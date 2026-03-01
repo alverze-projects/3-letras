@@ -1,0 +1,63 @@
+import React, { useEffect, useState } from 'react';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { RootStackParamList } from './src/navigation/types';
+import { loadSession } from './src/services/session';
+import { Colors } from './src/theme/colors';
+import WelcomeScreen from './src/screens/WelcomeScreen';
+import LoginScreen from './src/screens/LoginScreen';
+import RegisterScreen from './src/screens/RegisterScreen';
+import GuestScreen from './src/screens/GuestScreen';
+import MainScreen from './src/screens/MainScreen';
+import LobbyScreen from './src/screens/LobbyScreen';
+import GameScreen from './src/screens/GameScreen';
+import ResultsScreen from './src/screens/ResultsScreen';
+
+const Stack = createStackNavigator<RootStackParamList>();
+
+export default function App() {
+  const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null);
+
+  useEffect(() => {
+    loadSession().then((session) => {
+      setInitialRoute(session ? 'Main' : 'Welcome');
+    });
+  }, []);
+
+  if (!initialRoute) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={Colors.accent} />
+      </View>
+    );
+  }
+
+  return (
+    <GestureHandlerRootView style={styles.root}>
+      <NavigationContainer>
+        <StatusBar style="light" />
+        <Stack.Navigator
+          initialRouteName={initialRoute}
+          screenOptions={{ headerShown: false, cardStyle: { flex: 1 } }}
+        >
+          <Stack.Screen name="Welcome" component={WelcomeScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="Guest" component={GuestScreen} />
+          <Stack.Screen name="Main" component={MainScreen} />
+          <Stack.Screen name="Lobby" component={LobbyScreen} />
+          <Stack.Screen name="Game" component={GameScreen} />
+          <Stack.Screen name="Results" component={ResultsScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GestureHandlerRootView>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  loading: { flex: 1, backgroundColor: Colors.background, justifyContent: 'center', alignItems: 'center' },
+});

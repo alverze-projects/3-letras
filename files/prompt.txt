@@ -1,0 +1,18 @@
+lee los archivos y la estructura de este proyecto y dime que crees que tienes que hacer, te puedo decir lo siguiente:
+  - apps/ es donde estaran los distintos aplicativos
+  - apps/mobile (la app movil)
+    * Expo (React Native)
+  - apps/api (la apirest)
+    * NestJS
+    * TypeORM (Sqlite por el momento pero posibilidad de cambiar a futuro facilmente)
+    * WebSockets
+  - apps/admin-frontend (el frontend del panel administrativo)
+    * ReactJS
+    * Mantine UI (si lo conoces, sino recomiendame alguno que conozcas bien)
+  - libs/ (archivos compartidos entre todos los proyectos, por ejemplo las interfaces que devuelven los endpoints, asi el frontend sabe exactamente que es)
+
+básate en las instrucciones de @files/descripcion_tecnica_del_juego_tres_letras.pdf
+considera las instrucciones del chat con el cliente en @files/chat.json
+básate en el diseño de @files/bocetos_tentativos_caja_tarjeta_libreta.pdf
+
+si tienes dudas, hazmelas saber todas para que hagas el mejor trabajo posible

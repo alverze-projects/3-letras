@@ -1,4 +1,4 @@
-import type { IGameSettings } from '@3letras/interfaces';
+import type { IGameSettings, IGamePlayer } from '@3letras/interfaces';
 
 export type RootStackParamList = {
   Welcome: undefined;
@@ -18,6 +18,7 @@ export type RootStackParamList = {
     token: string;
     player: { id: string; nickname: string; isGuest: boolean };
     settings: IGameSettings;
+    initialPlayers: IGamePlayer[];
   };
   Results: {
     gameCode: string;

@@ -43,12 +43,12 @@ type VoteResult = {
 type Props = StackScreenProps<RootStackParamList, 'Game'>;
 
 export default function GameScreen({ navigation, route }: Props) {
-  const { gameCode, player, settings } = route.params;
+  const { gameCode, player, settings, initialPlayers } = route.params;
   const [round, setRound] = useState<IRound | null>(null);
   const [activeTurn, setActiveTurn] = useState<IActiveTurn | null>(null);
   const [word, setWord] = useState('');
   const [remainingMs, setRemainingMs] = useState(15000);
-  const [players, setPlayers] = useState<IGamePlayer[]>([]);
+  const [players, setPlayers] = useState<IGamePlayer[]>(initialPlayers ?? []);
   const [lastResult, setLastResult] = useState<{ turn: ITurn; nickname: string } | null>(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [diceRequest, setDiceRequest] = useState<DiceRollRequest | null>(null);
@@ -108,10 +108,16 @@ export default function GameScreen({ navigation, route }: Props) {
 
     });
 
-    socket.on(WS_EVENTS.SERVER.TURN_RESULT, ({ turn, playerNickname }) => {
+    socket.on(WS_EVENTS.SERVER.TURN_RESULT, ({ turn, playerNickname, playerScores }) => {
       setLastResult({ turn, nickname: playerNickname });
       setActiveTurn(null);
       setIsMyTurn(false);
+      if (playerScores) {
+        setPlayers((prev) => prev.map((p) => {
+          const updated = playerScores.find((s: { playerId: string; totalScore: number }) => s.playerId === p.playerId);
+          return updated ? { ...p, totalScore: updated.totalScore } : p;
+        }));
+      }
     });
 
     socket.on(WS_EVENTS.SERVER.ROUND_SUMMARY, ({ summary }) => {

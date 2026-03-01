@@ -342,6 +342,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server.to(code).emit(WS_EVENTS.SERVER.TURN_RESULT, {
         turn: { ...turn, submittedAt: null },
         playerNickname: players[playerIndex].user.nickname,
+        playerScores: players.map((p) => ({ playerId: p.userId, totalScore: p.totalScore })),
       });
 
       await this.startNextTurn(code, gameId, roundId, letters, players, playerIndex + 1, dieResult, turnNumber);
@@ -394,9 +395,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         turn.submittedAt = new Date();
         await this.turnRepo.save(turn);
 
-        this.server.to(code).emit(WS_EVENTS.SERVER.TURN_RESULT, { turn, playerNickname });
-
         const players = await this.gpRepo.find({ where: { gameId: game.id }, relations: ['user'] });
+        this.server.to(code).emit(WS_EVENTS.SERVER.TURN_RESULT, {
+          turn, playerNickname,
+          playerScores: players.map((p) => ({ playerId: p.userId, totalScore: p.totalScore })),
+        });
+
         const currentIndex = players.findIndex((p) => p.userId === playerId);
         await this.startNextTurn(code, game.id, round.id, round.letters as SpanishLetter[], players, currentIndex + 1, round.dieResult, turn.turnNumber);
         return;
@@ -424,15 +428,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
     await this.turnRepo.save(turn);
 
+    const players = await this.gpRepo.find({ where: { gameId: game.id }, relations: ['user'] });
     this.server.to(code).emit(WS_EVENTS.SERVER.TURN_RESULT, {
       turn,
       playerNickname,
-    });
-
-    const players = await this.gpRepo.find({ where: { gameId: game.id }, relations: ['user'] });
-    const completedTurns = await this.turnRepo.find({
-      where: { roundId: round.id },
-      order: { turnNumber: 'ASC' },
+      playerScores: players.map((p) => ({ playerId: p.userId, totalScore: p.totalScore })),
     });
 
     const currentIndex = players.findIndex((p) => p.userId === playerId);

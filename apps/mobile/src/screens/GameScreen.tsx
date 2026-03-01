@@ -10,6 +10,19 @@ import { Colors } from '../theme/colors';
 import type { IRound, IActiveTurn, ITurn, IGamePlayer } from '@3letras/interfaces';
 import { SPECIAL_LETTERS } from '@3letras/constants/game-rules';
 import SlotLetterCard from '../components/SlotLetterCard';
+import DiceAnimation from '../components/DiceAnimation';
+
+type DiceRollRequest = {
+  rollerId: string;
+  rollerNickname: string;
+  roundNumber: number;
+};
+
+type DiceResult = {
+  value: number;
+  rollerNickname: string;
+  roundNumber: number;
+};
 
 type VoteState = {
   letters: string[];
@@ -38,8 +51,12 @@ export default function GameScreen({ navigation, route }: Props) {
   const [players, setPlayers] = useState<IGamePlayer[]>([]);
   const [lastResult, setLastResult] = useState<{ turn: ITurn; nickname: string } | null>(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
+  const [diceRequest, setDiceRequest] = useState<DiceRollRequest | null>(null);
+  const [diceResult, setDiceResult] = useState<DiceResult | null>(null);
+  const [diceAnimDone, setDiceAnimDone] = useState(false);
   const [voteState, setVoteState] = useState<VoteState | null>(null);
   const [voteResult, setVoteResult] = useState<VoteResult | null>(null);
+  const diceRequestRef = useRef<DiceRollRequest | null>(null);
   const timerWidth = useRef(new Animated.Value(1)).current;
 
   const socket = getSocket();
@@ -52,6 +69,7 @@ export default function GameScreen({ navigation, route }: Props) {
     });
 
     socket.on(WS_EVENTS.SERVER.ROUND_NEW, ({ round: newRound }) => {
+      setDiceResult(null);
       setRound(newRound);
       setLastResult(null);
       setWord('');
@@ -85,7 +103,21 @@ export default function GameScreen({ navigation, route }: Props) {
       setRound(null);
     });
 
+    socket.on(WS_EVENTS.SERVER.DICE_ROLL_REQUEST, (data: DiceRollRequest) => {
+      diceRequestRef.current = data;
+      setDiceRequest(data);
+      setDiceResult(null);
+    });
+
+    socket.on(WS_EVENTS.SERVER.DICE_RESULT, (data: { value: number; rollerNickname: string }) => {
+      const roundNumber = diceRequestRef.current?.roundNumber ?? 0;
+      setDiceRequest(null);
+      setDiceAnimDone(false);
+      setDiceResult({ ...data, roundNumber });
+    });
+
     socket.on(WS_EVENTS.SERVER.VOTE_START, ({ letters, roundNumber, timeoutMs }) => {
+      setDiceResult(null);
       setVoteState({ letters, roundNumber, timeoutMs, votedCount: 0, totalCount: 0, hasVoted: false });
       setVoteResult(null);
     });
@@ -105,6 +137,8 @@ export default function GameScreen({ navigation, route }: Props) {
     });
 
     return () => {
+      socket.off(WS_EVENTS.SERVER.DICE_ROLL_REQUEST);
+      socket.off(WS_EVENTS.SERVER.DICE_RESULT);
       socket.off(WS_EVENTS.SERVER.ROUND_NEW);
       socket.off(WS_EVENTS.SERVER.TURN_START);
       socket.off(WS_EVENTS.SERVER.TURN_TIMER);
@@ -125,6 +159,10 @@ export default function GameScreen({ navigation, route }: Props) {
     socket?.emit(WS_EVENTS.CLIENT.TURN_SKIP, { gameCode });
   }
 
+  function rollDice() {
+    socket?.emit(WS_EVENTS.CLIENT.DICE_ROLL, { gameCode });
+  }
+
   function submitVote(accept: boolean) {
     socket?.emit(WS_EVENTS.CLIENT.VOTE_SUBMIT, { gameCode, accept });
     setVoteState((prev) => prev ? { ...prev, hasVoted: true } : prev);
@@ -135,6 +173,61 @@ export default function GameScreen({ navigation, route }: Props) {
     : Colors.red;
 
   const letters = round?.letters ?? [];
+
+  // Overlay: animación del dado rodando (el resultado ya llegó)
+  if (diceResult) {
+    return (
+      <View style={styles.diceOverlay}>
+        <Text style={styles.diceRoundLabel}>RONDA {diceResult.roundNumber}</Text>
+        <Text style={styles.diceRollerName}>{diceResult.rollerNickname} lanzó el dado</Text>
+        <DiceAnimation
+          targetValue={diceResult.value}
+          onDone={() => setDiceAnimDone(true)}
+        />
+        {diceAnimDone && (
+          <>
+            <Text style={styles.diceResultNumber}>
+              {diceResult.value}
+            </Text>
+            <Text style={styles.diceResultLabel}>
+              {diceResult.value === 1
+                ? 'cada jugador tendrá 1 turno por letra'
+                : `cada jugador tendrá ${diceResult.value} turnos por letra`}
+            </Text>
+          </>
+        )}
+      </View>
+    );
+  }
+
+  // Overlay: esperando que el jugador lance el dado
+  if (diceRequest) {
+    const isRoller = diceRequest.rollerId === player.id;
+    return (
+      <View style={styles.diceOverlay}>
+        <Text style={styles.diceRoundLabel}>RONDA {diceRequest.roundNumber}</Text>
+
+        {isRoller ? (
+          <>
+            <Text style={styles.diceMyTurnTitle}>¡Te toca lanzar el dado!</Text>
+            <TouchableOpacity style={styles.diceRollBtn} onPress={rollDice}>
+              <Text style={styles.diceRollBtnIcon}>🎲</Text>
+              <Text style={styles.diceRollBtnText}>LANZAR DADO</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <Text style={styles.diceWaitTitle}>
+              {diceRequest.rollerNickname} está lanzando el dado...
+            </Text>
+            <View style={styles.dicePlaceholder}>
+              <Text style={styles.dicePlaceholderText}>🎲</Text>
+            </View>
+          </>
+        )}
+      </View>
+    );
+  }
 
   // Overlay de resultado de votación
   if (voteResult) {
@@ -317,6 +410,52 @@ const styles = StyleSheet.create({
   difficulty_medium: { backgroundColor: '#E65100' },
   difficulty_advanced: { backgroundColor: '#B71C1C' },
   difficultyText: { color: Colors.white, fontWeight: '900', fontSize: 11, letterSpacing: 1 },
+  // ── Dado ────────────────────────────────────────────────────────────────────
+  diceOverlay: {
+    flex: 1, backgroundColor: Colors.background,
+    justifyContent: 'center', alignItems: 'center',
+    padding: 32, gap: 24,
+  },
+  diceRoundLabel: {
+    color: Colors.primaryLight, fontSize: 13, fontWeight: '700', letterSpacing: 3,
+  },
+  diceMyTurnTitle: {
+    color: Colors.accent, fontSize: 24, fontWeight: '900', textAlign: 'center',
+  },
+  diceWaitTitle: {
+    color: Colors.white, fontSize: 20, fontWeight: '700', textAlign: 'center',
+  },
+  diceRollerName: {
+    color: Colors.white, fontSize: 18, fontWeight: '700',
+  },
+  diceRollBtn: {
+    backgroundColor: Colors.accent, borderRadius: 20,
+    paddingVertical: 20, paddingHorizontal: 48,
+    alignItems: 'center', gap: 6,
+    elevation: 8,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+  },
+  diceRollBtnIcon: { fontSize: 40 },
+  diceRollBtnText: {
+    color: Colors.dark, fontSize: 20, fontWeight: '900', letterSpacing: 2,
+  },
+  dicePlaceholder: {
+    width: 110, height: 110,
+    borderRadius: 20, borderWidth: 3, borderColor: Colors.primaryLight,
+    borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center',
+  },
+  dicePlaceholderText: { fontSize: 52 },
+  diceResultNumber: {
+    color: Colors.accent, fontSize: 72, fontWeight: '900', lineHeight: 76,
+  },
+  diceResultLabel: {
+    color: Colors.white, fontSize: 17, fontWeight: '600',
+    textAlign: 'center', opacity: 0.9,
+  },
+  // ── Letras ──────────────────────────────────────────────────────────────────
   lettersRow: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginVertical: 20 },
   timerContainer: {
     flexDirection: 'row', alignItems: 'center', gap: 8,

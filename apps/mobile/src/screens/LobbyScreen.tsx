@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, FlatList,
   Alert, Share,
@@ -15,6 +15,7 @@ type Props = StackScreenProps<RootStackParamList, 'Lobby'>;
 export default function LobbyScreen({ navigation, route }: Props) {
   const { gameCode, token, player, difficulty, totalRounds } = route.params;
   const [players, setPlayers] = useState<IGamePlayer[]>([]);
+  const playersRef = useRef<IGamePlayer[]>([]);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isHost, setIsHost] = useState(false);
 
@@ -25,6 +26,7 @@ export default function LobbyScreen({ navigation, route }: Props) {
     s.emit(WS_EVENTS.CLIENT.GAME_READY, { gameCode });
 
     s.on(WS_EVENTS.SERVER.GAME_STATE, ({ game }) => {
+      playersRef.current = game.players;
       setPlayers(game.players);
       setIsHost(game.hostId === player.id);
     });
@@ -32,7 +34,9 @@ export default function LobbyScreen({ navigation, route }: Props) {
     s.on(WS_EVENTS.SERVER.PLAYER_JOINED, ({ player: newPlayer }) => {
       setPlayers((prev) => {
         if (prev.some((p) => p.playerId === newPlayer?.playerId)) return prev;
-        return [...prev, newPlayer];
+        const next = [...prev, newPlayer];
+        playersRef.current = next;
+        return next;
       });
     });
 
@@ -41,7 +45,7 @@ export default function LobbyScreen({ navigation, route }: Props) {
     });
 
     s.on(WS_EVENTS.SERVER.GAME_STARTED, ({ settings }) => {
-      navigation.replace('Game', { gameCode, token, player, settings });
+      navigation.replace('Game', { gameCode, token, player, settings, initialPlayers: playersRef.current });
     });
 
     return () => { s.off(WS_EVENTS.SERVER.GAME_STATE); s.off(WS_EVENTS.SERVER.PLAYER_JOINED); };

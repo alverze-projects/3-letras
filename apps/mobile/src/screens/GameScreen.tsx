@@ -57,9 +57,22 @@ export default function GameScreen({ navigation, route }: Props) {
   const [voteState, setVoteState] = useState<VoteState | null>(null);
   const [voteResult, setVoteResult] = useState<VoteResult | null>(null);
   const diceRequestRef = useRef<DiceRollRequest | null>(null);
+  const diceTextOpacity = useRef(new Animated.Value(0)).current;
+  const diceTextSlide = useRef(new Animated.Value(18)).current;
   const timerWidth = useRef(new Animated.Value(1)).current;
 
   const socket = getSocket();
+
+  useEffect(() => {
+    if (diceAnimDone) {
+      diceTextOpacity.setValue(0);
+      diceTextSlide.setValue(18);
+      Animated.parallel([
+        Animated.timing(diceTextOpacity, { toValue: 1, duration: 350, useNativeDriver: true }),
+        Animated.timing(diceTextSlide, { toValue: 0, duration: 350, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [diceAnimDone]);
 
   useEffect(() => {
     if (!socket) return;
@@ -184,18 +197,18 @@ export default function GameScreen({ navigation, route }: Props) {
           targetValue={diceResult.value}
           onDone={() => setDiceAnimDone(true)}
         />
-        {diceAnimDone && (
-          <>
-            <Text style={styles.diceResultNumber}>
-              {diceResult.value}
-            </Text>
-            <Text style={styles.diceResultLabel}>
-              {diceResult.value === 1
-                ? 'cada jugador tendrá 1 turno por letra'
-                : `cada jugador tendrá ${diceResult.value} turnos por letra`}
-            </Text>
-          </>
-        )}
+        {/* Espacio fijo: el dado no se mueve, el texto aparece con animación */}
+        <Animated.View style={[
+          styles.diceTextArea,
+          { opacity: diceTextOpacity, transform: [{ translateY: diceTextSlide }] },
+        ]}>
+          <Text style={styles.diceResultNumber}>{diceResult.value}</Text>
+          <Text style={styles.diceResultLabel}>
+            {diceResult.value === 1
+              ? 'cada jugador tendrá 1 turno por letra'
+              : `cada jugador tendrá ${diceResult.value} turnos por letra`}
+          </Text>
+        </Animated.View>
       </View>
     );
   }
@@ -448,6 +461,9 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center',
   },
   dicePlaceholderText: { fontSize: 52 },
+  diceTextArea: {
+    alignItems: 'center', gap: 6,
+  },
   diceResultNumber: {
     color: Colors.accent, fontSize: 72, fontWeight: '900', lineHeight: 76,
   },

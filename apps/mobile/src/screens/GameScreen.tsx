@@ -16,6 +16,7 @@ type DiceRollRequest = {
   rollerId: string;
   rollerNickname: string;
   roundNumber: number;
+  timeoutMs: number;
 };
 
 type DiceResult = {
@@ -54,6 +55,10 @@ export default function GameScreen({ navigation, route }: Props) {
   const [diceRequest, setDiceRequest] = useState<DiceRollRequest | null>(null);
   const [diceResult, setDiceResult] = useState<DiceResult | null>(null);
   const [diceAnimDone, setDiceAnimDone] = useState(false);
+  const [diceSecondsLeft, setDiceSecondsLeft] = useState(0);
+  const diceCountdownRef = useRef<NodeJS.Timeout | null>(null);
+  const [voteSecondsLeft, setVoteSecondsLeft] = useState(0);
+  const voteCountdownRef = useRef<NodeJS.Timeout | null>(null);
   const [voteState, setVoteState] = useState<VoteState | null>(null);
   const [voteResult, setVoteResult] = useState<VoteResult | null>(null);
   const diceRequestRef = useRef<DiceRollRequest | null>(null);
@@ -128,9 +133,26 @@ export default function GameScreen({ navigation, route }: Props) {
       diceRequestRef.current = data;
       setDiceRequest(data);
       setDiceResult(null);
+
+      // Countdown local
+      if (diceCountdownRef.current) clearInterval(diceCountdownRef.current);
+      let remaining = Math.ceil(data.timeoutMs / 1000);
+      setDiceSecondsLeft(remaining);
+      diceCountdownRef.current = setInterval(() => {
+        remaining -= 1;
+        setDiceSecondsLeft(remaining);
+        if (remaining <= 0 && diceCountdownRef.current) {
+          clearInterval(diceCountdownRef.current);
+          diceCountdownRef.current = null;
+        }
+      }, 1000);
     });
 
     socket.on(WS_EVENTS.SERVER.DICE_RESULT, (data: { value: number; rollerNickname: string }) => {
+      if (diceCountdownRef.current) {
+        clearInterval(diceCountdownRef.current);
+        diceCountdownRef.current = null;
+      }
       const roundNumber = diceRequestRef.current?.roundNumber ?? 0;
       setDiceRequest(null);
       setDiceAnimDone(false);
@@ -141,6 +163,18 @@ export default function GameScreen({ navigation, route }: Props) {
       setDiceResult(null);
       setVoteState({ letters, roundNumber, timeoutMs, votedCount: 0, totalCount: 0, hasVoted: false });
       setVoteResult(null);
+
+      if (voteCountdownRef.current) clearInterval(voteCountdownRef.current);
+      let remaining = Math.ceil(timeoutMs / 1000);
+      setVoteSecondsLeft(remaining);
+      voteCountdownRef.current = setInterval(() => {
+        remaining -= 1;
+        setVoteSecondsLeft(remaining);
+        if (remaining <= 0 && voteCountdownRef.current) {
+          clearInterval(voteCountdownRef.current);
+          voteCountdownRef.current = null;
+        }
+      }, 1000);
     });
 
     socket.on(WS_EVENTS.SERVER.VOTE_UPDATE, ({ votedCount, totalCount }) => {
@@ -148,6 +182,10 @@ export default function GameScreen({ navigation, route }: Props) {
     });
 
     socket.on(WS_EVENTS.SERVER.VOTE_RESULT, (result: VoteResult) => {
+      if (voteCountdownRef.current) {
+        clearInterval(voteCountdownRef.current);
+        voteCountdownRef.current = null;
+      }
       setVoteResult(result);
       setVoteState(null);
       setTimeout(() => setVoteResult(null), 2500);
@@ -158,6 +196,8 @@ export default function GameScreen({ navigation, route }: Props) {
     });
 
     return () => {
+      if (diceCountdownRef.current) clearInterval(diceCountdownRef.current);
+      if (voteCountdownRef.current) clearInterval(voteCountdownRef.current);
       socket.off(WS_EVENTS.SERVER.DICE_ROLL_REQUEST);
       socket.off(WS_EVENTS.SERVER.DICE_RESULT);
       socket.off(WS_EVENTS.SERVER.ROUND_NEW);
@@ -246,6 +286,10 @@ export default function GameScreen({ navigation, route }: Props) {
             </View>
           </>
         )}
+
+        <Text style={[styles.diceCountdown, diceSecondsLeft <= 5 && styles.diceCountdownUrgent]}>
+          {diceSecondsLeft}s
+        </Text>
       </View>
     );
   }
@@ -308,6 +352,10 @@ export default function GameScreen({ navigation, route }: Props) {
 
         <Text style={styles.voteHint}>
           Si no hay mayoría, la decisión será al azar
+        </Text>
+
+        <Text style={[styles.diceCountdown, voteSecondsLeft <= 5 && styles.diceCountdownUrgent]}>
+          {voteSecondsLeft}s
         </Text>
       </View>
     );
@@ -472,6 +520,8 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center',
   },
   dicePlaceholderText: { fontSize: 52 },
+  diceCountdown: { color: Colors.primaryLight, fontSize: 22, fontWeight: '700' },
+  diceCountdownUrgent: { color: Colors.red },
   diceTextArea: {
     alignItems: 'center', gap: 6,
   },

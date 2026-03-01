@@ -19,6 +19,7 @@ import { WS_EVENTS } from '@3letras/events/websocket.events';
 import { TURN_DURATION_MS, SPECIAL_LETTERS, SpanishLetter } from '@3letras/constants/game-rules';
 
 const VOTE_DURATION_MS = 15_000;
+const DICE_DURATION_MS = 15_000;
 
 interface AuthenticatedSocket extends Socket {
   userId: string;
@@ -46,6 +47,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     rollerId: string;
     dieResult: number;
     resolve: () => void;
+    timer: NodeJS.Timeout;
   }>();
 
   constructor(
@@ -150,11 +152,19 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const roller = players[rollerIndex];
 
     await new Promise<void>((resolve) => {
-      this.pendingDice.set(code, { rollerId: roller.userId, dieResult: round.dieResult, resolve });
+      const timer = setTimeout(() => {
+        if (this.pendingDice.has(code)) {
+          this.pendingDice.delete(code);
+          resolve();
+        }
+      }, DICE_DURATION_MS);
+
+      this.pendingDice.set(code, { rollerId: roller.userId, dieResult: round.dieResult, resolve, timer });
       this.server.to(code).emit(WS_EVENTS.SERVER.DICE_ROLL_REQUEST, {
         rollerId: roller.userId,
         rollerNickname: roller.user.nickname,
         roundNumber,
+        timeoutMs: DICE_DURATION_MS,
       });
     });
 
@@ -222,6 +232,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const code = payload.gameCode.toUpperCase();
     const pending = this.pendingDice.get(code);
     if (!pending || pending.rollerId !== client.userId) return;
+    clearTimeout(pending.timer);
     this.pendingDice.delete(code);
     pending.resolve();
   }

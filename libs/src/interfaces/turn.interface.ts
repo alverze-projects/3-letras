@@ -19,4 +19,6 @@ export interface IActiveTurn {
   nickname: string;
   startedAt: string;
   timeoutAt: string;
+  turnNumber: number;
+  totalTurns: number;
 }

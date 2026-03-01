@@ -303,6 +303,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         nickname: currentPlayer.user.nickname,
         startedAt: now.toISOString(),
         timeoutAt: timeoutAt.toISOString(),
+        turnNumber,
+        totalTurns: dieResult,
       },
     });
 

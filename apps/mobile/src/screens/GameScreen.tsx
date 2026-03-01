@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  FlatList, Animated, Alert,
+  Animated,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
@@ -9,6 +9,7 @@ import { getSocket, WS_EVENTS } from '../services/socket';
 import { Colors } from '../theme/colors';
 import type { IRound, IActiveTurn, ITurn, IGamePlayer } from '@3letras/interfaces';
 import { SPECIAL_LETTERS } from '@3letras/constants/game-rules';
+import SlotLetterCard from '../components/SlotLetterCard';
 
 type VoteState = {
   letters: string[];
@@ -164,12 +165,12 @@ export default function GameScreen({ navigation, route }: Props) {
 
         <View style={styles.voteLettersRow}>
           {voteLetters.map((letter, i) => (
-            <View key={i} style={[
-              styles.letterCard,
-              (SPECIAL_LETTERS as readonly string[]).includes(letter) && styles.letterCardSpecial,
-            ]}>
-              <Text style={styles.letterText}>{letter}</Text>
-            </View>
+            <SlotLetterCard
+              key={`vote-${voteState.roundNumber}-${i}`}
+              targetLetter={letter}
+              delay={i * 350}
+              isSpecial={(SPECIAL_LETTERS as readonly string[]).includes(letter)}
+            />
           ))}
         </View>
 
@@ -214,15 +215,15 @@ export default function GameScreen({ navigation, route }: Props) {
         </View>
       </View>
 
-      {/* Letras base */}
+      {/* Letras base — animación tragaperras al inicio de cada ronda */}
       <View style={styles.lettersRow}>
         {letters.map((letter, i) => (
-          <View key={i} style={[
-            styles.letterCard,
-            (SPECIAL_LETTERS as readonly string[]).includes(letter) && styles.letterCardSpecial,
-          ]}>
-            <Text style={styles.letterText}>{letter}</Text>
-          </View>
+          <SlotLetterCard
+            key={`${round?.id ?? 'init'}-${i}`}
+            targetLetter={letter}
+            delay={i * 350}
+            isSpecial={(SPECIAL_LETTERS as readonly string[]).includes(letter)}
+          />
         ))}
       </View>
 
@@ -317,13 +318,6 @@ const styles = StyleSheet.create({
   difficulty_advanced: { backgroundColor: '#B71C1C' },
   difficultyText: { color: Colors.white, fontWeight: '900', fontSize: 11, letterSpacing: 1 },
   lettersRow: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginVertical: 20 },
-  letterCard: {
-    width: 80, height: 80, backgroundColor: Colors.white, borderRadius: 12,
-    justifyContent: 'center', alignItems: 'center',
-    borderWidth: 3, borderColor: Colors.cardBorderAccent, elevation: 6,
-  },
-  letterCardSpecial: { borderColor: Colors.red, backgroundColor: '#FFF3F3' },
-  letterText: { fontSize: 40, fontWeight: '900', color: Colors.dark },
   timerContainer: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: Colors.primaryDark, borderRadius: 10,

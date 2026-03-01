@@ -1,0 +1,1055 @@
+{
+    "success": true,
+    "data": {
+        "initial": {
+            "abTestProfileCentric": "default",
+            "profileCentricInitials": null,
+            "connectFeedbackInitials": null,
+            "tab": "bid",
+            "cantAddMessage": null,
+            "postUrl": "https://www.workana.com/messages/index/luis-danilo-arriaza-cea-tres-letras/freeintelligence",
+            "isBid": false,
+            "otherParty": {
+                "name": "RENZO C.",
+                "userIds": [
+                    13647303
+                ],
+                "online": false,
+                "statusLabel": "Offline",
+                "label": "Ver Perfil",
+                "url": "https://www.workana.com/e/0511b1d886494a27fb7964c6be87e57e",
+                "logoUrl": "https://cf.wkncdn.com/static/assets/build/img/jobs/sneak-peek-user.dc8777a76.svg",
+                "ratings": {
+                    "label": "Calificaciones de freelancers",
+                    "all": []
+                },
+                "rating": "0.00",
+                "country": "pe",
+                "extra": [
+                    {
+                        "col": 4,
+                        "label": "Proyectos publicados",
+                        "val": 2
+                    },
+                    {
+                        "col": 4,
+                        "label": "Proyectos pagos",
+                        "val": 0
+                    },
+                    {
+                        "col": 4,
+                        "label": "14% de Comisión con este cliente",
+                        "val": "USD <span class=\"js-monetary-amount monetary-amount\" data-amount=\"600\">600,00</span>",
+                        "class": ""
+                    }
+                ],
+                "expandAside": {
+                    "label": "Ver información sobre este cliente"
+                },
+                "hash": "0511b1d886494a27fb7964c6be87e57e",
+                "isWorkerProfile": false,
+                "labelBack": "Perfil del cliente"
+            },
+            "project": {
+                "isWorking": false,
+                "isMultiple": false,
+                "url": "https://www.workana.com/job/luis-danilo-arriaza-cea-tres-letras",
+                "isOpen": false,
+                "statusClass": "open",
+                "statusText": "Verificando pago",
+                "averageBid": null
+            },
+            "projectQuestions": null,
+            "thread": {
+                "id": 38551748,
+                "totalMessages": 25,
+                "isFav": false,
+                "isHidden": false,
+                "buttons": []
+            },
+            "projectDetails": {
+                "label": "Volver a detalles del proyecto",
+                "working": false
+            },
+            "pageTitle": "Luis Danilo Arriaza Cea - Tres Letras",
+            "bidPageTitle": null,
+            "videoCallData": {
+                "threadId": 38551748,
+                "videoCallText": "Videollamada",
+                "showVideoCall": true,
+                "cantStartVideoCallReason": 0,
+                "videoCallNotAvailable": {
+                    "title": "Videollamada",
+                    "notAvailableMessage": null,
+                    "notAvailableInfoLink": null,
+                    "closeDialogText": "Cerrar"
+                },
+                "tooltipMsg": "No olvides registrar lo acordado en un mensaje para seguridad de ambos",
+                "createNewVideoCallUrl": "https://www.workana.com/messages/start_video_call",
+                "conditions": {
+                    "url": "https://help.workana.com/hc/es/articles/360046270433--C%C3%B3mo-realizar-una-videollamada-",
+                    "text": "Condiciones"
+                },
+                "videoCallEventUrl": "https://p2p.mirotalk.com/join?room=wkn34014489fa14f7b77d30511b1d88649&name=L.+D.+A.+C.&notify=0",
+                "otherPartyOfflineText": "Cuando el cliente esté online vas a poder realizar una videollamada",
+                "otherPartyIsOnline": false
+            },
+            "voiceMessageInitials": {
+                "shouldShow": false
+            },
+            "messages": [
+                {
+                    "threadId": 38551748,
+                    "id": 205118037,
+                    "classes": "self message-videocall message-videocall-calling",
+                    "isByHuman": true,
+                    "isUnread": false,
+                    "author": {
+                        "name": "Luis D. A. C.",
+                        "logoUrl": "https://cf.workana.com/logos/31/daddf8a16044e09b7428662b741298/472496.jpg",
+                        "identifier": 472496
+                    },
+                    "timeAgo": "25 Febrero, 2026 14:30",
+                    "timeAgoRelative": "Hace 2 días",
+                    "isBid": false,
+                    "bid": [],
+                    "isMobile": null,
+                    "content": "\nR. C. ha empezado una videollamada. Únete <a href=\"https://p2p.mirotalk.com/join?room=wkn34014489fa14f7b77d30511b1d88649&amp;name=L.+D.+A.+C.&amp;notify=0\" target=\"_blank\" rel=\"noopener\">aquí</a>\n",
+                    "attachments": {
+                        "has": false,
+                        "label": "Archivos adjuntos",
+                        "htmlLinks": []
+                    },
+                    "actions": [],
+                    "readByWorker": true,
+                    "readByEmployer": true,
+                    "isProjectOwner": false,
+                    "isVoiceMessage": false,
+                    "shouldShowBidAsSystemMsg": false,
+                    "shouldHideFirstBid": false,
+                    "bidItemsPanelInitials": null
+                },
+                {
+                    "threadId": 38551748,
+                    "id": 205129446,
+                    "classes": "self",
+                    "isByHuman": true,
+                    "isUnread": false,
+                    "author": {
+                        "name": "Luis D. A. C.",
+                        "logoUrl": "https://cf.workana.com/logos/31/daddf8a16044e09b7428662b741298/472496.jpg",
+                        "identifier": 472496
+                    },
+                    "timeAgo": "25 Febrero, 2026 16:39",
+                    "timeAgoRelative": "Ayer",
+                    "isBid": false,
+                    "bid": [],
+                    "isMobile": null,
+                    "content": "Según lo conversado, estamos listos para comenzar a trabajar",
+                    "attachments": {
+                        "has": false,
+                        "label": "Archivos adjuntos",
+                        "htmlLinks": []
+                    },
+                    "actions": [],
+                    "readByWorker": true,
+                    "readByEmployer": true,
+                    "isProjectOwner": false,
+                    "isVoiceMessage": false,
+                    "shouldShowBidAsSystemMsg": false,
+                    "shouldHideFirstBid": false,
+                    "bidItemsPanelInitials": null
+                },
+                {
+                    "threadId": 38551748,
+                    "id": 205163509,
+                    "classes": "self",
+                    "isByHuman": true,
+                    "isUnread": false,
+                    "author": {
+                        "name": "Luis D. A. C.",
+                        "logoUrl": "https://cf.workana.com/logos/31/daddf8a16044e09b7428662b741298/472496.jpg",
+                        "identifier": 472496
+                    },
+                    "timeAgo": "26 Febrero, 2026 09:33",
+                    "timeAgoRelative": "Ayer",
+                    "isBid": false,
+                    "bid": [],
+                    "isMobile": null,
+                    "content": "Hola Renzo, luego de nuestra conversación y de revisar en detalle el documento, te presento un plan de trabajo detallado para el desarrollo del juego &quot;Tres Letras&quot;.<br/>\n<br/>\n**Plan de Trabajo - Proyecto &quot;Tres Letras&quot; (20 días)**<br/>\n<br/>\n**Fase 1: Backend y Lógica del Juego (7 días)**<br/>\n*&nbsp;  Configuración inicial del servidor en Google Cloud Platform (GCP).<br/>\n*&nbsp;  Diseño y creación de la base de datos para usuarios, partidas y puntuaciones.<br/>\n*&nbsp;  Desarrollo del API (interfaz de programación) que contendrá toda la lógica del juego:<br/>\n&nbsp; &nbsp; *&nbsp;  Sistema de registro y autenticación de usuarios.<br/>\n&nbsp; &nbsp; *&nbsp;  Generación aleatoria de las letras base (2 para Nivel Básico, 3 para Medio/Avanzado).<br/>\n&nbsp; &nbsp; *&nbsp;  Simulación del lanzamiento del dado para definir el número de turnos.<br/>\n&nbsp; &nbsp; *&nbsp;  Algoritmo de validación de palabras: verificación del orden de letras base y validación de existencia contra un diccionario externo.<br/>\n&nbsp; &nbsp; *&nbsp;  Cálculo del sistema de puntuación, incluyendo el valor de letras estándar/especiales y las bonificaciones opcionales.<br/>\n&nbsp; &nbsp; *&nbsp;  Lógica para los tres niveles de dificultad, incluyendo la restricción de no usar palabras base en el Nivel Avanzado.<br/>\n<br/>\n**Hito de Pago 1: 30% ($210 USD) para iniciar el proyecto.**<br/>\n<br/>\n**Fase 2: Desarrollo de la App Móvil (iOS/Android) (7 días)**<br/>\n*&nbsp;  Desarrollo de la interfaz de usuario con React Native.<br/>\n*&nbsp;  Creación de las pantallas principales: inicio de sesión/registro, menú principal, selección de nivel de dificultad.<br/>\n*&nbsp;  Pantalla de juego: visualización de letras base, cronómetro de 15 segundos, campo para ingresar la palabra, marcador de puntaje.<br/>\n*&nbsp;  Pantalla de resultados al finalizar las rondas.<br/>\n*&nbsp;  Conexión de la aplicación con el API del backend para un funcionamiento integrado.<br/>\n<br/>\n**Hito de Pago 2: 40% ($280 USD) al entregar una versión funcional (APK/TestFlight) para pruebas.**<br/>\n<br/>\n**Fase 3: Panel de Administración y Monetización (3 días)**<br/>\n*&nbsp;  Desarrollo de un panel de administración web simple para visualizar estadísticas de uso y gestión básica de jugadores.<br/>\n*&nbsp;  Integración del SDK de Google AdMob en la aplicación móvil para mostrar publicidad (banners y anuncios intersticiales entre rondas, según definamos).<br/>\n<br/>\n**Fase 4: Pruebas Finales, Despliegue y Entrega (3 días)**<br/>\n*&nbsp;  Pruebas completas de la aplicación y el panel de administración para corregir errores.<br/>\n*&nbsp;  Optimización del rendimiento general.<br/>\n*&nbsp;  Configuración final del servidor de producción en GCP.<br/>\n*&nbsp;  Publicación de la aplicación en Google Play Store y Apple App Store (requiere que tengas tus cuentas de desarrollador).<br/>\n*&nbsp;  Una vez liberado el pago final, se procederá a la compra y configuración del dominio <a href=\"http://www.tresletras.com\" target=\"_blank\" class=\"js-check-for-external\" rel=\"nofollow noopener\">www.tresletras.com</a>, apuntándolo al servidor y entregando todos los accesos.<br/>\n<br/>\n**Hito de Pago 3 (Final): 30% ($210 USD) para la entrega final del proyecto y los activos.**<br/>\n<br/>\n**El proyecto incluye:**<br/>\n*&nbsp;  Aplicación móvil para iOS y Android.<br/>\n*&nbsp;  Panel de administración web.<br/>\n*&nbsp;  Integración de publicidad con Google AdMob.<br/>\n*&nbsp;  Hosting en Google Cloud Platform gratuito por 3 meses.<br/>\n*&nbsp;  Dominio <a href=\"http://www.tresletras.com\" target=\"_blank\" class=\"js-check-for-external\" rel=\"nofollow noopener\">www.tresletras.com</a> incluido.<br/>\n*&nbsp;  Configuración completa del servidor y dominio.<br/>\n<br/>\nQuedo atento a tu confirmación para crear los hitos en la plataforma y comenzar.",
+                    "attachments": {
+                        "has": false,
+                        "label": "Archivos adjuntos",
+                        "htmlLinks": []
+                    },
+                    "actions": [],
+                    "readByWorker": true,
+                    "readByEmployer": true,
+                    "isProjectOwner": false,
+                    "isVoiceMessage": false,
+                    "shouldShowBidAsSystemMsg": false,
+                    "shouldHideFirstBid": false,
+                    "bidItemsPanelInitials": null
+                },
+                {
+                    "threadId": 38551748,
+                    "id": 205180012,
+                    "classes": "other",
+                    "isByHuman": true,
+                    "isUnread": false,
+                    "author": {
+                        "name": "RENZO C.",
+                        "logoUrl": "https://cf.wkncdn.com/static/assets/build/img/jobs/sneak-peek-user.dc8777a76.svg",
+                        "identifier": 13647303
+                    },
+                    "timeAgo": "26 Febrero, 2026 12:46",
+                    "timeAgoRelative": "Ayer",
+                    "isBid": false,
+                    "bid": [],
+                    "isMobile": null,
+                    "content": "Hola Luis, ya estoy por acá",
+                    "attachments": {
+                        "has": false,
+                        "label": "Archivos adjuntos",
+                        "htmlLinks": []
+                    },
+                    "actions": [],
+                    "readByWorker": true,
+                    "readByEmployer": true,
+                    "isProjectOwner": false,
+                    "isVoiceMessage": false,
+                    "shouldShowBidAsSystemMsg": false,
+                    "shouldHideFirstBid": false,
+                    "bidItemsPanelInitials": null
+                },
+                {
+                    "threadId": 38551748,
+                    "id": 205180018,
+                    "classes": "self message-videocall message-videocall-calling",
+                    "isByHuman": true,
+                    "isUnread": false,
+                    "author": {
+                        "name": "Luis D. A. C.",
+                        "logoUrl": "https://cf.workana.com/logos/31/daddf8a16044e09b7428662b741298/472496.jpg",
+                        "identifier": 472496
+                    },
+                    "timeAgo": "26 Febrero, 2026 12:46",
+                    "timeAgoRelative": "Ayer",
+                    "isBid": false,
+                    "bid": [],
+                    "isMobile": null,
+                    "content": "\nR. C. ha empezado una videollamada. Únete <a href=\"https://p2p.mirotalk.com/join?room=wkn34014489fa14f7b77d30511b1d88649&amp;name=L.+D.+A.+C.&amp;notify=0\" target=\"_blank\" rel=\"noopener\">aquí</a>\n",
+                    "attachments": {
+                        "has": false,
+                        "label": "Archivos adjuntos",
+                        "htmlLinks": []
+                    },
+                    "actions": [],
+                    "readByWorker": true,
+                    "readByEmployer": true,
+                    "isProjectOwner": false,
+                    "isVoiceMessage": false,
+                    "shouldShowBidAsSystemMsg": false,
+                    "shouldHideFirstBid": false,
+                    "bidItemsPanelInitials": null
+                },
+                {
+                    "threadId": 38551748,
+                    "id": 205202871,
+                    "classes": "other",
+                    "isByHuman": true,
+                    "isUnread": false,
+                    "author": {
+                        "name": "RENZO C.",
+                        "logoUrl": "https://cf.wkncdn.com/static/assets/build/img/jobs/sneak-peek-user.dc8777a76.svg",
+                        "identifier": 13647303
+                    },
+                    "timeAgo": "26 Febrero, 2026 17:26",
+                    "timeAgoRelative": "Hace 21 horas",
+                    "isBid": false,
+                    "bid": [],
+                    "isMobile": null,
+                    "content": "Hola Luis, te consulté si se contempla el modo multijugador y sobre el soporte post entrega",
+                    "attachments": {
+                        "has": false,
+                        "label": "Archivos adjuntos",
+                        "htmlLinks": []
+                    },
+                    "actions": [],
+                    "readByWorker": true,
+                    "readByEmployer": true,
+                    "isProjectOwner": false,
+                    "isVoiceMessage": false,
+                    "shouldShowBidAsSystemMsg": false,
+                    "shouldHideFirstBid": false,
+                    "bidItemsPanelInitials": null
+                },
+                {
+                    "threadId": 38551748,
+                    "id": 205203071,
+                    "classes": "self",
+                    "isByHuman": true,
+                    "isUnread": false,
+                    "author": {
+                        "name": "Luis D. A. C.",
+                        "logoUrl": "https://cf.workana.com/logos/31/daddf8a16044e09b7428662b741298/472496.jpg",
+                        "identifier": 472496
+                    },
+                    "timeAgo": "26 Febrero, 2026 17:28",
+                    "timeAgoRelative": "Hace 21 horas",
+                    "isBid": false,
+                    "bid": [],
+                    "isMobile": null,
+                    "content": "El plan actual no contempla modo multijugador. Esa funcionalidad es un desarrollo adicional y se cotizaría por separado.<br/>\n<br/>\nEn cuanto al soporte post-entrega, ofrezco 30 días para la corrección de cualquier bug o error de mi parte. No incluye nuevas funcionalidades, cambios de diseño o modificaciones en la lógica. Cualquier requerimiento adicional después de este periodo se gestionaría como un nuevo proyecto.",
+                    "attachments": {
+                        "has": false,
+                        "label": "Archivos adjuntos",
+                        "htmlLinks": []
+                    },
+                    "actions": [],
+                    "readByWorker": true,
+                    "readByEmployer": true,
+                    "isProjectOwner": false,
+                    "isVoiceMessage": false,
+                    "shouldShowBidAsSystemMsg": false,
+                    "shouldHideFirstBid": false,
+                    "bidItemsPanelInitials": null
+                },
+                {
+                    "threadId": 38551748,
+                    "id": 205203871,
+                    "classes": "other",
+                    "isByHuman": true,
+                    "isUnread": false,
+                    "author": {
+                        "name": "RENZO C.",
+                        "logoUrl": "https://cf.wkncdn.com/static/assets/build/img/jobs/sneak-peek-user.dc8777a76.svg",
+                        "identifier": 13647303
+                    },
+                    "timeAgo": "26 Febrero, 2026 17:38",
+                    "timeAgoRelative": "Hace 21 horas",
+                    "isBid": false,
+                    "bid": [],
+                    "isMobile": null,
+                    "content": "ok, pero luego de terminado el trabajo voy a tener acceso a todo el programa?",
+                    "attachments": {
+                        "has": false,
+                        "label": "Archivos adjuntos",
+                        "htmlLinks": []
+                    },
+                    "actions": [],
+                    "readByWorker": true,
+                    "readByEmployer": true,
+                    "isProjectOwner": false,
+                    "isVoiceMessage": false,
+                    "shouldShowBidAsSystemMsg": false,
+                    "shouldHideFirstBid": false,
+                    "bidItemsPanelInitials": null
+                },
+                {
+                    "threadId": 38551748,
+                    "id": 205204047,
+                    "classes": "self",
+                    "isByHuman": true,
+                    "isUnread": false,
+                    "author": {
+                        "name": "Luis D. A. C.",
+                        "logoUrl": "https://cf.workana.com/logos/31/daddf8a16044e09b7428662b741298/472496.jpg",
+                        "identifier": 472496
+                    },
+                    "timeAgo": "26 Febrero, 2026 17:40",
+                    "timeAgoRelative": "Hace 21 horas",
+                    "isBid": false,
+                    "bid": [],
+                    "isMobile": null,
+                    "content": "Sí, al finalizar el trabajo y liberarse el pago final, tendrás acceso completo a todo el programa. Esto incluye:<br/>\n<br/>\n- Código fuente de la aplicación móvil (iOS y Android).<br/>\n- Código fuente del backend (API y lógica del juego).<br/>\n- Acceso al panel de administración web.<br/>\n- Credenciales de acceso al servidor en Google Cloud Platform (GCP).<br/>\n- Credenciales de acceso al dominio <a href=\"http://www.tresletras.com.\" target=\"_blank\" class=\"js-check-for-external\" rel=\"nofollow noopener\">www.tresletras.com.</a><br/>\n- Base de datos.",
+                    "attachments": {
+                        "has": false,
+                        "label": "Archivos adjuntos",
+                        "htmlLinks": []
+                    },
+                    "actions": [],
+                    "readByWorker": true,
+                    "readByEmployer": true,
+                    "isProjectOwner": false,
+                    "isVoiceMessage": false,
+                    "shouldShowBidAsSystemMsg": false,
+                    "shouldHideFirstBid": false,
+                    "bidItemsPanelInitials": null
+                },
+                {
+                    "threadId": 38551748,
+                    "id": 205206082,
+                    "classes": "message-notice",
+                    "isByHuman": false,
+                    "isUnread": false,
+                    "author": {
+                        "name": "Sistema",
+                        "logoUrl": null,
+                        "identifier": null
+                    },
+                    "timeAgo": "26 Febrero, 2026 18:11",
+                    "timeAgoRelative": "Hace 20 horas",
+                    "isBid": false,
+                    "bid": [],
+                    "isMobile": null,
+                    "content": "\n    <p>La propuesta hecha por <strong>Luis Danilo Arriaza Cea</strong> ha sido aceptada y el proyecto entró en la etapa de pago en garantía.</p>\n\n    <p>Durante esta etapa no debería realizarse ningún trabajo hasta que <strong>R. C.</strong> realice el pago en garantía por el monto total de la propuesta.</p>\n\n    <p>Una vez que el proceso de pago en garantía haya finalizado, una notificación informará a ambas partes que el trabajo podrá comenzarse.</p>\n\n",
+                    "attachments": {
+                        "has": false,
+                        "label": "Archivos adjuntos",
+                        "htmlLinks": []
+                    },
+                    "actions": [],
+                    "readByWorker": true,
+                    "readByEmployer": true,
+                    "isProjectOwner": false,
+                    "isVoiceMessage": false,
+                    "shouldShowBidAsSystemMsg": false,
+                    "shouldHideFirstBid": false,
+                    "bidItemsPanelInitials": null
+                },
+                {
+                    "threadId": 38551748,
+                    "id": 205213322,
+                    "classes": "other",
+                    "isByHuman": true,
+                    "isUnread": false,
+                    "author": {
+                        "name": "RENZO C.",
+                        "logoUrl": "https://cf.wkncdn.com/static/assets/build/img/jobs/sneak-peek-user.dc8777a76.svg",
+                        "identifier": 13647303
+                    },
+                    "timeAgo": "26 Febrero, 2026 20:20",
+                    "timeAgoRelative": "Hace 18 horas",
+                    "isBid": false,
+                    "bid": [],
+                    "isMobile": null,
+                    "content": "Ya hice el pago en garantía",
+                    "attachments": {
+                        "has": false,
+                        "label": "Archivos adjuntos",
+                        "htmlLinks": []
+                    },
+                    "actions": [],
+                    "readByWorker": true,
+                    "readByEmployer": true,
+                    "isProjectOwner": false,
+                    "isVoiceMessage": false,
+                    "shouldShowBidAsSystemMsg": false,
+                    "shouldHideFirstBid": false,
+                    "bidItemsPanelInitials": null
+                },
+                {
+                    "threadId": 38551748,
+                    "id": 205213344,
+                    "classes": "self",
+                    "isByHuman": true,
+                    "isUnread": false,
+                    "author": {
+                        "name": "Luis D. A. C.",
+                        "logoUrl": "https://cf.workana.com/logos/31/daddf8a16044e09b7428662b741298/472496.jpg",
+                        "identifier": 472496
+                    },
+                    "timeAgo": "26 Febrero, 2026 20:21",
+                    "timeAgoRelative": "Hace 18 horas",
+                    "isBid": false,
+                    "bid": [],
+                    "isMobile": null,
+                    "content": "Excelente. Estoy atento a la notificación de la plataforma para comenzar el trabajo.",
+                    "attachments": {
+                        "has": false,
+                        "label": "Archivos adjuntos",
+                        "htmlLinks": []
+                    },
+                    "actions": [],
+                    "readByWorker": true,
+                    "readByEmployer": true,
+                    "isProjectOwner": false,
+                    "isVoiceMessage": false,
+                    "shouldShowBidAsSystemMsg": false,
+                    "shouldHideFirstBid": false,
+                    "bidItemsPanelInitials": null
+                },
+                {
+                    "threadId": 38551748,
+                    "id": 205213442,
+                    "classes": "other",
+                    "isByHuman": true,
+                    "isUnread": false,
+                    "author": {
+                        "name": "RENZO C.",
+                        "logoUrl": "https://cf.wkncdn.com/static/assets/build/img/jobs/sneak-peek-user.dc8777a76.svg",
+                        "identifier": 13647303
+                    },
+                    "timeAgo": "26 Febrero, 2026 20:23",
+                    "timeAgoRelative": "Hace 18 horas",
+                    "isBid": false,
+                    "bid": [],
+                    "isMobile": null,
+                    "content": "Ok, gracias",
+                    "attachments": {
+                        "has": false,
+                        "label": "Archivos adjuntos",
+                        "htmlLinks": []
+                    },
+                    "actions": [],
+                    "readByWorker": true,
+                    "readByEmployer": true,
+                    "isProjectOwner": false,
+                    "isVoiceMessage": false,
+                    "shouldShowBidAsSystemMsg": false,
+                    "shouldHideFirstBid": false,
+                    "bidItemsPanelInitials": null
+                },
+                {
+                    "threadId": 38551748,
+                    "id": 205213467,
+                    "classes": "self",
+                    "isByHuman": true,
+                    "isUnread": false,
+                    "author": {
+                        "name": "Luis D. A. C.",
+                        "logoUrl": "https://cf.workana.com/logos/31/daddf8a16044e09b7428662b741298/472496.jpg",
+                        "identifier": 472496
+                    },
+                    "timeAgo": "26 Febrero, 2026 20:24",
+                    "timeAgoRelative": "Hace 18 horas",
+                    "isBid": false,
+                    "bid": [],
+                    "isMobile": null,
+                    "content": "Gracias a ti.",
+                    "attachments": {
+                        "has": false,
+                        "label": "Archivos adjuntos",
+                        "htmlLinks": []
+                    },
+                    "actions": [],
+                    "readByWorker": true,
+                    "readByEmployer": true,
+                    "isProjectOwner": false,
+                    "isVoiceMessage": false,
+                    "shouldShowBidAsSystemMsg": false,
+                    "shouldHideFirstBid": false,
+                    "bidItemsPanelInitials": null
+                },
+                {
+                    "threadId": 38551748,
+                    "id": 205220383,
+                    "classes": "self",
+                    "isByHuman": true,
+                    "isUnread": false,
+                    "author": {
+                        "name": "Luis D. A. C.",
+                        "logoUrl": "https://cf.workana.com/logos/31/daddf8a16044e09b7428662b741298/472496.jpg",
+                        "identifier": 472496
+                    },
+                    "timeAgo": "26 Febrero, 2026 23:15",
+                    "timeAgoRelative": "Hace 15 horas",
+                    "isBid": false,
+                    "bid": [],
+                    "isMobile": null,
+                    "content": "Solo para que quede claro, el multijugador si esta incluido en la app, con un sistema de &quot;salas&quot; con códigos, al estilo AmongUs.",
+                    "attachments": {
+                        "has": false,
+                        "label": "Archivos adjuntos",
+                        "htmlLinks": []
+                    },
+                    "actions": [],
+                    "readByWorker": true,
+                    "readByEmployer": true,
+                    "isProjectOwner": false,
+                    "isVoiceMessage": false,
+                    "shouldShowBidAsSystemMsg": false,
+                    "shouldHideFirstBid": false,
+                    "bidItemsPanelInitials": null
+                }
+            ],
+            "attachmentsGallery": {
+                "fieldName": "message.attachments",
+                "files": [],
+                "uploadedFiles": [],
+                "transloadit": {
+                    "params": {
+                        "auth": {
+                            "expires": "2026/02/28 06:07:20+00:00",
+                            "key": "7296cee5d562b7c9003940a4dee95fbc"
+                        },
+                        "steps": {
+                            "store": {
+                                "headers": {
+                                    "Content-Disposition": "attachment; filename=\"${file.name}\""
+                                }
+                            }
+                        },
+                        "fields": {
+                            "project_id": 3401448
+                        },
+                        "template_id": "4c9ea226eb134c598d35588d172db18e"
+                    },
+                    "signature": "9f17cf2b100abc85acc63c9c8727a3478a848578",
+                    "options": {
+                        "wait": true,
+                        "processZeroFiles": false
+                    },
+                    "noServiceMessage": "El servicio de carga de archivos se encuentra momentaneamente en mantenimiento. Vuelva a intentarlo más tarde por favor.",
+                    "uploadClientConfig": {
+                        "endpoint": "https://upload.workana.com/upload/assemblies"
+                    }
+                },
+                "msg": {
+                    "favoritesTitle": "Archivos favoritos",
+                    "noFavoritesToShow": "No existen archivos favoritos para mostrar",
+                    "attachFiles": "Adjuntar archivos",
+                    "cancel": "Cancelar",
+                    "remove": "Eliminar",
+                    "label": "Adjuntar archivo",
+                    "addToFav": "Agregar este archivo a favoritos",
+                    "archive": "Archivar",
+                    "delete": "Borrar",
+                    "gotIt": "Entendido",
+                    "next": "Siguiente",
+                    "previous": "Anterior"
+                },
+                "showTutorial": false,
+                "tutorial": {
+                    "introLine1": "Ahora cuando envíes una propuesta para un proyecto, podrás marcar como favoritos esos archivos que enviarás más de una vez.",
+                    "introLine2": "Cada archivo que quieras guardar deberás marcarlo con el siguiente icono:",
+                    "introStep2": "Así, cada uno que marques quedará disponible en \"Archivos Favoritos\", listo para seleccionarlo y volverlo a enviar sin necesidad de cargarlo nuevamente.",
+                    "titleStep2": "Archivos favoritos"
+                },
+                "validateMimeTypes": false,
+                "allowedMimeTypes": []
+            },
+            "projectAttachments": {
+                "threadId": 38551748,
+                "hasThread": true,
+                "maxSimpleResults": 5,
+                "maxFullResults": 12,
+                "totalFiles": 0,
+                "label": "Archivos adjuntos ({:totalFiles})",
+                "msg": {
+                    "seeAllFiles": "Ver los {:totalFiles} archivos",
+                    "allFilesOf": "Archivos adjuntos enviados por Luis Danilo Arriaza Cea",
+                    "next": "Siguiente",
+                    "previous": "Anterior",
+                    "new": "nuevo"
+                },
+                "url": "https://www.workana.com/threads/38551748/attachments"
+            },
+            "pagination": {
+                "total": 28,
+                "limit": 15,
+                "page": 1,
+                "pages": 2,
+                "urls": {
+                    "1": "https://www.workana.com/messages/index/luis-danilo-arriaza-cea-tres-letras/freeintelligence?ref=roaster&page=1",
+                    "2": "https://www.workana.com/messages/index/luis-danilo-arriaza-cea-tres-letras/freeintelligence?ref=roaster&page=2",
+                    "base": "https://www.workana.com/messages/index/luis-danilo-arriaza-cea-tres-letras/freeintelligence?ref=roaster",
+                    "template": "https://www.workana.com/messages/index/luis-danilo-arriaza-cea-tres-letras/freeintelligence?ref=roaster&page={:page}",
+                    "next": "https://www.workana.com/messages/index/luis-danilo-arriaza-cea-tres-letras/freeintelligence?ref=roaster&page=2"
+                },
+                "offset": 0,
+                "nextPage": 2,
+                "count": 28
+            },
+            "lastBid": {
+                "bidMessage": null,
+                "label": "Detalles de la propuesta",
+                "title": "Propuesta",
+                "more": "Ver más detalles"
+            },
+            "acceptBidDialogText": {
+                "i18n": {
+                    "title": "Estás por aceptar una propuesta para tu proyecto.",
+                    "back": "Volver",
+                    "accept": "Aceptar",
+                    "acceptAndPay": "Aceptar y pagar",
+                    "rehire": {
+                        "title": "Quiero contratar a varios freelancers para este proyecto",
+                        "description": "Si habilitas esta opción podrás elegir a todos los freelancers que necesites para cada etapa de tu proyecto en un sólo paso! <a href=\"https://help.workana.com/hc/es/articles/360041612274-How-to-choose-more-than-1-freelancer-for-your-project-\" target=\"_blank\" rel=\"noopener\">Ver más info</a>"
+                    },
+                    "hiw1": {
+                        "text": "Tu compra está garantizada por Workana. Si no estás conforme con el trabajo, te devolvemos el dinero.",
+                        "icon": "https://cf.wkncdn.com/static/assets/build/img/icons/notifications/bid_escrowed.367699554.svg"
+                    },
+                    "hiw2": {
+                        "text": "Paga el monto del proyecto y habla con el freelancer para comenzar.",
+                        "icon": "https://cf.wkncdn.com/static/assets/build/img/icons/notifications/message.f9c87c1a3.svg"
+                    },
+                    "hiw3": {
+                        "text": "Libera el pago al freelancer una vez recibido el trabajo.",
+                        "icon": "https://cf.wkncdn.com/static/assets/build/img/icons/notifications/direct_payment.21384dd2e.svg"
+                    }
+                },
+                "canPay": true
+            },
+            "moderationThreadContext": {
+                "show": true,
+                "updateUserPreference": {
+                    "url": "https://www.workana.com/user_preference",
+                    "payload": {
+                        "userPreference": "suspicious_message_alert_showed",
+                        "parameters": {
+                            "messageContent": ""
+                        }
+                    }
+                },
+                "rules": [
+                    {
+                        "pattern": "whatsapp|skype|[0-9]{5,100}|@",
+                        "identifier": "politics",
+                        "systemMessage": {
+                            "title": "Mensaje del sistema",
+                            "body": "Hemos detectado que tu mensaje puede poseer datos de contacto. Te recordamos que informar tu teléfono, email o cualquier app de mensajería para contactarte fuera de Workana infringe con <a href=\"https://help.workana.com/hc/es/articles/360040841214-Pol%C3%ADticas-de-Workana\">nuestras políticas.</a>",
+                            "icon": "https://cf.wkncdn.com/static/assets/build/img/favicon.85f2b5014.png",
+                            "help": "Elige \"Editar\" para modificar tu mensaje",
+                            "cta": {
+                                "edit": "Editar",
+                                "send": "Enviar"
+                            }
+                        }
+                    },
+                    {
+                        "pattern": "behance",
+                        "identifier": "behance_share",
+                        "systemMessage": {
+                            "title": "Mensaje del sistema",
+                            "body": "Hemos detectado que tu mensaje contiene \"Behance\". Te pedimos que lo cargues en tu perfil y compartas directamente el perfil de Workana.",
+                            "icon": "https://cf.wkncdn.com/static/assets/build/img/favicon.85f2b5014.png",
+                            "help": "Elige \"Editar\" para modificar tu mensaje",
+                            "cta": {
+                                "edit": "Editar",
+                                "send": "Enviar"
+                            }
+                        }
+                    },
+                    {
+                        "pattern": "comision|comisión|taxa|fee|comissão|comissao|commission",
+                        "identifier": "fee",
+                        "systemMessage": {
+                            "title": "Mensaje del sistema",
+                            "body": "Hemos detectado que tu mensaje puede hacer alusión a la comisión de Workana. Te informamos que hacerlo implica una violación de las políticas del sitio ya que puede ser considerado como una invitación a la desintermediación.",
+                            "icon": "https://cf.wkncdn.com/static/assets/build/img/favicon.85f2b5014.png",
+                            "help": "Elige \"Editar\" para modificar tu mensaje",
+                            "cta": {
+                                "edit": "Editar",
+                                "send": "Enviar"
+                            }
+                        }
+                    },
+                    {
+                        "pattern": "(https?:\\/\\/)?((www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{2,6})\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)",
+                        "identifier": "external_url",
+                        "systemMessage": {
+                            "title": "Mensaje del sistema",
+                            "body": "Detectamos que tu mensaje contiene un enlace externo. Si tiene información de contacto, Workana puede suspender tu cuenta.",
+                            "icon": "https://cf.wkncdn.com/static/assets/build/img/favicon.85f2b5014.png",
+                            "help": "Elige \"Editar\" para modificar tu mensaje",
+                            "cta": {
+                                "edit": "Editar",
+                                "send": "Enviar"
+                            }
+                        }
+                    }
+                ]
+            },
+            "globalAlert": null,
+            "messagesAdd": {
+                "textarea": {
+                    "recording": "Grabando",
+                    "placeholder": "Responder mensaje",
+                    "value": null
+                },
+                "noContact": {
+                    "show": true,
+                    "legend": "Por favor <strong>no incluyas</strong> información de contacto.",
+                    "tooltip": "Recordamos que cualquier contacto desarrollado por fuera de nuestra plataforma pone a ambas partes en riesgo. No consideramos fuentes externas de comunicación como válidas si este proyecto ingresa eventualmente en arbitraje.\nPara protegerte de cualquier riesgo mantén la comunicación a través de WORKANA.",
+                    "imgSrc": "https://cf.wkncdn.com/static/assets/build/img/svg/icon-helper.d54f3d057.svg"
+                },
+                "sendHelp": {
+                    "press": "Presione",
+                    "hotKeys": "Ctrl + Enter",
+                    "toAddLine": "para agregar una nueva linea"
+                }
+            },
+            "rehireCTA": {
+                "show": false,
+                "text": "Recontratar"
+            },
+            "deleteThreadAlert": {
+                "title": " ¿Está seguro?",
+                "yes": "Yes, I want to delete it",
+                "no": "No, cancelar"
+            },
+            "avgBidInfo": {
+                "bidderInfo": {
+                    "hourlyRate": {
+                        "amount": 25,
+                        "currency": "USD"
+                    }
+                },
+                "avgBid": {
+                    "amount": 610,
+                    "currency": "USD"
+                },
+                "g11n": {
+                    "title": {
+                        "multipleHours": "¿Estás seguro que este proyecto te tomará sólo {:hours} horas terminarlo?",
+                        "singleHour": "¿Estás seguro que este proyecto te tomará sólo {:hours} hora terminarlo?"
+                    },
+                    "modalInfo": "La cantidad de horas fue calculada en base a tu tarifa por hora y el monto presupuestado.",
+                    "intro": "Cuando estimas el valor de un proyecto, tienes que contemplar cada etapa:",
+                    "bullets": [
+                        "Identificar la necesidad del cliente y demostrar que eres la solución.",
+                        "Escribir una propuesta enfocada y personalizada.",
+                        "Contemplar todas las tareas operativas del desarrollo del proyecto.",
+                        "Controlar la calidad del proyecto (revisiones, tareas de testeo).",
+                        "Entregar la versión final del proyecto."
+                    ],
+                    "warningInfo": "Mejora tu propuesta en relación al tipo de proyecto que estás presupuestando.",
+                    "send": "Enviar propuesta actual",
+                    "modify": "Modificar propuesta"
+                }
+            },
+            "g11n": {
+                "messages": {
+                    "attachments": "Archivos adjuntos",
+                    "processing": " (Procesando)",
+                    "failedToSendMessage": "No se ha podido enviar el mensaje",
+                    "uploadingFileText": "Aguarda, estamos subiendo tu archivo...",
+                    "loadingVoiceMessageText": "Cargando mensaje de voz...",
+                    "retry": "Reintentar",
+                    "uploadFailed": {
+                        "title": "Falló el upload",
+                        "text": "Error al realizar el upload"
+                    },
+                    "descriptionLabel": "Descripción",
+                    "loadMoreMessages": "Cargar más mensajes"
+                },
+                "deleteThreadAlert": {
+                    "deleteThreadModalTitle": "Eliminar Conversación",
+                    "deleteThreadQuestion": "¿Estás seguro de que quieres eliminar la conversación?",
+                    "confirmDeleteBtn": "Si, eliminar",
+                    "cancelDeleteBtn": "No, cancelar"
+                },
+                "verifiedAgency": "Agencia verificada",
+                "superBidsDialog": {
+                    "isSuperBidSent": true,
+                    "modalImg": {
+                        "img": "https://cf.wkncdn.com/static/assets/build/img/svg/post-bid-extras-art.9e8f58d34.svg",
+                        "alt": "Extras"
+                    },
+                    "title": "¡Anímate y agrega extras a tu propuesta!",
+                    "subtitle": "Las propuestas con servicios extras tienen 20% más de chances de ser elegidas!.",
+                    "cta": {
+                        "cancel": "Enviar sin extras",
+                        "ok": "Cargar extras"
+                    }
+                }
+            },
+            "canAcceptBid": false,
+            "canAcceptDeliverable": false,
+            "canAddMessage": true,
+            "canAuthorize": false,
+            "canBid": false,
+            "canBroadcast": false,
+            "canClose": false,
+            "canDeliver": false,
+            "canEdit": false,
+            "canEscrow": false,
+            "canProposeDeadline": false,
+            "canViewActualDeadline": false,
+            "canProposeMediation": false,
+            "canRate": false,
+            "canRelease": false,
+            "canViewMessage": true,
+            "canFavorite": false,
+            "canHide": false,
+            "segment": 38551748,
+            "actions": {
+                "seeMessages": {
+                    "url": "https://www.workana.com/messages/index/luis-danilo-arriaza-cea-tres-letras/freeintelligence?ref=from_messages_index",
+                    "label": "Ir a la bandeja de mensajes"
+                }
+            },
+            "currentCta": null,
+            "emptySearchContent": {
+                "isRecommended": {
+                    "icon": "icon-bookmark",
+                    "title": "Aún no recibes propuestas en destaque",
+                    "content": {
+                        "label": "Armá un proyecto lo más completo posible para recibir propuestas de los mejores freelancers. [Mejorar proyecto](link1)",
+                        "links": {
+                            "link1": "https://www.workana.com/projects/upsell/luis-danilo-arriaza-cea-tres-letras?skipFlow=1"
+                        }
+                    }
+                },
+                "isInConversation": {
+                    "icon": "icon-messages-b",
+                    "title": "Aún no tienes conversaciones en curso",
+                    "content": {
+                        "label": "[Invita](link1) a freelancers a tu proyecto o responde sus consultas para iniciar una conversación.",
+                        "links": {
+                            "link1": "https://www.workana.com/projects/add_invite/luis-danilo-arriaza-cea-tres-letras/1?r=https%3A%2F%2Fwww.workana.com%2Ffreelancers"
+                        }
+                    }
+                },
+                "isFavorite": {
+                    "icon": "icon-like-b",
+                    "title": "Aún no tienes candidatos preseleccionados.",
+                    "content": {
+                        "label": "Marca los candidatos que te interesen con  <i class=\"wk2-icon wk2-icon-like-b wk2-icon-3x\"></i>. Utilizalo para filtrar los candidatos ideales para tu proyecto",
+                        "links": null
+                    }
+                },
+                "isDeleted": {
+                    "icon": "icon-dislike-b",
+                    "title": "Aún no tienes candidatos descartados.",
+                    "content": {
+                        "label": "Marca los candidatos que no te interesen con <i class=\"wk2-icon wk2-icon-dislike-b wk2-icon-3x\"></i>. Verás el listado aquí",
+                        "links": null
+                    }
+                },
+                "isInvitation": {
+                    "icon": "icon-mail-b",
+                    "title": "Aún no invitaste freelancers a tu proyecto",
+                    "content": {
+                        "label": "[Invita](link1) freelancers a tu proyecto que consideres adecuados para este trabajo.",
+                        "links": {
+                            "link1": "https://www.workana.com/projects/add_invite/luis-danilo-arriaza-cea-tres-letras/1?r=https%3A%2F%2Fwww.workana.com%2Ffreelancers"
+                        }
+                    }
+                }
+            },
+            "searchBanners": {
+                "invitePanel": {
+                    "text": "Encuentra los mejores freelancers",
+                    "cta": {
+                        "label": "Invitar",
+                        "url": "https://www.workana.com/projects/add_invite/luis-danilo-arriaza-cea-tres-letras/1?r=https%3A%2F%2Fwww.workana.com%2Ffreelancers"
+                    },
+                    "show": true
+                },
+                "upsellPanel": {
+                    "text": "Contrata la asistencia de workana",
+                    "cta": {
+                        "label": "Ver más",
+                        "url": "https://www.workana.com/projects/upsell/luis-danilo-arriaza-cea-tres-letras?skipFlow=1"
+                    },
+                    "show": true
+                }
+            },
+            "noMessagesConfiguration": {
+                "forOpenProjectsWithoutThreads": {
+                    "title": "Pronto recibirás propuestas y mensajes para tu proyecto. Mientras comienza invitando freelancers.",
+                    "cta": {
+                        "label": "Invitar Freelancers",
+                        "url": "https://www.workana.com/projects/add_invite/luis-danilo-arriaza-cea-tres-letras/1?r=https%3A%2F%2Fwww.workana.com%2Ffreelancers"
+                    }
+                }
+            },
+            "dropdownActions": {
+                "reportProject": {
+                    "shouldShow": false
+                },
+                "reportUser": {
+                    "shouldShow": true,
+                    "type": "user",
+                    "hash": "0511b1d886494a27fb7964c6be87e57e",
+                    "buttonCTA": {
+                        "label": "Reportar"
+                    },
+                    "reportData": {
+                        "reportReasons": {
+                            "requesting_external_payment": "El usuario está buscando trabajar por afuera de Workana",
+                            "trying_to_swindle": "El usuario me quiere estafar",
+                            "profile_fake_or_stolen": "El usuario parece falso o tiene contenido plagiado",
+                            "posting_contact_information": "El perfil contiene información de contacto",
+                            "other": "Otra razón"
+                        },
+                        "i18n": {
+                            "title": "Reportar usuario",
+                            "moreInfo": "Más información:",
+                            "submit": "Enviar",
+                            "alreadyReported": "Ya has denunciado previamente este usuario, gracias por la ayuda.",
+                            "attachmentLabel": "¿Quieres agregar alguna prueba?"
+                        },
+                        "actionUrl": "https://www.workana.com/user-report",
+                        "checkAlreadyReportedUrl": "https://www.workana.com/user-report/check-already-reported",
+                        "attachmentsGallery": {
+                            "fieldName": "userReports",
+                            "files": [],
+                            "uploadedFiles": [],
+                            "transloadit": {
+                                "params": {
+                                    "auth": {
+                                        "expires": "2026/02/28 06:07:20+00:00",
+                                        "key": "7296cee5d562b7c9003940a4dee95fbc"
+                                    },
+                                    "steps": {
+                                        "store": {
+                                            "headers": {
+                                                "Content-Disposition": "attachment; filename=\"${file.name}\""
+                                            }
+                                        }
+                                    },
+                                    "fields": {
+                                        "type": "userReports"
+                                    },
+                                    "template_id": "e70d7994a018d6837281784549184a6d"
+                                },
+                                "signature": "3a5eeb6678c66d9686544f33e3c3036ad81438ad",
+                                "options": {
+                                    "wait": true,
+                                    "processZeroFiles": false
+                                },
+                                "noServiceMessage": "El servicio de carga de archivos se encuentra momentaneamente en mantenimiento. Vuelva a intentarlo más tarde por favor.",
+                                "uploadClientConfig": {
+                                    "endpoint": "https://upload.workana.com/upload/assemblies"
+                                }
+                            },
+                            "msg": {
+                                "favoritesTitle": "Archivos favoritos",
+                                "noFavoritesToShow": "No existen archivos favoritos para mostrar",
+                                "attachFiles": "Adjuntar archivos",
+                                "cancel": "Cancelar",
+                                "remove": "Eliminar",
+                                "label": "Adjuntar archivo",
+                                "addToFav": "Agregar este archivo a favoritos",
+                                "archive": "Archivar",
+                                "delete": "Borrar",
+                                "gotIt": "Entendido",
+                                "next": "Siguiente",
+                                "previous": "Anterior"
+                            },
+                            "showTutorial": false,
+                            "tutorial": {
+                                "introLine1": "Ahora cuando envíes una propuesta para un proyecto, podrás marcar como favoritos esos archivos que enviarás más de una vez.",
+                                "introLine2": "Cada archivo que quieras guardar deberás marcarlo con el siguiente icono:",
+                                "introStep2": "Así, cada uno que marques quedará disponible en \"Archivos Favoritos\", listo para seleccionarlo y volverlo a enviar sin necesidad de cargarlo nuevamente.",
+                                "titleStep2": "Archivos favoritos"
+                            },
+                            "validateMimeTypes": false,
+                            "allowedMimeTypes": []
+                        },
+                        "threadId": 38551748
+                    }
+                }
+            },
+            "filterTexts": {
+                "all": "Todas",
+                "evalbids_worker": "Propuestas enviadas",
+                "evalbids_employer": "Evaluando propuestas",
+                "working": "Proyectos en curso",
+                "eternal": "Mi equipo",
+                "isRecommended": "Recomendado",
+                "isInConversation": "En Conversacion",
+                "isFavorite": "Preseleccionados",
+                "isInvitation": "Invitaciones",
+                "isDeleted": "Descartados"
+            },
+            "instantNotificationsAlert": null
+        }
+    },
+    "timestamp": "2026-02-27T18:07:20.153Z"
+}

@@ -42,6 +42,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     playerCount: number;
     timer: NodeJS.Timeout;
   }>();
+  private pendingDice = new Map<string, {
+    rollerId: string;
+    dieResult: number;
+    resolve: () => void;
+  }>();
 
   constructor(
     private readonly jwtService: JwtService,
@@ -140,6 +145,28 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const players = await this.gpRepo.find({ where: { gameId }, relations: ['user'] });
 
+    // El dado lo lanza el jugador que corresponde a esta ronda (rotación)
+    const rollerIndex = (roundNumber - 1) % players.length;
+    const roller = players[rollerIndex];
+
+    await new Promise<void>((resolve) => {
+      this.pendingDice.set(code, { rollerId: roller.userId, dieResult: round.dieResult, resolve });
+      this.server.to(code).emit(WS_EVENTS.SERVER.DICE_ROLL_REQUEST, {
+        rollerId: roller.userId,
+        rollerNickname: roller.user.nickname,
+        roundNumber,
+      });
+    });
+
+    // El jugador lanzó — emitir resultado a todos y esperar animación
+    this.server.to(code).emit(WS_EVENTS.SERVER.DICE_RESULT, {
+      value: round.dieResult,
+      rollerNickname: roller.user.nickname,
+    });
+
+    // Dar tiempo a que la animación termine y el jugador lea el resultado (~2.3s animación + 2s lectura)
+    await new Promise((r) => setTimeout(r, 4500));
+
     const hasSpecial = round.letters.some(
       (l) => (SPECIAL_LETTERS as readonly string[]).includes(l as string),
     );
@@ -185,6 +212,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       clearTimeout(voteState.timer);
       await this.resolveVote(code);
     }
+  }
+
+  @SubscribeMessage(WS_EVENTS.CLIENT.DICE_ROLL)
+  onDiceRoll(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() payload: { gameCode: string },
+  ) {
+    const code = payload.gameCode.toUpperCase();
+    const pending = this.pendingDice.get(code);
+    if (!pending || pending.rollerId !== client.userId) return;
+    this.pendingDice.delete(code);
+    pending.resolve();
   }
 
   private async resolveVote(code: string) {

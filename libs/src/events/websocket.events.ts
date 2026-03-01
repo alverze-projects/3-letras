@@ -28,6 +28,10 @@ export interface ClientVoteSubmitEvent {
   accept: boolean;
 }
 
+export interface ClientDiceRollEvent {
+  gameCode: string;
+}
+
 // ─── Events: Server → Client ─────────────────────────────────────────────────
 
 export interface ServerGameStateEvent {
@@ -97,6 +101,17 @@ export interface ServerVoteResultEvent {
   wasTie: boolean;
 }
 
+export interface ServerDiceRollRequestEvent {
+  rollerId: string;
+  rollerNickname: string;
+  roundNumber: number;
+}
+
+export interface ServerDiceResultEvent {
+  value: number;
+  rollerNickname: string;
+}
+
 export interface ServerErrorEvent {
   code: string;
   message: string;
@@ -112,6 +127,7 @@ export const WS_EVENTS = {
     TURN_SUBMIT: 'turn:submit',
     TURN_SKIP: 'turn:skip',
     VOTE_SUBMIT: 'vote:submit',
+    DICE_ROLL: 'dice:roll',
   },
   // Server → Client
   SERVER: {
@@ -128,6 +144,8 @@ export const WS_EVENTS = {
     VOTE_START: 'vote:start',
     VOTE_UPDATE: 'vote:update',
     VOTE_RESULT: 'vote:result',
+    DICE_ROLL_REQUEST: 'dice:roll_request',
+    DICE_RESULT: 'dice:result',
     ERROR: 'error',
   },
 } as const;

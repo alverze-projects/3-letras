@@ -65,12 +65,14 @@ export default function GameScreen({ navigation, route }: Props) {
 
   useEffect(() => {
     if (diceAnimDone) {
-      diceTextOpacity.setValue(0);
-      diceTextSlide.setValue(18);
       Animated.parallel([
         Animated.timing(diceTextOpacity, { toValue: 1, duration: 350, useNativeDriver: true }),
         Animated.timing(diceTextSlide, { toValue: 0, duration: 350, useNativeDriver: true }),
       ]).start();
+    } else {
+      // Resetear para la próxima vez (nuevo dado)
+      diceTextOpacity.setValue(0);
+      diceTextSlide.setValue(18);
     }
   }, [diceAnimDone]);
 
@@ -205,8 +207,8 @@ export default function GameScreen({ navigation, route }: Props) {
           <Text style={styles.diceResultNumber}>{diceResult.value}</Text>
           <Text style={styles.diceResultLabel}>
             {diceResult.value === 1
-              ? 'cada jugador tendrá 1 turno por letra'
-              : `cada jugador tendrá ${diceResult.value} turnos por letra`}
+              ? 'cada jugador tendrá 1 turno con estas letras'
+              : `cada jugador tendrá ${diceResult.value} turnos con estas letras`}
           </Text>
         </Animated.View>
       </View>
@@ -310,7 +312,7 @@ export default function GameScreen({ navigation, route }: Props) {
       <View style={styles.header}>
         <Text style={styles.roundLabel}>RONDA {round?.roundNumber ?? '-'}</Text>
         <View style={styles.headerRight}>
-          {round && <Text style={styles.dieLabel}>{round.dieResult} turno{round.dieResult > 1 ? 's' : ''} por letra</Text>}
+          {round && <Text style={styles.dieLabel}>{round.dieResult} turno{round.dieResult > 1 ? 's' : ''} por jugador</Text>}
           <View style={[styles.difficultyBadge, styles[`difficulty_${settings.difficulty}`]]}>
             <Text style={styles.difficultyText}>
               {settings.difficulty === 'basic' ? 'BÁSICO'

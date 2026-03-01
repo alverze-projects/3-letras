@@ -33,12 +33,17 @@ export class WordsService {
       return this.invalid(word, 'not_found');
     }
 
-    // Avanzado: debe contener al menos una letra especial
+    // Avanzado: si las letras base incluyen una especial, la palabra debe contenerla
     if (difficulty === 'advanced') {
-      const hasSpecial = normalized.split('').some(
-        (c) => (SPECIAL_LETTERS as readonly string[]).includes(c),
+      const baseHasSpecial = baseLetters.some(
+        (l) => (SPECIAL_LETTERS as readonly string[]).includes(l),
       );
-      if (!hasSpecial) return this.invalid(word, 'no_special_letter');
+      if (baseHasSpecial) {
+        const wordHasSpecial = normalized.split('').some(
+          (c) => (SPECIAL_LETTERS as readonly string[]).includes(c),
+        );
+        if (!wordHasSpecial) return this.invalid(word, 'no_special_letter');
+      }
     }
 
     // Avanzado: no puede construir sobre la palabra anterior (contenerla)

@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { GamesService } from './games.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { AdminGuard } from '../common/guards/admin.guard';
 import { CurrentUser, CurrentUserData } from '../common/decorators/current-user.decorator';
 import type {
   CreateGameDto, CreateGameResponseDto, GetGameResponseDto, JoinGameResponseDto, ListGamesResponseDto,
@@ -30,6 +31,7 @@ export class GamesController {
   }
 
   @Get('all')
+  @UseGuards(AdminGuard)
   async listAll(): Promise<ListGamesResponseDto> {
     const games = await this.gamesService.listAll();
     return { games, total: games.length };

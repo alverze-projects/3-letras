@@ -1,10 +1,13 @@
-import { AppShell, Burger, Group, NavLink, Text, Title } from '@mantine/core';
+import { AppShell, Burger, Group, NavLink, Text, Title, Button } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconDeviceGamepad2, IconLayoutDashboard } from '@tabler/icons-react';
+import { IconDeviceGamepad2, IconLayoutDashboard, IconLogout } from '@tabler/icons-react';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Dashboard from './pages/Dashboard';
+import LoginPage from './pages/LoginPage';
 
-export default function App() {
+function Shell() {
   const [opened, { toggle }] = useDisclosure();
+  const { logout } = useAuth();
 
   return (
     <AppShell
@@ -19,7 +22,18 @@ export default function App() {
             <IconDeviceGamepad2 size={28} color="#FFD600" />
             <Title order={4} c="yellow">TRES LETRAS</Title>
           </Group>
-          <Text size="xs" c="dimmed">Panel de Administración</Text>
+          <Group>
+            <Text size="xs" c="dimmed">Panel de Administración</Text>
+            <Button
+              variant="subtle"
+              color="gray"
+              size="xs"
+              leftSection={<IconLogout size={14} />}
+              onClick={logout}
+            >
+              Cerrar sesión
+            </Button>
+          </Group>
         </Group>
       </AppShell.Header>
 
@@ -36,5 +50,18 @@ export default function App() {
         <Dashboard />
       </AppShell.Main>
     </AppShell>
+  );
+}
+
+function AppContent() {
+  const { token } = useAuth();
+  return token ? <Shell /> : <LoginPage />;
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

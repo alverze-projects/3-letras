@@ -20,6 +20,9 @@ export class User {
   @Column({ type: 'boolean', default: true })
   isGuest: boolean;
 
+  @Column({ type: 'boolean', default: false })
+  isAdmin: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

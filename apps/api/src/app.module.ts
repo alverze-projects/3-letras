@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
+import { AdminModule } from './admin/admin.module';
 import { GamesModule } from './games/games.module';
 import { WordsModule } from './words/words.module';
 import { DictionaryModule } from './dictionary/dictionary.module';
@@ -27,6 +28,7 @@ import { Turn } from './entities/turn.entity';
       inject: [ConfigService],
     }),
     AuthModule,
+    AdminModule,
     DictionaryModule,
     WordsModule,
     GamesModule,

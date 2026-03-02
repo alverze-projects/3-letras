@@ -112,7 +112,33 @@ export const adminApi = {
 
   updateAdmob: (dto: Partial<IAdmobConfig>) =>
     http.put<IAdmobConfig>('/admob', dto).then((r) => r.data),
+
+  listVocab: (params: { search?: string; page?: number; limit?: number }) =>
+    http.get<IVocabList>('/vocab', { params }).then((r) => r.data),
+
+  createVocabWord: (word: string) =>
+    http.post<IVocabEntry>('/vocab', { word }).then((r) => r.data),
+
+  updateVocabWord: (id: string, data: { word?: string; isActive?: boolean }) =>
+    http.patch<IVocabEntry>(`/vocab/${id}`, data).then((r) => r.data),
+
+  deleteVocabWord: (id: string) =>
+    http.delete(`/vocab/${id}`),
 };
+
+export interface IVocabEntry {
+  id: string;
+  word: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface IVocabList {
+  words: IVocabEntry[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
 
 export interface IAdmobConfig {
   id: string;

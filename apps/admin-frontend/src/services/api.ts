@@ -106,7 +106,28 @@ export const adminApi = {
 
   getUserGames: (id: string) =>
     http.get<IUserGame[]>(`/users/${id}/games`).then((r) => r.data),
+
+  getAdmob: () =>
+    http.get<IAdmobConfig>('/admob').then((r) => r.data),
+
+  updateAdmob: (dto: Partial<IAdmobConfig>) =>
+    http.put<IAdmobConfig>('/admob', dto).then((r) => r.data),
 };
+
+export interface IAdmobConfig {
+  id: string;
+  enabled: boolean;
+  testMode: boolean;
+  androidAppId: string | null;
+  bannerAndroid: string | null;
+  interstitialAndroid: string | null;
+  rewardedAndroid: string | null;
+  iosAppId: string | null;
+  bannerIos: string | null;
+  interstitialIos: string | null;
+  rewardedIos: string | null;
+  updatedAt: string;
+}
 
 export interface IUserGame {
   id: string;

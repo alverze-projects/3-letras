@@ -105,6 +105,56 @@ export class GamesService {
     return this.toIRound(round);
   }
 
+  async getAdminDetail(gameId: string) {
+    const game = await this.gameRepo.findOneOrFail({
+      where: { id: gameId },
+      relations: ['gamePlayers', 'gamePlayers.user', 'rounds', 'rounds.turns'],
+    });
+
+    const playerMap = new Map(game.gamePlayers.map((gp) => [gp.userId, gp]));
+
+    return {
+      id: game.id,
+      code: game.code,
+      status: game.status,
+      difficulty: game.difficulty,
+      totalRounds: game.totalRounds,
+      hostId: game.hostId,
+      createdAt: game.createdAt.toISOString(),
+      updatedAt: game.updatedAt.toISOString(),
+      players: game.gamePlayers
+        .sort((a, b) => b.totalScore - a.totalScore)
+        .map((gp) => ({
+          playerId: gp.userId,
+          nickname: gp.user.nickname,
+          totalScore: gp.totalScore,
+          isHost: gp.userId === game.hostId,
+        })),
+      rounds: game.rounds
+        .sort((a, b) => a.roundNumber - b.roundNumber)
+        .map((r) => ({
+          id: r.id,
+          roundNumber: r.roundNumber,
+          letters: r.letters,
+          dieResult: r.dieResult,
+          isComplete: r.isComplete,
+          turns: (r.turns ?? [])
+            .sort((a, b) => a.turnNumber - b.turnNumber)
+            .map((t) => ({
+              id: t.id,
+              playerId: t.playerId,
+              nickname: playerMap.get(t.playerId)?.user?.nickname ?? '—',
+              turnNumber: t.turnNumber,
+              word: t.word,
+              score: t.score,
+              isValid: t.isValid,
+              status: t.status,
+              invalidReason: t.invalidReason,
+            })),
+        })),
+    };
+  }
+
   async listAll(): Promise<IGameSummary[]> {
     const games = await this.gameRepo.find({
       relations: ['gamePlayers'],

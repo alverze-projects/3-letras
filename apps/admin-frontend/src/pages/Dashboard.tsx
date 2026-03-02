@@ -3,7 +3,7 @@ import {
   Title, Grid, Card, Text, Badge, Table, Group,
   Stack, ThemeIcon, Loader, Center,
 } from '@mantine/core';
-import { IconDeviceGamepad2, IconUsers, IconTrophy, IconClockHour4 } from '@tabler/icons-react';
+import { IconDeviceGamepad2, IconUsers, IconTrophy, IconClockHour4, IconChevronRight } from '@tabler/icons-react';
 import { adminApi } from '../services/api';
 import type { IGameSummary } from '@3letras/interfaces';
 
@@ -25,7 +25,11 @@ const DIFF_LABELS: Record<string, string> = {
   advanced: 'Avanzado',
 };
 
-export default function Dashboard() {
+interface Props {
+  onSelectGame: (gameId: string) => void;
+}
+
+export default function Dashboard({ onSelectGame }: Props) {
   const [games, setGames] = useState<IGameSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -85,11 +89,16 @@ export default function Dashboard() {
                 <Table.Th>Dificultad</Table.Th>
                 <Table.Th>Jugadores</Table.Th>
                 <Table.Th>Creada</Table.Th>
+                <Table.Th w={36} />
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {games.map((g) => (
-                <Table.Tr key={g.id}>
+                <Table.Tr
+                  key={g.id}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => onSelectGame(g.id)}
+                >
                   <Table.Td>
                     <Text ff="monospace" fw={700} size="lg">{g.code}</Text>
                   </Table.Td>
@@ -104,6 +113,9 @@ export default function Dashboard() {
                     <Text size="sm" c="dimmed">
                       {new Date(g.createdAt).toLocaleString('es-CL')}
                     </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <IconChevronRight size={16} color="gray" />
                   </Table.Td>
                 </Table.Tr>
               ))}

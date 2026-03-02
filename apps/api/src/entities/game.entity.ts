@@ -1,5 +1,5 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,
+  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn,
   OneToMany, ManyToOne, JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
@@ -38,4 +38,7 @@ export class Game {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

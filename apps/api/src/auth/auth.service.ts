@@ -59,7 +59,7 @@ export class AuthService {
   }
 
   private buildAuthResponse(user: User): AuthResponseDto {
-    const payload = { sub: user.id, nickname: user.nickname, isGuest: user.isGuest };
+    const payload = { sub: user.id, nickname: user.nickname, isGuest: user.isGuest, isAdmin: user.isAdmin };
     return {
       accessToken: this.jwtService.sign(payload),
       player: {

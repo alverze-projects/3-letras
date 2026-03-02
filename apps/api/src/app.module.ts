@@ -8,6 +8,7 @@ import { GamesModule } from './games/games.module';
 import { WordsModule } from './words/words.module';
 import { DictionaryModule } from './dictionary/dictionary.module';
 import { AdmobModule } from './admob/admob.module';
+import { VocabModule } from './vocab/vocab.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { User } from './entities/user.entity';
 import { Game } from './entities/game.entity';
@@ -15,6 +16,7 @@ import { GamePlayer } from './entities/game-player.entity';
 import { Round } from './entities/round.entity';
 import { Turn } from './entities/turn.entity';
 import { AdmobConfig } from './entities/admob-config.entity';
+import { VocabEntry } from './entities/vocab-entry.entity';
 
 @Module({
   imports: [
@@ -24,7 +26,7 @@ import { AdmobConfig } from './entities/admob-config.entity';
       useFactory: (config: ConfigService) => ({
         type: 'better-sqlite3',
         database: config.get<string>('DATABASE_PATH', 'data/tresletras.db'),
-        entities: [User, Game, GamePlayer, Round, Turn, AdmobConfig],
+        entities: [User, Game, GamePlayer, Round, Turn, AdmobConfig, VocabEntry],
         synchronize: true,
         logging: config.get('NODE_ENV') !== 'production',
       }),
@@ -37,6 +39,7 @@ import { AdmobConfig } from './entities/admob-config.entity';
     WordsModule,
     GamesModule,
     AdmobModule,
+    VocabModule,
     GatewayModule,
   ],
 })

@@ -1,12 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AppShell, Burger, Group, NavLink, Text, Title, Button } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconDeviceGamepad2, IconLogout, IconUsers } from '@tabler/icons-react';
+import { IconDeviceGamepad2, IconLogout, IconUsers, IconAd } from '@tabler/icons-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import GamesPage from './pages/Dashboard';
 import LoginPage from './pages/LoginPage';
 import GameDetailPage from './pages/GameDetailPage';
 import UsersPage from './pages/UsersPage';
+import AdmobPage from './pages/AdmobPage';
 
 function Shell() {
   const [opened, { toggle }] = useDisclosure();
@@ -61,6 +62,13 @@ function Shell() {
           active={location.pathname.startsWith('/users')}
           onClick={() => navigate('/users')}
         />
+        <NavLink
+          component="button"
+          label="AdMob"
+          leftSection={<IconAd size={18} />}
+          active={location.pathname === '/admob'}
+          onClick={() => navigate('/admob')}
+        />
       </AppShell.Navbar>
 
       <AppShell.Main>
@@ -69,6 +77,7 @@ function Shell() {
           <Route path="/games" element={<GamesPage />} />
           <Route path="/games/:id" element={<GameDetailPage onBack={() => navigate('/games')} />} />
           <Route path="/users" element={<UsersPage />} />
+          <Route path="/admob" element={<AdmobPage />} />
           <Route path="*" element={<Navigate to="/games" replace />} />
         </Routes>
       </AppShell.Main>

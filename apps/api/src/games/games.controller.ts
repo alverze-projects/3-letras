@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { GamesService } from './games.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AdminGuard } from '../common/guards/admin.guard';
@@ -32,8 +32,11 @@ export class GamesController {
 
   @Get('all')
   @UseGuards(AdminGuard)
-  async listAll(): Promise<ListGamesResponseDto> {
-    const games = await this.gamesService.listAll();
+  async listAll(
+    @Query('status') status?: string,
+    @Query('code') code?: string,
+  ): Promise<ListGamesResponseDto> {
+    const games = await this.gamesService.listAll({ status, code });
     return { games, total: games.length };
   }
 
@@ -41,6 +44,20 @@ export class GamesController {
   @UseGuards(AdminGuard)
   async getAdminDetail(@Param('id') id: string) {
     return this.gamesService.getAdminDetail(id);
+  }
+
+  @Patch('admin/:id/finish')
+  @UseGuards(AdminGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async forceFinish(@Param('id') id: string) {
+    await this.gamesService.forceFinish(id);
+  }
+
+  @Delete('admin/:id')
+  @UseGuards(AdminGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async adminDelete(@Param('id') id: string) {
+    await this.gamesService.adminDelete(id);
   }
 
   @Get(':code')

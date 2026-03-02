@@ -10,7 +10,7 @@ import UsersPage from './pages/UsersPage';
 
 function Shell() {
   const [opened, { toggle }] = useDisclosure();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -28,7 +28,11 @@ function Shell() {
             <Title order={4} c="yellow">TRES LETRAS</Title>
           </Group>
           <Group>
-            <Text size="xs" c="dimmed">Panel de Administración</Text>
+            {user && (
+              <Text size="sm" c="dimmed">
+                <Text span c="white" fw={500}>{user.nickname}</Text>
+              </Text>
+            )}
             <Button
               variant="subtle"
               color="gray"

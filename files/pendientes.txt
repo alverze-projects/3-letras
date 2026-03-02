@@ -1,3 +1,4 @@
 - Sistema para ver lo que el jugador actual esta escribiendo, asi todos saben en que va la palabra.
 - Sistema para recuperar la partida en caso de que el jugador se desconecte, incluye que aparezcan los jugadores desconectados en el marcador.
-- Sistema de offline que permitiría crear partidas sin internet, todos los jugadores desde el mismo dispositivo.
+- Sistema para crear partidas offline, todos los jugadores desde el mismo dispositivo.
+- Sistema para poder ocupar la app móvil en una Web.

@@ -1,13 +1,17 @@
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AppShell, Burger, Group, NavLink, Text, Title, Button } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconDeviceGamepad2, IconLayoutDashboard, IconLogout } from '@tabler/icons-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Dashboard from './pages/Dashboard';
 import LoginPage from './pages/LoginPage';
+import GameDetailPage from './pages/GameDetailPage';
 
 function Shell() {
   const [opened, { toggle }] = useDisclosure();
   const { logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <AppShell
@@ -39,15 +43,20 @@ function Shell() {
 
       <AppShell.Navbar p="md">
         <NavLink
-          href="#"
+          component="button"
           label="Dashboard"
           leftSection={<IconLayoutDashboard size={18} />}
-          active
+          active={location.pathname === '/'}
+          onClick={() => navigate('/')}
         />
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Dashboard />
+        <Routes>
+          <Route path="/" element={<Dashboard onSelectGame={(id) => navigate(`/games/${id}`)} />} />
+          <Route path="/games/:id" element={<GameDetailPage onBack={() => navigate('/')} />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </AppShell.Main>
     </AppShell>
   );
@@ -61,7 +70,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
     </AuthProvider>
   );
 }

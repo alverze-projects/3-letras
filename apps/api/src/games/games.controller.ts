@@ -37,6 +37,12 @@ export class GamesController {
     return { games, total: games.length };
   }
 
+  @Get('admin/:id')
+  @UseGuards(AdminGuard)
+  async getAdminDetail(@Param('id') id: string) {
+    return this.gamesService.getAdminDetail(id);
+  }
+
   @Get(':code')
   async getByCode(@Param('code') code: string): Promise<GetGameResponseDto> {
     const game = await this.gamesService.getByCode(code);

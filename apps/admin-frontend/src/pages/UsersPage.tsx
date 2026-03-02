@@ -320,7 +320,7 @@ export default function UsersPage() {
             <Title order={2}>Usuarios</Title>
             <Text size="sm" c="dimmed">
               {users.length} total · {registered} registrados · {guests} invitados · {admins} admins
-            </Text>
+              </Text>
           </div>
           <Button leftSection={<IconUserPlus size={16} />} onClick={handleNewUser}>
             Nuevo usuario

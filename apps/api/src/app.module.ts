@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
+import { UsersModule } from './users/users.module';
 import { GamesModule } from './games/games.module';
 import { WordsModule } from './words/words.module';
 import { DictionaryModule } from './dictionary/dictionary.module';
@@ -29,6 +30,7 @@ import { Turn } from './entities/turn.entity';
     }),
     AuthModule,
     AdminModule,
+    UsersModule,
     DictionaryModule,
     WordsModule,
     GamesModule,

@@ -52,13 +52,69 @@ export interface IAdminGameDetail {
   rounds: IAdminRound[];
 }
 
+export interface IUserSummary {
+  id: string;
+  nickname: string;
+  email: string | null;
+  isGuest: boolean;
+  isAdmin: boolean;
+  gamesPlayed: number;
+  createdAt: string;
+}
+
+export interface CreateUserDto {
+  nickname: string;
+  email: string;
+  password: string;
+  isAdmin: boolean;
+}
+
+export interface UpdateUserDto {
+  nickname?: string;
+  email?: string;
+  password?: string;
+  isAdmin?: boolean;
+}
+
 export const adminApi = {
   login: (email: string, password: string) =>
     http.post<{ accessToken: string }>('/auth/login', { email, password }).then((r) => r.data),
 
-  listGames: () =>
-    http.get<{ games: IGameSummary[]; total: number }>('/games/all').then((r) => r.data),
+  listGames: (filters?: { status?: string; code?: string }) =>
+    http.get<{ games: IGameSummary[]; total: number }>('/games/all', { params: filters }).then((r) => r.data),
 
   getGameDetail: (id: string) =>
     http.get<IAdminGameDetail>(`/games/admin/${id}`).then((r) => r.data),
+
+  forceFinishGame: (id: string) =>
+    http.patch(`/games/admin/${id}/finish`),
+
+  deleteGame: (id: string) =>
+    http.delete(`/games/admin/${id}`),
+
+  listUsers: () =>
+    http.get<{ users: IUserSummary[]; total: number }>('/users').then((r) => r.data),
+
+  createUser: (dto: CreateUserDto) =>
+    http.post<IUserSummary>('/users', dto).then((r) => r.data),
+
+  updateUser: (id: string, dto: UpdateUserDto) =>
+    http.patch<IUserSummary>(`/users/${id}`, dto).then((r) => r.data),
+
+  deleteUser: (id: string) =>
+    http.delete(`/users/${id}`),
+
+  getUserGames: (id: string) =>
+    http.get<IUserGame[]>(`/users/${id}/games`).then((r) => r.data),
 };
+
+export interface IUserGame {
+  id: string;
+  code: string;
+  status: string;
+  difficulty: string;
+  totalRounds: number;
+  score: number;
+  isHost: boolean;
+  createdAt: string;
+}

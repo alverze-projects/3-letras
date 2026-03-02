@@ -1,11 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AppShell, Burger, Group, NavLink, Text, Title, Button } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconDeviceGamepad2, IconLayoutDashboard, IconLogout } from '@tabler/icons-react';
+import { IconDeviceGamepad2, IconLogout, IconUsers } from '@tabler/icons-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import Dashboard from './pages/Dashboard';
+import GamesPage from './pages/Dashboard';
 import LoginPage from './pages/LoginPage';
 import GameDetailPage from './pages/GameDetailPage';
+import UsersPage from './pages/UsersPage';
 
 function Shell() {
   const [opened, { toggle }] = useDisclosure();
@@ -44,18 +45,27 @@ function Shell() {
       <AppShell.Navbar p="md">
         <NavLink
           component="button"
-          label="Dashboard"
-          leftSection={<IconLayoutDashboard size={18} />}
-          active={location.pathname === '/'}
-          onClick={() => navigate('/')}
+          label="Partidas"
+          leftSection={<IconDeviceGamepad2 size={18} />}
+          active={location.pathname.startsWith('/games')}
+          onClick={() => navigate('/games')}
+        />
+        <NavLink
+          component="button"
+          label="Usuarios"
+          leftSection={<IconUsers size={18} />}
+          active={location.pathname.startsWith('/users')}
+          onClick={() => navigate('/users')}
         />
       </AppShell.Navbar>
 
       <AppShell.Main>
         <Routes>
-          <Route path="/" element={<Dashboard onSelectGame={(id) => navigate(`/games/${id}`)} />} />
-          <Route path="/games/:id" element={<GameDetailPage onBack={() => navigate('/')} />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/" element={<Navigate to="/games" replace />} />
+          <Route path="/games" element={<GamesPage />} />
+          <Route path="/games/:id" element={<GameDetailPage onBack={() => navigate('/games')} />} />
+          <Route path="/users" element={<UsersPage />} />
+          <Route path="*" element={<Navigate to="/games" replace />} />
         </Routes>
       </AppShell.Main>
     </AppShell>

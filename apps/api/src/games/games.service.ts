@@ -105,6 +105,22 @@ export class GamesService {
     return this.toIRound(round);
   }
 
+  async forceFinish(gameId: string): Promise<void> {
+    const result = await this.gameRepo.update(
+      { id: gameId },
+      { status: 'finished' },
+    );
+    if (!result.affected) throw new NotFoundException('Partida no encontrada');
+  }
+
+  async adminDelete(gameId: string): Promise<void> {
+    const game = await this.gameRepo.findOneOrFail({
+      where: { id: gameId },
+      relations: ['gamePlayers', 'rounds', 'rounds.turns'],
+    });
+    await this.gameRepo.remove(game);
+  }
+
   async getAdminDetail(gameId: string) {
     const game = await this.gameRepo.findOneOrFail({
       where: { id: gameId },
@@ -155,12 +171,22 @@ export class GamesService {
     };
   }
 
-  async listAll(): Promise<IGameSummary[]> {
-    const games = await this.gameRepo.find({
-      relations: ['gamePlayers'],
-      order: { createdAt: 'DESC' },
-      take: 50,
-    });
+  async listAll(filters: { status?: string; code?: string } = {}): Promise<IGameSummary[]> {
+    const qb = this.gameRepo
+      .createQueryBuilder('game')
+      .leftJoinAndSelect('game.gamePlayers', 'gp')
+      .orderBy('game.createdAt', 'DESC')
+      .take(200);
+
+    if (filters.status) {
+      qb.andWhere('game.status = :status', { status: filters.status });
+    }
+
+    if (filters.code) {
+      qb.andWhere('game.code LIKE :code', { code: `%${filters.code.toUpperCase()}%` });
+    }
+
+    const games = await qb.getMany();
     return games.map((g) => ({
       id: g.id,
       code: g.code,

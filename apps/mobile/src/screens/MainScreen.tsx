@@ -291,6 +291,16 @@ export default function MainScreen({ navigation }: Props) {
 
       </View>
 
+      {/* Clasificación mundial */}
+      {createStep === 0 && !showJoin && (
+        <TouchableOpacity
+          style={styles.btnLeaderboard}
+          onPress={() => navigation.navigate('Leaderboard', { userId: session.player.id })}
+        >
+          <Text style={styles.btnLeaderboardText}>🏆  CLASIFICACIÓN MUNDIAL</Text>
+        </TouchableOpacity>
+      )}
+
       {/* Enlace de instrucciones al pie, bien separado de las acciones */}
       <TouchableOpacity
         style={styles.howToPlayBtn}
@@ -312,6 +322,12 @@ const styles = StyleSheet.create({
   nickname: { color: Colors.white, fontSize: 20, fontWeight: '700' },
   guestBadge: { color: Colors.gray, fontSize: 12, marginTop: 2 },
   logout: { color: Colors.gray, fontSize: 14, textDecorationLine: 'underline', marginTop: 4 },
+  btnLeaderboard: {
+    borderRadius: 14, paddingVertical: 16, alignItems: 'center',
+    borderWidth: 1, borderColor: Colors.primaryLight,
+    marginTop: 14,
+  },
+  btnLeaderboardText: { color: Colors.primaryLight, fontSize: 15, fontWeight: '700', letterSpacing: 1 },
   howToPlayBtn: { alignItems: 'center', paddingVertical: 20, marginTop: 8 },
   howToPlay: { color: Colors.primaryLight, fontSize: 14, textDecorationLine: 'underline' },
   logo: { alignItems: 'center', marginVertical: 36 },

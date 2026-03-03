@@ -1,0 +1,217 @@
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View, Text, TouchableOpacity, StyleSheet,
+  ScrollView, ActivityIndicator,
+} from 'react-native';
+import { StackScreenProps } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/types';
+import { recordsApi, GameRecord } from '../services/api';
+import { Colors } from '../theme/colors';
+
+type Props = StackScreenProps<RootStackParamList, 'Records'>;
+
+const RECORD_META: Record<string, { icon: string; title: string; description: string; unit: (n: number) => string }> = {
+  most_words_in_round: {
+    icon: '📝',
+    title: 'Más palabras en una ronda',
+    description: 'Mayor cantidad de palabras válidas formadas con una misma combinación de letras en una sola ronda.',
+    unit: (n) => `${n} ${n === 1 ? 'palabra' : 'palabras'}`,
+  },
+};
+
+function RecordCard({ record }: { record: GameRecord }) {
+  const meta = RECORD_META[record.type];
+  if (!meta) return null;
+
+  const date = new Date(record.achievedAt).toLocaleDateString('es-CL', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
+
+  return (
+    <View style={styles.card}>
+      {/* Ícono + título */}
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardIcon}>{meta.icon}</Text>
+        <View style={styles.cardHeaderText}>
+          <Text style={styles.cardTitle}>{meta.title}</Text>
+          <Text style={styles.cardDescription}>{meta.description}</Text>
+        </View>
+      </View>
+
+      {/* Separador */}
+      <View style={styles.divider} />
+
+      {/* Récord actual */}
+      <View style={styles.holderRow}>
+        <View style={styles.crownBadge}>
+          <Text style={styles.crownIcon}>👑</Text>
+        </View>
+        <View style={styles.holderInfo}>
+          <Text style={styles.holderNickname}>{record.holderNickname}</Text>
+          <Text style={styles.holderValue}>{meta.unit(record.value)}</Text>
+        </View>
+        <View style={styles.lettersBox}>
+          {record.letters.map((l, i) => (
+            <View key={i} style={styles.letterChip}>
+              <Text style={styles.letterChipText}>{l}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <Text style={styles.achievedAt}>Logrado el {date}</Text>
+    </View>
+  );
+}
+
+function EmptyCard({ type }: { type: string }) {
+  const meta = RECORD_META[type];
+  if (!meta) return null;
+  return (
+    <View style={[styles.card, styles.cardEmpty]}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardIcon}>{meta.icon}</Text>
+        <View style={styles.cardHeaderText}>
+          <Text style={styles.cardTitle}>{meta.title}</Text>
+          <Text style={styles.cardDescription}>{meta.description}</Text>
+        </View>
+      </View>
+      <View style={styles.divider} />
+      <View style={styles.emptyHolder}>
+        <Text style={styles.emptyHolderIcon}>🏅</Text>
+        <Text style={styles.emptyHolderText}>¡Nadie lo tiene aún!</Text>
+        <Text style={styles.emptyHolderSub}>Sé el primero en establecer este récord.</Text>
+      </View>
+    </View>
+  );
+}
+
+export default function RecordsScreen({ navigation }: Props) {
+  const [records, setRecords] = useState<GameRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const data = await recordsApi.getAll();
+      setRecords(data);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, []);
+
+  // Tipos de récords conocidos (en orden de aparición)
+  const knownTypes = Object.keys(RECORD_META);
+  const recordByType = Object.fromEntries(records.map((r) => [r.type, r]));
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+          <Text style={styles.back}>← Volver</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>RÉCORDS</Text>
+        <View style={{ width: 64 }} />
+      </View>
+
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={Colors.accent} />
+        </View>
+      ) : error ? (
+        <View style={styles.center}>
+          <Text style={styles.errorText}>No se pudieron cargar los récords</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={load}>
+            <Text style={styles.retryText}>Reintentar</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+          <Text style={styles.subtitle}>Récords mundiales de todos los jugadores</Text>
+          {knownTypes.map((type) =>
+            recordByType[type]
+              ? <RecordCard key={type} record={recordByType[type]} />
+              : <EmptyCard key={type} type={type} />
+          )}
+        </ScrollView>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.background },
+
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16,
+  },
+  back: { color: Colors.primaryLight, fontSize: 15, fontWeight: '600', width: 64 },
+  title: { color: Colors.white, fontSize: 20, fontWeight: '900', letterSpacing: 3 },
+
+  subtitle: {
+    color: Colors.primaryLight, fontSize: 13, textAlign: 'center',
+    fontStyle: 'italic', marginBottom: 20,
+  },
+
+  scroll: { paddingHorizontal: 16, paddingBottom: 40 },
+
+  card: {
+    backgroundColor: Colors.primaryDark, borderRadius: 18,
+    padding: 18, marginBottom: 16,
+    borderWidth: 1, borderColor: '#1A3A6E',
+  },
+  cardEmpty: { opacity: 0.7 },
+
+  cardHeader: { flexDirection: 'row', gap: 14, alignItems: 'flex-start' },
+  cardIcon: { fontSize: 32, marginTop: 2 },
+  cardHeaderText: { flex: 1, gap: 4 },
+  cardTitle: { color: Colors.white, fontSize: 16, fontWeight: '900' },
+  cardDescription: { color: Colors.primaryLight, fontSize: 12, lineHeight: 18 },
+
+  divider: { height: 1, backgroundColor: '#1A3A6E', marginVertical: 14 },
+
+  holderRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  crownBadge: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: 'rgba(255,214,0,0.15)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  crownIcon: { fontSize: 24 },
+  holderInfo: { flex: 1 },
+  holderNickname: { color: Colors.white, fontSize: 18, fontWeight: '900' },
+  holderValue: { color: Colors.accent, fontSize: 15, fontWeight: '700', marginTop: 2 },
+
+  lettersBox: { flexDirection: 'row', gap: 5 },
+  letterChip: {
+    backgroundColor: 'rgba(255,214,0,0.15)', borderRadius: 8,
+    width: 30, height: 34, justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: 'rgba(255,214,0,0.3)',
+  },
+  letterChipText: { color: Colors.accent, fontSize: 14, fontWeight: '900' },
+
+  achievedAt: {
+    color: Colors.primaryLight, fontSize: 11,
+    marginTop: 12, textAlign: 'right', fontStyle: 'italic',
+  },
+
+  emptyHolder: { alignItems: 'center', gap: 6, paddingVertical: 8 },
+  emptyHolderIcon: { fontSize: 28 },
+  emptyHolderText: { color: Colors.white, fontSize: 15, fontWeight: '700' },
+  emptyHolderSub: { color: Colors.primaryLight, fontSize: 12, fontStyle: 'italic', textAlign: 'center' },
+
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
+  errorText: { color: Colors.primaryLight, fontSize: 15 },
+  retryBtn: {
+    borderRadius: 10, paddingVertical: 10, paddingHorizontal: 24,
+    borderWidth: 1, borderColor: Colors.primaryLight,
+  },
+  retryText: { color: Colors.primaryLight, fontSize: 14, fontWeight: '700' },
+});

@@ -56,6 +56,21 @@ export interface LeaderboardResponse {
   myEntry: LeaderboardEntry | null;
 }
 
+export interface GameRecord {
+  id: string;
+  type: string;
+  holderId: string;
+  holderNickname: string;
+  value: number;
+  letters: string[];
+  achievedAt: string;
+}
+
+export const recordsApi = {
+  getAll: () =>
+    http.get<GameRecord[]>('/records').then((r) => r.data),
+};
+
 export const leaderboardApi = {
   get: (difficulty: LeaderboardDifficulty = 'general', userId?: string) =>
     http.get<LeaderboardResponse>('/leaderboard', { params: { difficulty, userId } }).then((r) => r.data),

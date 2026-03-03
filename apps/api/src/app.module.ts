@@ -10,6 +10,7 @@ import { DictionaryModule } from './dictionary/dictionary.module';
 import { AdmobModule } from './admob/admob.module';
 import { VocabModule } from './vocab/vocab.module';
 import { LeaderboardModule } from './leaderboard/leaderboard.module';
+import { RecordsModule } from './records/records.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { User } from './entities/user.entity';
 import { Game } from './entities/game.entity';
@@ -18,6 +19,7 @@ import { Round } from './entities/round.entity';
 import { Turn } from './entities/turn.entity';
 import { AdmobConfig } from './entities/admob-config.entity';
 import { VocabEntry } from './entities/vocab-entry.entity';
+import { Record } from './entities/record.entity';
 
 @Module({
   imports: [
@@ -27,7 +29,7 @@ import { VocabEntry } from './entities/vocab-entry.entity';
       useFactory: (config: ConfigService) => ({
         type: 'better-sqlite3',
         database: config.get<string>('DATABASE_PATH', 'data/tresletras.db'),
-        entities: [User, Game, GamePlayer, Round, Turn, AdmobConfig, VocabEntry],
+        entities: [User, Game, GamePlayer, Round, Turn, AdmobConfig, VocabEntry, Record],
         synchronize: true,
         logging: config.get('NODE_ENV') !== 'production',
       }),
@@ -42,6 +44,7 @@ import { VocabEntry } from './entities/vocab-entry.entity';
     AdmobModule,
     VocabModule,
     LeaderboardModule,
+    RecordsModule,
     GatewayModule,
   ],
 })

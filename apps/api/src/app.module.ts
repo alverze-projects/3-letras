@@ -9,6 +9,7 @@ import { WordsModule } from './words/words.module';
 import { DictionaryModule } from './dictionary/dictionary.module';
 import { AdmobModule } from './admob/admob.module';
 import { VocabModule } from './vocab/vocab.module';
+import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { User } from './entities/user.entity';
 import { Game } from './entities/game.entity';
@@ -40,6 +41,7 @@ import { VocabEntry } from './entities/vocab-entry.entity';
     GamesModule,
     AdmobModule,
     VocabModule,
+    LeaderboardModule,
     GatewayModule,
   ],
 })

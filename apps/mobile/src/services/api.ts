@@ -40,3 +40,23 @@ export const wordsApi = {
   validate: (dto: ValidateWordDto) =>
     http.post<ValidateWordResponseDto>('/words/validate', dto).then((r) => r.data),
 };
+
+export type LeaderboardDifficulty = 'general' | 'basic' | 'medium' | 'advanced';
+
+export interface LeaderboardEntry {
+  rank: number;
+  userId: string;
+  nickname: string;
+  totalScore: number;
+  gamesCount: number;
+}
+
+export interface LeaderboardResponse {
+  entries: LeaderboardEntry[];
+  myEntry: LeaderboardEntry | null;
+}
+
+export const leaderboardApi = {
+  get: (difficulty: LeaderboardDifficulty = 'general', userId?: string) =>
+    http.get<LeaderboardResponse>('/leaderboard', { params: { difficulty, userId } }).then((r) => r.data),
+};

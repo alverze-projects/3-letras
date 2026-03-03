@@ -7,6 +7,7 @@ export type RootStackParamList = {
   Guest: undefined;
   Main: undefined;
   Instructions: { nextRoute: 'Welcome' | 'Main' } | undefined;
+  Leaderboard: { userId: string };
   Lobby: {
     gameCode: string;
     token: string;

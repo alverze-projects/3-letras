@@ -17,6 +17,7 @@ import LobbyScreen from './src/screens/LobbyScreen';
 import GameScreen from './src/screens/GameScreen';
 import ResultsScreen from './src/screens/ResultsScreen';
 import InstructionsScreen, { INSTRUCTIONS_SEEN_KEY } from './src/screens/InstructionsScreen';
+import LeaderboardScreen from './src/screens/LeaderboardScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -68,6 +69,7 @@ export default function App() {
           <Stack.Screen name="Lobby" component={LobbyScreen} />
           <Stack.Screen name="Game" component={GameScreen} />
           <Stack.Screen name="Results" component={ResultsScreen} />
+          <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>

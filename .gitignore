@@ -1,0 +1,38 @@
+# Dependencias
+node_modules/
+
+# Build outputs
+dist/
+build/
+.expo/
+web-build/
+
+# Base de datos SQLite (se genera en runtime con el seed)
+apps/api/data/*.db
+apps/api/data/*.db-shm
+apps/api/data/*.db-wal
+
+# Archivos de datos pesados (no van en git)
+files/CREA_total.TXT
+
+# Variables de entorno
+.env
+.env.local
+.env*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript incremental build
+*.tsbuildinfo
+
+# Sistema operativo
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp

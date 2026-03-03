@@ -291,14 +291,22 @@ export default function MainScreen({ navigation }: Props) {
 
       </View>
 
-      {/* Clasificación mundial */}
+      {/* Clasificación y récords */}
       {createStep === 0 && !showJoin && (
-        <TouchableOpacity
-          style={styles.btnLeaderboard}
-          onPress={() => navigation.navigate('Leaderboard', { userId: session.player.id })}
-        >
-          <Text style={styles.btnLeaderboardText}>🏆  CLASIFICACIÓN MUNDIAL</Text>
-        </TouchableOpacity>
+        <View style={styles.extraButtons}>
+          <TouchableOpacity
+            style={[styles.btnExtra, { flex: 3 }]}
+            onPress={() => navigation.navigate('Leaderboard', { userId: session.player.id })}
+          >
+            <Text style={styles.btnExtraText}>🏆  Clasificación</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.btnExtra, { flex: 2 }]}
+            onPress={() => navigation.navigate('Records')}
+          >
+            <Text style={styles.btnExtraText}>🎖️  Récords</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
       {/* Enlace de instrucciones al pie, bien separado de las acciones */}
@@ -322,12 +330,14 @@ const styles = StyleSheet.create({
   nickname: { color: Colors.white, fontSize: 20, fontWeight: '700' },
   guestBadge: { color: Colors.gray, fontSize: 12, marginTop: 2 },
   logout: { color: Colors.gray, fontSize: 14, textDecorationLine: 'underline', marginTop: 4 },
-  btnLeaderboard: {
+  extraButtons: {
+    flexDirection: 'row', gap: 10, marginTop: 14,
+  },
+  btnExtra: {
     borderRadius: 14, paddingVertical: 16, alignItems: 'center',
     borderWidth: 1, borderColor: Colors.primaryLight,
-    marginTop: 14,
   },
-  btnLeaderboardText: { color: Colors.primaryLight, fontSize: 15, fontWeight: '700', letterSpacing: 1 },
+  btnExtraText: { color: Colors.primaryLight, fontSize: 14, fontWeight: '700' },
   howToPlayBtn: { alignItems: 'center', paddingVertical: 20, marginTop: 8 },
   howToPlay: { color: Colors.primaryLight, fontSize: 14, textDecorationLine: 'underline' },
   logo: { alignItems: 'center', marginVertical: 36 },

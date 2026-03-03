@@ -8,6 +8,7 @@ export type RootStackParamList = {
   Main: undefined;
   Instructions: { nextRoute: 'Welcome' | 'Main' } | undefined;
   Leaderboard: { userId: string };
+  Records: undefined;
   Lobby: {
     gameCode: string;
     token: string;

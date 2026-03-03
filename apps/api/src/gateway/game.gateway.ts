@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { Logger } from '@nestjs/common';
 import { GamesService } from '../games/games.service';
 import { WordsService } from '../words/words.service';
+import { RecordsService } from '../records/records.service';
 import type { IRound } from '@3letras/interfaces';
 import { Game } from '../entities/game.entity';
 import { GamePlayer } from '../entities/game-player.entity';
@@ -55,6 +56,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly jwtService: JwtService,
     private readonly gamesService: GamesService,
     private readonly wordsService: WordsService,
+    private readonly recordsService: RecordsService,
     @InjectRepository(Game) private readonly gameRepo: Repository<Game>,
     @InjectRepository(GamePlayer) private readonly gpRepo: Repository<GamePlayer>,
     @InjectRepository(Round) private readonly roundRepo: Repository<Round>,
@@ -484,6 +486,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     round.isComplete = true;
     await this.roundRepo.save(round);
+
+    // Chequear récords de forma asíncrona (no bloquea el flujo del juego)
+    this.recordsService.checkMostWordsInRound(roundId, gameId, round.letters as string[])
+      .catch(() => { /* silencioso */ });
 
     const players = await this.gpRepo.find({ where: { gameId }, relations: ['user'] });
     const scores = players.map((p) => ({

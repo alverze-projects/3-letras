@@ -4,6 +4,7 @@ import { GameGateway } from './game.gateway';
 import { GamesModule } from '../games/games.module';
 import { WordsModule } from '../words/words.module';
 import { AuthModule } from '../auth/auth.module';
+import { RecordsModule } from '../records/records.module';
 import { Game } from '../entities/game.entity';
 import { GamePlayer } from '../entities/game-player.entity';
 import { Round } from '../entities/round.entity';
@@ -16,6 +17,7 @@ import { User } from '../entities/user.entity';
     GamesModule,
     WordsModule,
     AuthModule,
+    RecordsModule,
   ],
   providers: [GameGateway],
 })

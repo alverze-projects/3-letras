@@ -1,5 +1,5 @@
 /**
- * Importa todas las palabras de files/CREA_total.TXT a la tabla vocab_entries
+ * Descarga el corpus CREA de la RAE, extrae las palabras e importa a vocab_entries
  * usando NestJS + TypeORM (compatible con SQLite, MySQL, PostgreSQL, etc.)
  *
  * Uso:
@@ -10,23 +10,59 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as https from 'https';
+import * as http from 'http';
+import AdmZip = require('adm-zip');
 import { randomUUID } from 'crypto';
 import { AppModule } from '../app.module';
 import { VocabEntry } from '../entities/vocab-entry.entity';
 
-const FILE_PATH = path.join(__dirname, '../../../../files/CREA_total.TXT');
-const BATCH = 200;
+const ZIP_URL      = 'https://corpus.rae.es/frec/CREA_total.zip';
+const TXT_FILENAME = 'CREA_total.TXT';
+const BATCH        = 200;
 
+// ── Descarga con soporte de redirecciones y progreso ────────────────────────
+function downloadBuffer(url: string, depth = 0): Promise<Buffer> {
+  if (depth > 5) return Promise.reject(new Error('Demasiadas redirecciones'));
+
+  return new Promise((resolve, reject) => {
+    const get = url.startsWith('https://') ? https.get : http.get;
+
+    get(url, (res) => {
+      // Seguir redirecciones
+      if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return downloadBuffer(res.headers.location, depth + 1).then(resolve).catch(reject);
+      }
+
+      if (res.statusCode !== 200) {
+        return reject(new Error(`HTTP ${res.statusCode} al descargar ${url}`));
+      }
+
+      const total = parseInt(res.headers['content-length'] ?? '0', 10);
+      const chunks: Buffer[] = [];
+      let received = 0;
+
+      res.on('data', (chunk: Buffer) => {
+        chunks.push(chunk);
+        received += chunk.length;
+        const mb  = (received / 1_048_576).toFixed(1);
+        const pct = total ? `${Math.round((received / total) * 100)}%` : `${mb} MB`;
+        process.stdout.write(`\r  Descargando... ${pct}  (${mb} MB)`);
+      });
+
+      res.on('end', () => {
+        process.stdout.write('\n');
+        resolve(Buffer.concat(chunks));
+      });
+
+      res.on('error', reject);
+    }).on('error', reject);
+  });
+}
+
+// ── Main ─────────────────────────────────────────────────────────────────────
 async function bootstrap() {
-  // ── Verificar archivo ────────────────────────────────────────────────────────
-  if (!fs.existsSync(FILE_PATH)) {
-    console.error(`\n❌  Archivo no encontrado: ${FILE_PATH}\n`);
-    process.exit(1);
-  }
-
-  // ── Iniciar contexto NestJS (sin HTTP server) ────────────────────────────────
+  // Iniciar contexto NestJS (sin HTTP server)
   console.log('Iniciando contexto NestJS...');
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn'],
@@ -34,12 +70,22 @@ async function bootstrap() {
 
   const repo = app.get<Repository<VocabEntry>>(getRepositoryToken(VocabEntry));
 
-  // ── Leer y parsear ────────────────────────────────────────────────────────────
-  console.log('Leyendo archivo...');
-  const buffer = fs.readFileSync(FILE_PATH);
-  const content = buffer.toString('latin1');       // ISO-8859-1 → string JS
-  const lines = content.split('\r\n');             // CRLF
+  // ── Descargar ZIP ────────────────────────────────────────────────────────────
+  console.log(`Descargando ${ZIP_URL}`);
+  const zipBuffer = await downloadBuffer(ZIP_URL);
+  console.log(`ZIP descargado: ${(zipBuffer.length / 1_048_576).toFixed(1)} MB`);
 
+  // ── Extraer TXT del ZIP en memoria ───────────────────────────────────────────
+  console.log(`Extrayendo ${TXT_FILENAME}...`);
+  const zip   = new AdmZip(zipBuffer);
+  const entry = zip.getEntry(TXT_FILENAME);
+  if (!entry) throw new Error(`${TXT_FILENAME} no encontrado dentro del ZIP`);
+
+  const txtBuffer = entry.getData();
+  const content   = txtBuffer.toString('latin1');  // ISO-8859-1 → string JS
+  const lines     = content.split('\r\n');          // CRLF
+
+  // ── Parsear palabras ─────────────────────────────────────────────────────────
   const words: string[] = [];
   for (const line of lines) {
     if (!line.trim()) continue;
@@ -48,7 +94,7 @@ async function bootstrap() {
     const parts = line.split('\t');
     if (parts.length < 2) continue;
 
-    // La primera columna debe ser un número seguido de punto
+    // Primera columna: número seguido de punto
     if (!/^\s*\d+\.\s*$/.test(parts[0])) continue;
 
     const word = parts[1].trim();
@@ -69,7 +115,7 @@ async function bootstrap() {
   // ── Insertar en transacción ───────────────────────────────────────────────────
   console.log('Insertando palabras...');
   const start = Date.now();
-  const now = new Date();
+  const now   = new Date();
 
   await repo.manager.transaction(async (manager) => {
     for (let i = 0; i < words.length; i += BATCH) {
@@ -80,24 +126,24 @@ async function bootstrap() {
         .insert()
         .into(VocabEntry)
         .values(batch.map((word) => ({
-          id: randomUUID(),
+          id:        randomUUID(),
           word,
-          isActive: true,
+          isActive:  true,
           createdAt: now,
         })))
         .orIgnore()
         .execute();
 
       const done = Math.min(i + BATCH, words.length);
-      const pct = Math.round((done / words.length) * 100);
+      const pct  = Math.round((done / words.length) * 100);
       process.stdout.write(
         `\r  ${pct}%  (${done.toLocaleString('es-CL')} / ${words.length.toLocaleString('es-CL')})`,
       );
     }
   });
 
-  const elapsed = ((Date.now() - start) / 1000).toFixed(1);
-  const total = await repo.count();
+  const elapsed  = ((Date.now() - start) / 1000).toFixed(1);
+  const total    = await repo.count();
   const inserted = total - existing;
 
   console.log('\n');

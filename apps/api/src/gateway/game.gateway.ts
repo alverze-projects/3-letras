@@ -49,6 +49,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     resolve: () => void;
     timer: NodeJS.Timeout;
   }>();
+  private soloGames = new Set<string>();
 
   constructor(
     private readonly jwtService: JwtService,
@@ -119,6 +120,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     this.server.to(code).emit(WS_EVENTS.SERVER.GAME_STARTED, { settings: payload.settings });
 
+    const gamePlayers = await this.gpRepo.find({ where: { gameId: game.id } });
+    if (gamePlayers.length === 1) this.soloGames.add(code);
+
     await this.startNewRound(code, game.id, game.difficulty, 1);
   }
 
@@ -146,60 +150,66 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.usedWords.set(round.id, new Set());
 
     const players = await this.gpRepo.find({ where: { gameId }, relations: ['user'] });
+    const isSolo = this.soloGames.has(code);
 
-    // El dado lo lanza el jugador que corresponde a esta ronda (rotación)
-    const rollerIndex = (roundNumber - 1) % players.length;
-    const roller = players[rollerIndex];
+    if (!isSolo) {
+      // El dado lo lanza el jugador que corresponde a esta ronda (rotación)
+      const rollerIndex = (roundNumber - 1) % players.length;
+      const roller = players[rollerIndex];
 
-    await new Promise<void>((resolve) => {
-      const timer = setTimeout(() => {
-        if (this.pendingDice.has(code)) {
-          this.pendingDice.delete(code);
-          resolve();
-        }
-      }, DICE_DURATION_MS);
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(() => {
+          if (this.pendingDice.has(code)) {
+            this.pendingDice.delete(code);
+            resolve();
+          }
+        }, DICE_DURATION_MS);
 
-      this.pendingDice.set(code, { rollerId: roller.userId, dieResult: round.dieResult, resolve, timer });
-      this.server.to(code).emit(WS_EVENTS.SERVER.DICE_ROLL_REQUEST, {
-        rollerId: roller.userId,
+        this.pendingDice.set(code, { rollerId: roller.userId, dieResult: round.dieResult, resolve, timer });
+        this.server.to(code).emit(WS_EVENTS.SERVER.DICE_ROLL_REQUEST, {
+          rollerId: roller.userId,
+          rollerNickname: roller.user.nickname,
+          roundNumber,
+          timeoutMs: DICE_DURATION_MS,
+        });
+      });
+
+      // El jugador lanzó — emitir resultado a todos y esperar animación
+      this.server.to(code).emit(WS_EVENTS.SERVER.DICE_RESULT, {
+        value: round.dieResult,
         rollerNickname: roller.user.nickname,
-        roundNumber,
-        timeoutMs: DICE_DURATION_MS,
       });
-    });
 
-    // El jugador lanzó — emitir resultado a todos y esperar animación
-    this.server.to(code).emit(WS_EVENTS.SERVER.DICE_RESULT, {
-      value: round.dieResult,
-      rollerNickname: roller.user.nickname,
-    });
+      // Dar tiempo a que la animación termine y el jugador lea el resultado (~2.3s animación + 2s lectura)
+      await new Promise((r) => setTimeout(r, 4500));
 
-    // Dar tiempo a que la animación termine y el jugador lea el resultado (~2.3s animación + 2s lectura)
-    await new Promise((r) => setTimeout(r, 4500));
+      const hasSpecial = round.letters.some(
+        (l) => (SPECIAL_LETTERS as readonly string[]).includes(l as string),
+      );
 
-    const hasSpecial = round.letters.some(
-      (l) => (SPECIAL_LETTERS as readonly string[]).includes(l as string),
-    );
-
-    if (hasSpecial && (difficulty === 'basic' || difficulty === 'medium')) {
-      const voteTimer = setTimeout(() => this.resolveVote(code), VOTE_DURATION_MS);
-      this.pendingVotes.set(code, {
-        roundId: round.id,
-        gameId,
-        difficulty,
-        votes: new Map(),
-        playerCount: players.length,
-        timer: voteTimer,
-      });
-      this.server.to(code).emit(WS_EVENTS.SERVER.VOTE_START, {
-        letters: round.letters,
-        roundNumber: round.roundNumber,
-        timeoutMs: VOTE_DURATION_MS,
-      });
-    } else {
-      this.server.to(code).emit(WS_EVENTS.SERVER.ROUND_NEW, { round });
-      await this.startNextTurn(code, gameId, round.id, round.letters as SpanishLetter[], players, 0, round.dieResult, 1);
+      if (hasSpecial && (difficulty === 'basic' || difficulty === 'medium')) {
+        const voteTimer = setTimeout(() => this.resolveVote(code), VOTE_DURATION_MS);
+        this.pendingVotes.set(code, {
+          roundId: round.id,
+          gameId,
+          difficulty,
+          votes: new Map(),
+          playerCount: players.length,
+          timer: voteTimer,
+        });
+        this.server.to(code).emit(WS_EVENTS.SERVER.VOTE_START, {
+          letters: round.letters,
+          roundNumber: round.roundNumber,
+          timeoutMs: VOTE_DURATION_MS,
+        });
+        return;
+      }
     }
+
+    // Modo normal sin letras especiales, o modo solo (sin dado, sin votación)
+    this.server.to(code).emit(WS_EVENTS.SERVER.ROUND_NEW, { round });
+    const effectiveDieResult = isSolo ? 999 : round.dieResult;
+    await this.startNextTurn(code, gameId, round.id, round.letters as SpanishLetter[], players, 0, effectiveDieResult, 1);
   }
 
   @SubscribeMessage(WS_EVENTS.CLIENT.VOTE_SUBMIT)
@@ -305,7 +315,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     await this.turnRepo.save(turn);
 
     const now = new Date();
-    const timeoutAt = new Date(now.getTime() + TURN_DURATION_MS);
+    const isSolo = this.soloGames.has(code);
 
     this.server.to(code).emit(WS_EVENTS.SERVER.TURN_START, {
       activeTurn: {
@@ -313,13 +323,15 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         playerId: currentPlayer.userId,
         nickname: currentPlayer.user.nickname,
         startedAt: now.toISOString(),
-        timeoutAt: timeoutAt.toISOString(),
+        timeoutAt: isSolo ? null : new Date(now.getTime() + TURN_DURATION_MS).toISOString(),
         turnNumber,
-        totalTurns: dieResult,
+        totalTurns: isSolo ? null : dieResult,
       },
     });
 
-    this.startTurnTimer(code, gameId, roundId, letters, players, playerIndex, dieResult, turnNumber, turn.id);
+    if (!isSolo) {
+      this.startTurnTimer(code, gameId, roundId, letters, players, playerIndex, dieResult, turnNumber, turn.id);
+    }
   }
 
   private startTurnTimer(
@@ -451,11 +463,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const currentIndex = players.findIndex((p) => p.userId === playerId);
     const currentTurnNumber = turn.turnNumber;
 
+    // En modo solo, el skip termina la ronda en lugar de pasar al siguiente turno
+    if (turn.status === 'skipped' && this.soloGames.has(code)) {
+      await this.endRound(code, game.id, round.id);
+      return;
+    }
+
+    const effectiveDieResult = this.soloGames.has(code) ? 999 : round.dieResult;
     await this.startNextTurn(
       code, game.id, round.id,
       round.letters as SpanishLetter[],
       players, currentIndex + 1,
-      round.dieResult, currentTurnNumber,
+      effectiveDieResult, currentTurnNumber,
     );
   }
 
@@ -497,6 +516,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private async endGame(code: string, gameId: string) {
+    this.soloGames.delete(code);
+
     const game = await this.gameRepo.findOneBy({ id: gameId });
     if (!game) return;
 

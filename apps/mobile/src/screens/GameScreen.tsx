@@ -45,6 +45,7 @@ type Props = StackScreenProps<RootStackParamList, 'Game'>;
 
 export default function GameScreen({ navigation, route }: Props) {
   const { gameCode, player, settings, initialPlayers } = route.params;
+  const isSolo = (initialPlayers?.length ?? 0) === 1;
   const [round, setRound] = useState<IRound | null>(null);
   const [activeTurn, setActiveTurn] = useState<IActiveTurn | null>(null);
   const [word, setWord] = useState('');
@@ -366,10 +367,10 @@ export default function GameScreen({ navigation, route }: Props) {
       <View style={styles.header}>
         <Text style={styles.roundLabel}>RONDA {round?.roundNumber ?? '-'}</Text>
         <View style={styles.headerRight}>
-          {activeTurn
+          {!isSolo && (activeTurn
             ? <Text style={styles.dieLabel}>Turno {activeTurn.turnNumber} de {activeTurn.totalTurns}</Text>
             : round && <Text style={styles.dieLabel}>{round.dieResult} turno{round.dieResult > 1 ? 's' : ''} por jugador</Text>
-          }
+          )}
           <View style={[styles.difficultyBadge, styles[`difficulty_${settings.difficulty}`]]}>
             <Text style={styles.difficultyText}>
               {settings.difficulty === 'basic' ? 'BÁSICO'
@@ -392,8 +393,8 @@ export default function GameScreen({ navigation, route }: Props) {
         ))}
       </View>
 
-      {/* Timer */}
-      {activeTurn && (
+      {/* Timer — oculto en modo solo */}
+      {activeTurn && !isSolo && (
         <View style={styles.timerContainer}>
           <Animated.View style={[styles.timerBar, { flex: timerWidth, backgroundColor: timerColor }]} />
           <Text style={styles.timerText}>{Math.ceil(remainingMs / 1000)}s</Text>
@@ -453,7 +454,7 @@ export default function GameScreen({ navigation, route }: Props) {
       )}
       {isMyTurn && (
         <TouchableOpacity style={styles.skipBtn} onPress={skipTurn}>
-          <Text style={styles.skipBtnText}>Pasar turno</Text>
+          <Text style={styles.skipBtnText}>{isSolo ? 'Terminar ronda' : 'Pasar turno'}</Text>
         </TouchableOpacity>
       )}
 

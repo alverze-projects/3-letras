@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from './src/navigation/types';
 import { loadSession } from './src/services/session';
 import { Colors } from './src/theme/colors';
@@ -15,15 +16,26 @@ import MainScreen from './src/screens/MainScreen';
 import LobbyScreen from './src/screens/LobbyScreen';
 import GameScreen from './src/screens/GameScreen';
 import ResultsScreen from './src/screens/ResultsScreen';
+import InstructionsScreen, { INSTRUCTIONS_SEEN_KEY } from './src/screens/InstructionsScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 export default function App() {
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null);
+  const [instructionsNextRoute, setInstructionsNextRoute] = useState<'Welcome' | 'Main'>('Welcome');
 
   useEffect(() => {
-    loadSession().then((session) => {
-      setInitialRoute(session ? 'Main' : 'Welcome');
+    Promise.all([
+      loadSession(),
+      AsyncStorage.getItem(INSTRUCTIONS_SEEN_KEY),
+    ]).then(([session, seen]) => {
+      const next = session ? 'Main' : 'Welcome';
+      if (!seen) {
+        setInstructionsNextRoute(next);
+        setInitialRoute('Instructions');
+      } else {
+        setInitialRoute(next);
+      }
     });
   }, []);
 
@@ -43,6 +55,11 @@ export default function App() {
           initialRouteName={initialRoute}
           screenOptions={{ headerShown: false, cardStyle: { flex: 1 } }}
         >
+          <Stack.Screen
+            name="Instructions"
+            component={InstructionsScreen}
+            initialParams={{ nextRoute: instructionsNextRoute }}
+          />
           <Stack.Screen name="Welcome" component={WelcomeScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, FlatList,
-  Alert, Share,
+  Share,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
@@ -52,7 +52,6 @@ export default function LobbyScreen({ navigation, route }: Props) {
   }, [gameCode, token]);
 
   function handleStart() {
-    if (players.length < 2) { Alert.alert('Se necesitan al menos 2 jugadores'); return; }
     socket?.emit(WS_EVENTS.CLIENT.GAME_START, {
       gameCode,
       settings: { difficulty, totalRounds },
@@ -102,7 +101,7 @@ export default function LobbyScreen({ navigation, route }: Props) {
 
       {isHost ? (
         <TouchableOpacity
-          style={[styles.startBtn, players.length < 2 && styles.startBtnDisabled]}
+          style={styles.startBtn}
           onPress={handleStart}
         >
           <Text style={styles.startBtnText}>INICIAR JUEGO</Text>

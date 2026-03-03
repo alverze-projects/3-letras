@@ -290,6 +290,15 @@ export default function MainScreen({ navigation }: Props) {
         )}
 
       </View>
+
+      {/* Enlace de instrucciones al pie, bien separado de las acciones */}
+      <TouchableOpacity
+        style={styles.howToPlayBtn}
+        onPress={() => navigation.navigate('Instructions', { nextRoute: 'Main' })}
+      >
+        <Text style={styles.howToPlay}>¿Cómo se juega?  →</Text>
+      </TouchableOpacity>
+
     </ScrollView>
   );
 }
@@ -303,6 +312,8 @@ const styles = StyleSheet.create({
   nickname: { color: Colors.white, fontSize: 20, fontWeight: '700' },
   guestBadge: { color: Colors.gray, fontSize: 12, marginTop: 2 },
   logout: { color: Colors.gray, fontSize: 14, textDecorationLine: 'underline', marginTop: 4 },
+  howToPlayBtn: { alignItems: 'center', paddingVertical: 20, marginTop: 8 },
+  howToPlay: { color: Colors.primaryLight, fontSize: 14, textDecorationLine: 'underline' },
   logo: { alignItems: 'center', marginVertical: 36 },
   logoTitle: { fontSize: 72, fontWeight: '900', color: Colors.accent, letterSpacing: 4, lineHeight: 72 },
   logoAccent: { fontSize: 52, fontWeight: '900', color: Colors.white, letterSpacing: 6, marginTop: -8 },

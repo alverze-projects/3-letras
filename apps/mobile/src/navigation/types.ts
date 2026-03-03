@@ -6,6 +6,7 @@ export type RootStackParamList = {
   Register: undefined;
   Guest: undefined;
   Main: undefined;
+  Instructions: { nextRoute: 'Welcome' | 'Main' } | undefined;
   Lobby: {
     gameCode: string;
     token: string;

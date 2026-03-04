@@ -6,6 +6,7 @@ import {
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { getSocket, WS_EVENTS } from '../services/socket';
+import { soundManager } from '../services/sound';
 import { Colors } from '../theme/colors';
 import type { IRound, IActiveTurn, ITurn, IGamePlayer } from '@3letras/interfaces';
 import { SPECIAL_LETTERS } from '@3letras/constants/game-rules';
@@ -62,12 +63,19 @@ export default function GameScreen({ navigation, route }: Props) {
   const voteCountdownRef = useRef<NodeJS.Timeout | null>(null);
   const [voteState, setVoteState] = useState<VoteState | null>(null);
   const [voteResult, setVoteResult] = useState<VoteResult | null>(null);
-  const diceRequestRef = useRef<DiceRollRequest | null>(null);
+  const diceRequestRef  = useRef<DiceRollRequest | null>(null);
+  const isMyTurnRef     = useRef(false);
   const diceTextOpacity = useRef(new Animated.Value(0)).current;
   const diceTextSlide = useRef(new Animated.Value(18)).current;
   const timerWidth = useRef(new Animated.Value(1)).current;
 
   const socket = getSocket();
+
+  // Precargar sonidos al montar la pantalla
+  useEffect(() => {
+    soundManager.preload();
+    return () => { soundManager.unload(); };
+  }, []);
 
   useEffect(() => {
     if (diceAnimDone) {
@@ -94,14 +102,18 @@ export default function GameScreen({ navigation, route }: Props) {
       setRound(newRound);
       setLastResult(null);
       setWord('');
+      soundManager.play('round_start');
     });
 
     socket.on(WS_EVENTS.SERVER.TURN_START, ({ activeTurn: at }) => {
       setActiveTurn(at);
-      setIsMyTurn(at.playerId === player.id);
+      const mine = at.playerId === player.id;
+      setIsMyTurn(mine);
+      isMyTurnRef.current = mine;
       setRemainingMs(15000);
       setWord('');
       Animated.timing(timerWidth, { toValue: 1, duration: 0, useNativeDriver: false }).start();
+      if (mine) soundManager.play('turn_start');
     });
 
     socket.on(WS_EVENTS.SERVER.TURN_TIMER, ({ remainingMs: ms }) => {
@@ -111,13 +123,21 @@ export default function GameScreen({ navigation, route }: Props) {
         duration: 900,
         useNativeDriver: false,
       }).start();
-
+      if (isMyTurnRef.current && ms <= 5000 && ms > 0) soundManager.play('tick');
     });
 
     socket.on(WS_EVENTS.SERVER.TURN_RESULT, ({ turn, playerNickname, playerScores }) => {
       setLastResult({ turn, nickname: playerNickname });
       setActiveTurn(null);
       setIsMyTurn(false);
+      isMyTurnRef.current = false;
+      if (turn.isValid) {
+        soundManager.play('valid_word');
+      } else if (turn.word) {
+        soundManager.play('invalid_word');
+      } else {
+        soundManager.play(isSolo ? 'skip' : 'timer_end');
+      }
       if (playerScores) {
         setPlayers((prev) => prev.map((p) => {
           const updated = playerScores.find((s: { playerId: string; totalScore: number }) => s.playerId === p.playerId);
@@ -126,8 +146,9 @@ export default function GameScreen({ navigation, route }: Props) {
       }
     });
 
-    socket.on(WS_EVENTS.SERVER.ROUND_SUMMARY, ({ summary }) => {
+    socket.on(WS_EVENTS.SERVER.ROUND_SUMMARY, () => {
       setRound(null);
+      soundManager.play('round_end');
     });
 
     socket.on(WS_EVENTS.SERVER.DICE_ROLL_REQUEST, (data: DiceRollRequest) => {
@@ -193,6 +214,7 @@ export default function GameScreen({ navigation, route }: Props) {
     });
 
     socket.on(WS_EVENTS.SERVER.GAME_END, ({ finalScores, winnerId }) => {
+      soundManager.play(winnerId === player.id ? 'victory' : 'defeat');
       navigation.replace('Results', { finalScores, winnerId, gameCode });
     });
 

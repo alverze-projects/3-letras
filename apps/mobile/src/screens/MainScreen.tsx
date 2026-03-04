@@ -8,6 +8,7 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList, MainTabParamList } from '../navigation/types';
 import { gamesApi } from '../services/api';
+import { soundManager } from '../services/sound';
 import { loadSession, clearSession, Session } from '../services/session';
 import { Colors } from '../theme/colors';
 import type { DifficultyLevel } from '@3letras/interfaces';
@@ -40,7 +41,10 @@ export default function MainScreen({ navigation }: Props) {
   const [isCustom, setIsCustom]         = useState(false);
   const [loading, setLoading]           = useState(false);
 
-  useEffect(() => { loadSession().then(setSession); }, []);
+  useEffect(() => {
+    loadSession().then(setSession);
+    soundManager.preload();
+  }, []);
 
   function reset() {
     setStep(0); setIsSolo(false); setShowJoin(false); setCode('');
@@ -131,7 +135,7 @@ export default function MainScreen({ navigation }: Props) {
 
         {/* ── Menú principal ── */}
         {step === 0 && (
-          <TouchableOpacity style={styles.btnCreate} onPress={() => setStep('mode')}>
+          <TouchableOpacity style={styles.btnCreate} onPress={() => { soundManager.play('button_tap'); setStep('mode'); }}>
             <Text style={styles.btnCreateText}>JUGAR</Text>
           </TouchableOpacity>
         )}

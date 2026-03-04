@@ -20,64 +20,41 @@ type Props = CompositeScreenProps<
 const ROUND_OPTIONS = [3, 5, 7, 10];
 
 const DIFFICULTIES: { value: DifficultyLevel; label: string; description: string }[] = [
-  {
-    value: 'basic',
-    label: 'Básico',
-    description: '2 letras · Sin restricciones especiales',
-  },
-  {
-    value: 'medium',
-    label: 'Medio',
-    description: '3 letras · Puedes construir sobre la palabra anterior',
-  },
-  {
-    value: 'advanced',
-    label: 'Avanzado',
-    description: '3 letras · Sin construir sobre anterior · Letra especial obligatoria',
-  },
+  { value: 'basic',    label: 'Básico',    description: '2 letras · Sin restricciones especiales' },
+  { value: 'medium',   label: 'Medio',     description: '3 letras · Puedes construir sobre la palabra anterior' },
+  { value: 'advanced', label: 'Avanzado',  description: '3 letras · Sin construir sobre anterior · Letra especial obligatoria' },
 ];
 
-// 0 = menú, 'mode' = elegir solo/multi, 1 = elegir dificultad, 2 = elegir rondas
-type CreateStep = 0 | 'mode' | 1 | 2;
+// 0=menú · 'mode'=solo/multi · 'multi'=crear/unirse · 1=dificultad · 2=rondas
+type Step = 0 | 'mode' | 'multi' | 1 | 2;
 
 export default function MainScreen({ navigation }: Props) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [code, setCode] = useState('');
-  const [showJoin, setShowJoin] = useState(false);
-  const [createStep, setCreateStep] = useState<CreateStep>(0);
-  const [isSolo, setIsSolo] = useState(false);
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
-  const [totalRounds, setTotalRounds] = useState(5);
+  const [session, setSession]           = useState<Session | null>(null);
+  const [step, setStep]                 = useState<Step>(0);
+  const [isSolo, setIsSolo]             = useState(false);
+  const [showJoin, setShowJoin]         = useState(false);
+  const [code, setCode]                 = useState('');
+  const [difficulty, setDifficulty]     = useState<DifficultyLevel>('medium');
+  const [totalRounds, setTotalRounds]   = useState(5);
   const [customRounds, setCustomRounds] = useState('');
-  const [isCustomRounds, setIsCustomRounds] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isCustom, setIsCustom]         = useState(false);
+  const [loading, setLoading]           = useState(false);
 
-  useEffect(() => {
-    loadSession().then(setSession);
-  }, []);
+  useEffect(() => { loadSession().then(setSession); }, []);
 
-  function openCreate() {
-    setCreateStep('mode');
-    setShowJoin(false);
+  function reset() {
+    setStep(0); setIsSolo(false); setShowJoin(false); setCode('');
+    setDifficulty('medium'); setTotalRounds(5); setCustomRounds(''); setIsCustom(false);
   }
 
   function selectMode(solo: boolean) {
     setIsSolo(solo);
-    setCreateStep(1);
-  }
-
-  function cancelCreate() {
-    setCreateStep(0);
-    setIsSolo(false);
-    setDifficulty('medium');
-    setTotalRounds(5);
-    setCustomRounds('');
-    setIsCustomRounds(false);
+    setStep(solo ? 1 : 'multi');
   }
 
   async function handleCreate() {
     if (!session) return;
-    const rounds = isCustomRounds ? parseInt(customRounds, 10) : totalRounds;
+    const rounds = isCustom ? parseInt(customRounds, 10) : totalRounds;
     if (!rounds || rounds < 1 || rounds > 50) {
       Alert.alert('Número de rondas inválido', 'Debe ser un número entre 1 y 50');
       return;
@@ -150,18 +127,17 @@ export default function MainScreen({ navigation }: Props) {
         <Text style={styles.logoAccent}>LETRAS</Text>
       </View>
 
-      {/* Acciones */}
       <View style={styles.actions}>
 
-        {/* ── JUGAR ── */}
-        {createStep === 0 && (
-          <TouchableOpacity style={styles.btnCreate} onPress={openCreate}>
+        {/* ── Menú principal ── */}
+        {step === 0 && (
+          <TouchableOpacity style={styles.btnCreate} onPress={() => setStep('mode')}>
             <Text style={styles.btnCreateText}>JUGAR</Text>
           </TouchableOpacity>
         )}
 
-        {/* Selección de modo: Solo / Multijugador */}
-        {createStep === 'mode' && (
+        {/* ── Elegir modo ── */}
+        {step === 'mode' && (
           <View style={styles.stepBox}>
             <View style={styles.stepHeader}>
               <Text style={styles.stepTitle}>¿Cómo quieres jugar?</Text>
@@ -183,14 +159,66 @@ export default function MainScreen({ navigation }: Props) {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.btnBack} onPress={cancelCreate}>
+            <TouchableOpacity style={styles.btnBack} onPress={reset}>
               <Text style={styles.btnBackText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Step 1: Dificultad */}
-        {createStep === 1 && (
+        {/* ── Multijugador: Crear sala / Unirse ── */}
+        {step === 'multi' && !showJoin && (
+          <View style={styles.stepBox}>
+            <View style={styles.stepHeader}>
+              <Text style={styles.stepTitle}>Multijugador</Text>
+            </View>
+
+            <TouchableOpacity style={styles.btnCreate} onPress={() => setStep(1)}>
+              <Text style={styles.btnCreateText}>CREAR SALA</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.btnJoin} onPress={() => setShowJoin(true)}>
+              <Text style={styles.btnJoinText}>UNIRSE A PARTIDA</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.btnBack} onPress={() => setStep('mode')}>
+              <Text style={styles.btnBackText}>← Atrás</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* ── Unirse: ingreso de código ── */}
+        {step === 'multi' && showJoin && (
+          <View style={styles.stepBox}>
+            <View style={styles.stepHeader}>
+              <Text style={styles.stepTitle}>Unirse a partida</Text>
+            </View>
+
+            <TextInput
+              style={styles.codeInput}
+              placeholder="Código de sala"
+              placeholderTextColor={Colors.gray}
+              value={code}
+              onChangeText={(t) => setCode(t.toUpperCase())}
+              maxLength={6}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              autoFocus
+            />
+            <View style={styles.stepButtons}>
+              <TouchableOpacity style={styles.btnBack} onPress={() => { setShowJoin(false); setCode(''); }}>
+                <Text style={styles.btnBackText}>← Atrás</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.btnConfirm} onPress={handleJoin} disabled={loading}>
+                {loading
+                  ? <ActivityIndicator color={Colors.dark} size="small" />
+                  : <Text style={styles.btnConfirmText}>UNIRSE</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* ── Paso 1: Dificultad ── */}
+        {step === 1 && (
           <View style={styles.stepBox}>
             <View style={styles.stepHeader}>
               <Text style={styles.stepIndicator}>Paso 1 de 2</Text>
@@ -216,18 +244,18 @@ export default function MainScreen({ navigation }: Props) {
             ))}
 
             <View style={styles.stepButtons}>
-              <TouchableOpacity style={styles.btnBack} onPress={cancelCreate}>
-                <Text style={styles.btnBackText}>Cancelar</Text>
+              <TouchableOpacity style={styles.btnBack} onPress={() => setStep(isSolo ? 'mode' : 'multi')}>
+                <Text style={styles.btnBackText}>← Atrás</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.btnNext} onPress={() => setCreateStep(2)}>
+              <TouchableOpacity style={styles.btnNext} onPress={() => setStep(2)}>
                 <Text style={styles.btnNextText}>SIGUIENTE →</Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
 
-        {/* Step 2: Rondas */}
-        {createStep === 2 && (
+        {/* ── Paso 2: Rondas ── */}
+        {step === 2 && (
           <View style={styles.stepBox}>
             <View style={styles.stepHeader}>
               <Text style={styles.stepIndicator}>Paso 2 de 2</Text>
@@ -243,21 +271,21 @@ export default function MainScreen({ navigation }: Props) {
               {ROUND_OPTIONS.map((n) => (
                 <TouchableOpacity
                   key={n}
-                  style={[styles.roundOption, !isCustomRounds && totalRounds === n && styles.roundOptionSelected]}
-                  onPress={() => { setTotalRounds(n); setIsCustomRounds(false); }}
+                  style={[styles.roundOption, !isCustom && totalRounds === n && styles.roundOptionSelected]}
+                  onPress={() => { setTotalRounds(n); setIsCustom(false); }}
                 >
-                  <Text style={[styles.roundNumber, !isCustomRounds && totalRounds === n && styles.roundNumberSelected]}>
+                  <Text style={[styles.roundNumber, !isCustom && totalRounds === n && styles.roundNumberSelected]}>
                     {n}
                   </Text>
-                  <Text style={[styles.roundLabel, !isCustomRounds && totalRounds === n && styles.roundLabelSelected]}>
+                  <Text style={[styles.roundLabel, !isCustom && totalRounds === n && styles.roundLabelSelected]}>
                     rondas
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            {!isCustomRounds ? (
-              <TouchableOpacity style={styles.btnCustom} onPress={() => setIsCustomRounds(true)}>
+            {!isCustom ? (
+              <TouchableOpacity style={styles.btnCustom} onPress={() => setIsCustom(true)}>
                 <Text style={styles.btnCustomText}>Personalizada</Text>
               </TouchableOpacity>
             ) : (
@@ -272,14 +300,14 @@ export default function MainScreen({ navigation }: Props) {
                   maxLength={2}
                   autoFocus
                 />
-                <TouchableOpacity style={styles.btnCustom} onPress={() => { setIsCustomRounds(false); setCustomRounds(''); }}>
+                <TouchableOpacity style={styles.btnCustom} onPress={() => { setIsCustom(false); setCustomRounds(''); }}>
                   <Text style={styles.btnCustomText}>Usar opciones fijas</Text>
                 </TouchableOpacity>
               </View>
             )}
 
             <View style={styles.stepButtons}>
-              <TouchableOpacity style={styles.btnBack} onPress={() => setCreateStep(1)}>
+              <TouchableOpacity style={styles.btnBack} onPress={() => setStep(1)}>
                 <Text style={styles.btnBackText}>← Atrás</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.btnConfirm} onPress={handleCreate} disabled={loading}>
@@ -291,49 +319,10 @@ export default function MainScreen({ navigation }: Props) {
           </View>
         )}
 
-        {/* ── UNIRSE A PARTIDA ── */}
-        {createStep === 0 && !showJoin && (
-          <TouchableOpacity
-            style={styles.btnJoin}
-            onPress={() => setShowJoin(true)}
-          >
-            <Text style={styles.btnJoinText}>UNIRSE A PARTIDA</Text>
-          </TouchableOpacity>
-        )}
-
-        {createStep === 0 && showJoin && (
-          <View style={styles.joinBox}>
-            <TextInput
-              style={styles.codeInput}
-              placeholder="Código de sala"
-              placeholderTextColor={Colors.gray}
-              value={code}
-              onChangeText={(t) => setCode(t.toUpperCase())}
-              maxLength={6}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              autoFocus
-            />
-            <View style={styles.stepButtons}>
-              <TouchableOpacity
-                style={styles.btnBack}
-                onPress={() => { setShowJoin(false); setCode(''); }}
-              >
-                <Text style={styles.btnBackText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.btnConfirm} onPress={handleJoin} disabled={loading}>
-                {loading
-                  ? <ActivityIndicator color={Colors.dark} size="small" />
-                  : <Text style={styles.btnConfirmText}>UNIRSE</Text>}
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
       </View>
 
       {/* Enlace de instrucciones al pie */}
-      {createStep === 0 && !showJoin && (
+      {step === 0 && (
         <TouchableOpacity
           style={styles.howToPlayBtn}
           onPress={() => navigation.navigate('Instructions', { nextRoute: 'Main' })}
@@ -350,24 +339,26 @@ const styles = StyleSheet.create({
   loading: { flex: 1, backgroundColor: Colors.background, justifyContent: 'center', alignItems: 'center' },
   scroll: { flex: 1, backgroundColor: Colors.background },
   container: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 40 },
+
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   greeting: { color: Colors.primaryLight, fontSize: 14 },
   nickname: { color: Colors.white, fontSize: 20, fontWeight: '700' },
   guestBadge: { color: Colors.gray, fontSize: 12, marginTop: 2 },
   logout: { color: Colors.gray, fontSize: 14, textDecorationLine: 'underline', marginTop: 4 },
-  howToPlayBtn: { alignItems: 'center', paddingVertical: 20, marginTop: 8 },
-  howToPlay: { color: Colors.primaryLight, fontSize: 14, textDecorationLine: 'underline' },
+
   logo: { alignItems: 'center', marginVertical: 36 },
   logoTitle: { fontSize: 72, fontWeight: '900', color: Colors.accent, letterSpacing: 4, lineHeight: 72 },
   logoAccent: { fontSize: 52, fontWeight: '900', color: Colors.white, letterSpacing: 6, marginTop: -8 },
+
   actions: { gap: 14 },
+
   btnCreate: {
     backgroundColor: Colors.accent, borderRadius: 14, paddingVertical: 20,
     alignItems: 'center', elevation: 4,
   },
   btnCreateText: { fontSize: 20, fontWeight: '900', color: Colors.dark, letterSpacing: 2 },
 
-  // Selección de modo
+  // Modo
   modeOption: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     borderRadius: 12, padding: 16,
@@ -387,9 +378,7 @@ const styles = StyleSheet.create({
   stepSubtitleAccent: { color: Colors.accent, fontWeight: '700' },
 
   // Dificultad
-  difficultyOption: {
-    borderRadius: 10, padding: 14, borderWidth: 1, borderColor: Colors.primaryLight,
-  },
+  difficultyOption: { borderRadius: 10, padding: 14, borderWidth: 1, borderColor: Colors.primaryLight },
   difficultySelected: { borderColor: Colors.accent, backgroundColor: '#1A3A6E' },
   optionRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   radio: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: Colors.primaryLight },
@@ -417,8 +406,7 @@ const styles = StyleSheet.create({
   btnCustomText: { color: Colors.primaryLight, fontSize: 14, fontWeight: '700' },
   customRoundsBox: { gap: 8 },
   customRoundsInput: {
-    width: '100%', backgroundColor: Colors.white, borderRadius: 12,
-    paddingHorizontal: 16, paddingVertical: 12,
+    backgroundColor: Colors.white, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12,
     fontSize: 24, fontWeight: '900', color: Colors.dark, textAlign: 'center',
     borderWidth: 2, borderColor: Colors.accent, letterSpacing: 4,
   },
@@ -446,11 +434,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent', borderRadius: 14, paddingVertical: 18,
     alignItems: 'center', borderWidth: 2, borderColor: Colors.accent,
   },
-  btnJoinText: { fontSize: 20, fontWeight: '700', color: Colors.accent, letterSpacing: 2 },
-  joinBox: { gap: 10 },
+  btnJoinText: { fontSize: 18, fontWeight: '700', color: Colors.accent, letterSpacing: 2 },
   codeInput: {
     backgroundColor: Colors.white, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
     fontSize: 22, fontWeight: '700', color: Colors.dark, textAlign: 'center',
     letterSpacing: 8, borderWidth: 2, borderColor: Colors.accent,
   },
+
+  howToPlayBtn: { alignItems: 'center', paddingVertical: 20, marginTop: 8 },
+  howToPlay: { color: Colors.primaryLight, fontSize: 14, textDecorationLine: 'underline' },
 });

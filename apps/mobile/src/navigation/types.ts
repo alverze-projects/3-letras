@@ -1,5 +1,11 @@
 import type { IGameSettings, IGamePlayer } from '@3letras/interfaces';
 
+export type MainTabParamList = {
+  Clasificacion: undefined;
+  Inicio: undefined;
+  Records: undefined;
+};
+
 export type RootStackParamList = {
   Welcome: undefined;
   Login: undefined;
@@ -7,14 +13,13 @@ export type RootStackParamList = {
   Guest: undefined;
   Main: undefined;
   Instructions: { nextRoute: 'Welcome' | 'Main' } | undefined;
-  Leaderboard: { userId: string };
-  Records: undefined;
   Lobby: {
     gameCode: string;
     token: string;
     player: { id: string; nickname: string; isGuest: boolean };
     difficulty: 'basic' | 'medium' | 'advanced';
     totalRounds: number;
+    autoStart?: boolean;
   };
   Game: {
     gameCode: string;

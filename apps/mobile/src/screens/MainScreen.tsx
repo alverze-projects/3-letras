@@ -3,14 +3,19 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ActivityIndicator, Alert, ScrollView,
 } from 'react-native';
+import { CompositeScreenProps } from '@react-navigation/native';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { StackScreenProps } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/types';
+import { RootStackParamList, MainTabParamList } from '../navigation/types';
 import { gamesApi } from '../services/api';
 import { loadSession, clearSession, Session } from '../services/session';
 import { Colors } from '../theme/colors';
 import type { DifficultyLevel } from '@3letras/interfaces';
 
-type Props = StackScreenProps<RootStackParamList, 'Main'>;
+type Props = CompositeScreenProps<
+  BottomTabScreenProps<MainTabParamList, 'Inicio'>,
+  StackScreenProps<RootStackParamList>
+>;
 
 const ROUND_OPTIONS = [3, 5, 7, 10];
 
@@ -32,14 +37,15 @@ const DIFFICULTIES: { value: DifficultyLevel; label: string; description: string
   },
 ];
 
-// 0 = menú, 1 = elegir dificultad, 2 = elegir rondas
-type CreateStep = 0 | 1 | 2;
+// 0 = menú, 'mode' = elegir solo/multi, 1 = elegir dificultad, 2 = elegir rondas
+type CreateStep = 0 | 'mode' | 1 | 2;
 
 export default function MainScreen({ navigation }: Props) {
   const [session, setSession] = useState<Session | null>(null);
   const [code, setCode] = useState('');
   const [showJoin, setShowJoin] = useState(false);
   const [createStep, setCreateStep] = useState<CreateStep>(0);
+  const [isSolo, setIsSolo] = useState(false);
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
   const [totalRounds, setTotalRounds] = useState(5);
   const [customRounds, setCustomRounds] = useState('');
@@ -51,12 +57,18 @@ export default function MainScreen({ navigation }: Props) {
   }, []);
 
   function openCreate() {
-    setCreateStep(1);
+    setCreateStep('mode');
     setShowJoin(false);
+  }
+
+  function selectMode(solo: boolean) {
+    setIsSolo(solo);
+    setCreateStep(1);
   }
 
   function cancelCreate() {
     setCreateStep(0);
+    setIsSolo(false);
     setDifficulty('medium');
     setTotalRounds(5);
     setCustomRounds('');
@@ -75,7 +87,7 @@ export default function MainScreen({ navigation }: Props) {
       const { game } = await gamesApi.create({ difficulty, totalRounds: rounds });
       navigation.navigate('Lobby', {
         gameCode: game.code, token: session.token, player: session.player,
-        difficulty, totalRounds: rounds,
+        difficulty, totalRounds: rounds, autoStart: isSolo,
       });
     } catch (e: any) {
       Alert.alert('Error', e?.response?.data?.message ?? 'No se pudo crear la partida');
@@ -141,11 +153,40 @@ export default function MainScreen({ navigation }: Props) {
       {/* Acciones */}
       <View style={styles.actions}>
 
-        {/* ── CREAR PARTIDA ── */}
+        {/* ── JUGAR ── */}
         {createStep === 0 && (
           <TouchableOpacity style={styles.btnCreate} onPress={openCreate}>
-            <Text style={styles.btnCreateText}>CREAR PARTIDA</Text>
+            <Text style={styles.btnCreateText}>JUGAR</Text>
           </TouchableOpacity>
+        )}
+
+        {/* Selección de modo: Solo / Multijugador */}
+        {createStep === 'mode' && (
+          <View style={styles.stepBox}>
+            <View style={styles.stepHeader}>
+              <Text style={styles.stepTitle}>¿Cómo quieres jugar?</Text>
+            </View>
+
+            <TouchableOpacity style={styles.modeOption} onPress={() => selectMode(true)}>
+              <Text style={styles.modeIcon}>🎮</Text>
+              <View style={styles.modeText}>
+                <Text style={styles.modeLabel}>Solo</Text>
+                <Text style={styles.modeDesc}>Practica a tu ritmo, sin timer ni límite de turnos</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.modeOption} onPress={() => selectMode(false)}>
+              <Text style={styles.modeIcon}>👥</Text>
+              <View style={styles.modeText}>
+                <Text style={styles.modeLabel}>Multijugador</Text>
+                <Text style={styles.modeDesc}>Compite con otros jugadores en tiempo real</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.btnBack} onPress={cancelCreate}>
+              <Text style={styles.btnBackText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
         )}
 
         {/* Step 1: Dificultad */}
@@ -291,31 +332,15 @@ export default function MainScreen({ navigation }: Props) {
 
       </View>
 
-      {/* Clasificación y récords */}
+      {/* Enlace de instrucciones al pie */}
       {createStep === 0 && !showJoin && (
-        <View style={styles.extraButtons}>
-          <TouchableOpacity
-            style={[styles.btnExtra, { flex: 3 }]}
-            onPress={() => navigation.navigate('Leaderboard', { userId: session.player.id })}
-          >
-            <Text style={styles.btnExtraText}>🏆  Clasificación</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.btnExtra, { flex: 2 }]}
-            onPress={() => navigation.navigate('Records')}
-          >
-            <Text style={styles.btnExtraText}>🎖️  Récords</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.howToPlayBtn}
+          onPress={() => navigation.navigate('Instructions', { nextRoute: 'Main' })}
+        >
+          <Text style={styles.howToPlay}>¿Cómo se juega?  →</Text>
+        </TouchableOpacity>
       )}
-
-      {/* Enlace de instrucciones al pie, bien separado de las acciones */}
-      <TouchableOpacity
-        style={styles.howToPlayBtn}
-        onPress={() => navigation.navigate('Instructions', { nextRoute: 'Main' })}
-      >
-        <Text style={styles.howToPlay}>¿Cómo se juega?  →</Text>
-      </TouchableOpacity>
 
     </ScrollView>
   );
@@ -330,14 +355,6 @@ const styles = StyleSheet.create({
   nickname: { color: Colors.white, fontSize: 20, fontWeight: '700' },
   guestBadge: { color: Colors.gray, fontSize: 12, marginTop: 2 },
   logout: { color: Colors.gray, fontSize: 14, textDecorationLine: 'underline', marginTop: 4 },
-  extraButtons: {
-    flexDirection: 'row', gap: 10, marginTop: 14,
-  },
-  btnExtra: {
-    borderRadius: 14, paddingVertical: 16, alignItems: 'center',
-    borderWidth: 1, borderColor: Colors.primaryLight,
-  },
-  btnExtraText: { color: Colors.primaryLight, fontSize: 14, fontWeight: '700' },
   howToPlayBtn: { alignItems: 'center', paddingVertical: 20, marginTop: 8 },
   howToPlay: { color: Colors.primaryLight, fontSize: 14, textDecorationLine: 'underline' },
   logo: { alignItems: 'center', marginVertical: 36 },
@@ -349,6 +366,17 @@ const styles = StyleSheet.create({
     alignItems: 'center', elevation: 4,
   },
   btnCreateText: { fontSize: 20, fontWeight: '900', color: Colors.dark, letterSpacing: 2 },
+
+  // Selección de modo
+  modeOption: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    borderRadius: 12, padding: 16,
+    borderWidth: 1, borderColor: Colors.primaryLight,
+  },
+  modeIcon: { fontSize: 30 },
+  modeText: { flex: 1, gap: 3 },
+  modeLabel: { color: Colors.white, fontSize: 17, fontWeight: '900' },
+  modeDesc: { color: Colors.primaryLight, fontSize: 12, lineHeight: 17 },
 
   // Steps
   stepBox: { backgroundColor: Colors.primaryDark, borderRadius: 16, padding: 18, gap: 12 },

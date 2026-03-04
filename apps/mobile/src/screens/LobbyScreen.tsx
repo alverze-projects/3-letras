@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, FlatList,
-  Share,
+  Share, ActivityIndicator,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
@@ -13,7 +13,7 @@ import type { Socket } from 'socket.io-client';
 type Props = StackScreenProps<RootStackParamList, 'Lobby'>;
 
 export default function LobbyScreen({ navigation, route }: Props) {
-  const { gameCode, token, player, difficulty, totalRounds } = route.params;
+  const { gameCode, token, player, difficulty, totalRounds, autoStart } = route.params;
   const [players, setPlayers] = useState<IGamePlayer[]>([]);
   const playersRef = useRef<IGamePlayer[]>([]);
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -28,7 +28,16 @@ export default function LobbyScreen({ navigation, route }: Props) {
     s.on(WS_EVENTS.SERVER.GAME_STATE, ({ game }) => {
       playersRef.current = game.players;
       setPlayers(game.players);
-      setIsHost(game.hostId === player.id);
+      const iAmHost = game.hostId === player.id;
+      setIsHost(iAmHost);
+
+      // Modo solo: iniciar automáticamente en cuanto se confirme el estado
+      if (autoStart && iAmHost) {
+        s.emit(WS_EVENTS.CLIENT.GAME_START, {
+          gameCode,
+          settings: { difficulty, totalRounds },
+        });
+      }
     });
 
     s.on(WS_EVENTS.SERVER.PLAYER_JOINED, ({ player: newPlayer }) => {
@@ -60,6 +69,14 @@ export default function LobbyScreen({ navigation, route }: Props) {
 
   async function handleShare() {
     await Share.share({ message: `¡Únete a mi partida de Tres Letras! Código: ${gameCode}` });
+  }
+
+  if (autoStart) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={Colors.accent} />
+      </View>
+    );
   }
 
   return (
@@ -100,10 +117,7 @@ export default function LobbyScreen({ navigation, route }: Props) {
       />
 
       {isHost ? (
-        <TouchableOpacity
-          style={styles.startBtn}
-          onPress={handleStart}
-        >
+        <TouchableOpacity style={styles.startBtn} onPress={handleStart}>
           <Text style={styles.startBtnText}>INICIAR JUEGO</Text>
         </TouchableOpacity>
       ) : (
@@ -116,6 +130,7 @@ export default function LobbyScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
+  loading: { flex: 1, backgroundColor: Colors.background, justifyContent: 'center', alignItems: 'center' },
   container: { flex: 1, backgroundColor: Colors.background, padding: 24 },
   title: { fontSize: 28, fontWeight: '900', color: Colors.white, textAlign: 'center', marginTop: 40, letterSpacing: 4 },
   codeBox: {

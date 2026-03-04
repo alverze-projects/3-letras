@@ -9,4 +9,7 @@ const config = getDefaultConfig(projectRoot);
 // Permitir que Metro acceda a archivos fuera del directorio del proyecto
 config.watchFolders = [libsRoot];
 
+// Soporte explícito para archivos de audio
+config.resolver.assetExts = [...config.resolver.assetExts, 'wav', 'mp3', 'ogg'];
+
 module.exports = config;

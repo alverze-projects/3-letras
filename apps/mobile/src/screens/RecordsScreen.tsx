@@ -3,12 +3,9 @@ import {
   View, Text, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator,
 } from 'react-native';
-import { StackScreenProps } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/types';
+import { useFocusEffect } from '@react-navigation/native';
 import { recordsApi, GameRecord } from '../services/api';
 import { Colors } from '../theme/colors';
-
-type Props = StackScreenProps<RootStackParamList, 'Records'>;
 
 const RECORD_META: Record<string, { icon: string; title: string; description: string; unit: (n: number) => string }> = {
   most_words_in_round: {
@@ -86,7 +83,7 @@ function EmptyCard({ type }: { type: string }) {
   );
 }
 
-export default function RecordsScreen({ navigation }: Props) {
+export default function RecordsScreen() {
   const [records, setRecords] = useState<GameRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -104,7 +101,7 @@ export default function RecordsScreen({ navigation }: Props) {
     }
   }, []);
 
-  useEffect(() => { load(); }, []);
+  useFocusEffect(useCallback(() => { load(); }, []));
 
   // Tipos de récords conocidos (en orden de aparición)
   const knownTypes = Object.keys(RECORD_META);
@@ -114,11 +111,7 @@ export default function RecordsScreen({ navigation }: Props) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-          <Text style={styles.back}>← Volver</Text>
-        </TouchableOpacity>
         <Text style={styles.title}>RÉCORDS</Text>
-        <View style={{ width: 64 }} />
       </View>
 
       {loading ? (
@@ -150,10 +143,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
 
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16,
+    alignItems: 'center',
   },
-  back: { color: Colors.primaryLight, fontSize: 15, fontWeight: '600', width: 64 },
   title: { color: Colors.white, fontSize: 20, fontWeight: '900', letterSpacing: 3 },
 
   subtitle: {

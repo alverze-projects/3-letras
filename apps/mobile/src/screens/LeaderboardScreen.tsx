@@ -3,12 +3,10 @@ import {
   View, Text, TouchableOpacity, StyleSheet,
   FlatList, ActivityIndicator,
 } from 'react-native';
-import { StackScreenProps } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/types';
+import { useFocusEffect } from '@react-navigation/native';
 import { leaderboardApi, LeaderboardEntry, LeaderboardDifficulty } from '../services/api';
+import { loadSession } from '../services/session';
 import { Colors } from '../theme/colors';
-
-type Props = StackScreenProps<RootStackParamList, 'Leaderboard'>;
 
 const TABS: { key: LeaderboardDifficulty; label: string }[] = [
   { key: 'general',  label: 'General' },
@@ -26,19 +24,23 @@ const DIFF_COLOR: Record<LeaderboardDifficulty, string> = {
   advanced: '#EF5350',
 };
 
-export default function LeaderboardScreen({ navigation, route }: Props) {
-  const { userId } = route.params;
+export default function LeaderboardScreen() {
+  const [userId, setUserId] = useState<string | null>(null);
   const [tab, setTab] = useState<LeaderboardDifficulty>('general');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [myEntry, setMyEntry] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  const load = useCallback(async (difficulty: LeaderboardDifficulty) => {
+  useEffect(() => {
+    loadSession().then((s) => setUserId(s?.player.id ?? null));
+  }, []);
+
+  const load = useCallback(async (difficulty: LeaderboardDifficulty, uid: string | null) => {
     setLoading(true);
     setError(false);
     try {
-      const data = await leaderboardApi.get(difficulty, userId);
+      const data = await leaderboardApi.get(difficulty, uid ?? undefined);
       setEntries(data.entries);
       setMyEntry(data.myEntry);
     } catch {
@@ -46,17 +48,21 @@ export default function LeaderboardScreen({ navigation, route }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, []);
 
-  useEffect(() => { load(tab); }, [tab]);
+  // Recargar al enfocar el tab o cambiar el tab de dificultad
+  useFocusEffect(
+    useCallback(() => {
+      load(tab, userId);
+    }, [tab, userId]),
+  );
 
   // ¿El usuario ya aparece dentro del top visible?
-  const myEntryInList = myEntry ? entries.some((e) => e.userId === userId) : false;
-
+  const myEntryInList = myEntry && userId ? entries.some((e) => e.userId === userId) : false;
   const accentColor = DIFF_COLOR[tab];
 
   function renderItem({ item }: { item: LeaderboardEntry }) {
-    const isMe = item.userId === userId;
+    const isMe = !!userId && item.userId === userId;
     const isTop3 = item.rank <= 3;
     return (
       <View style={[styles.row, isTop3 && styles.rowTop, isMe && styles.rowMe]}>
@@ -83,14 +89,10 @@ export default function LeaderboardScreen({ navigation, route }: Props) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-          <Text style={styles.back}>← Volver</Text>
-        </TouchableOpacity>
         <Text style={styles.title}>CLASIFICACIÓN</Text>
-        <View style={{ width: 64 }} />
       </View>
 
-      {/* Tabs */}
+      {/* Tabs de dificultad */}
       <View style={styles.tabs}>
         {TABS.map((t) => (
           <TouchableOpacity
@@ -122,7 +124,7 @@ export default function LeaderboardScreen({ navigation, route }: Props) {
       ) : error ? (
         <View style={styles.center}>
           <Text style={styles.errorText}>No se pudo cargar la clasificación</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={() => load(tab)}>
+          <TouchableOpacity style={styles.retryBtn} onPress={() => load(tab, userId)}>
             <Text style={styles.retryText}>Reintentar</Text>
           </TouchableOpacity>
         </View>
@@ -176,10 +178,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
 
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16,
+    alignItems: 'center',
   },
-  back: { color: Colors.primaryLight, fontSize: 15, fontWeight: '600', width: 64 },
   title: { color: Colors.white, fontSize: 20, fontWeight: '900', letterSpacing: 3 },
 
   tabs: {
@@ -222,7 +223,6 @@ const styles = StyleSheet.create({
   score: { fontSize: 16, fontWeight: '900' },
   games: { color: Colors.primaryLight, fontSize: 11, marginTop: 1 },
 
-  // Mi posición fija al pie
   myEntryWrapper: {
     paddingHorizontal: 16, paddingBottom: 24,
     borderTopWidth: 1, borderTopColor: Colors.primaryDark,

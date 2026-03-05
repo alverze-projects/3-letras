@@ -16,7 +16,6 @@ Digitalization of the "Tres Letras" board game — a Spanish word-formation mult
 │   └── admin-frontend/ → React + Mantine UI + Vite — port 5173
 ├── libs/src/         → Shared TypeScript: interfaces, DTOs, constants, WS events
 └── files/
-    ├── palabras.json → Spanish dictionary (636K words, loaded into memory Set)
     └── descripcion_tecnica_del_juego_tres_letras.pdf → Full game rules
 ```
 
@@ -66,7 +65,7 @@ NestJS uses **webpack** (not tsc) as bundler — configured in `nest-cli.json`. 
 1. **Native modules must be webpack externals:** `better-sqlite3` and `bcrypt` are in `webpack.config.js` externals. Any new native module must be added there.
 2. **TypeORM entities need explicit column types:** Webpack removes TypeScript metadata, so `@Column({ type: 'text' })` is required on every entity column — never rely on type inference.
 
-Dictionary is loaded once at startup into a `Set<string>` in `DictionaryService`. Path: `DICTIONARY_PATH` env var or `process.cwd()/../../files/palabras.json`.
+Dictionary is loaded once at startup into a `Set<string>` in `DictionaryService` from the `vocab_entries` DB table (only `isActive = true` rows). Supports `reload()` to refresh after admin changes.
 
 ### In-memory game state (GameGateway)
 The gateway holds per-session Maps that are **not persisted**:
@@ -138,7 +137,6 @@ PORT=3000
 NODE_ENV=development
 JWT_SECRET=tres-letras-dev-secret-2024
 DATABASE_PATH=data/tresletras.db
-DICTIONARY_PATH=../../files/palabras.json
 ```
 
 **apps/mobile/.env.local:**

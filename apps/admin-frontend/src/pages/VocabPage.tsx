@@ -2,12 +2,12 @@ import { useEffect, useState, useRef } from 'react';
 import {
   Title, Text, Stack, Group, TextInput, Button, ActionIcon, Tooltip,
   Table, Badge, Pagination, Loader, Center, Modal, Alert,
-  Switch,
+  Switch, Paper, Divider,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
   IconSearch, IconPlus, IconPencil, IconTrash,
-  IconAlertCircle, IconBook,
+  IconAlertCircle, IconBook, IconAbc, IconX,
 } from '@tabler/icons-react';
 import { adminApi, type IVocabEntry } from '../services/api';
 
@@ -101,6 +101,14 @@ export default function VocabPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // Letter filter
+  const [letter1, setLetter1] = useState('');
+  const [letter2, setLetter2] = useState('');
+  const [letter3, setLetter3] = useState('');
+  const [letterFilter, setLetterFilter] = useState(''); // the active search string
+  const ref2 = useRef<HTMLInputElement>(null);
+  const ref3 = useRef<HTMLInputElement>(null);
+
   const [editing, setEditing] = useState<IVocabEntry | null>(null);
   const [deleting, setDeleting] = useState<IVocabEntry | null>(null);
   const [formOpened, { open: openForm, close: closeForm }] = useDisclosure(false);
@@ -108,10 +116,15 @@ export default function VocabPage() {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  async function load(p = page, q = search, showLoader = true) {
+  async function load(p = page, q = search, letters = letterFilter, showLoader = true) {
     if (showLoader) setLoading(true);
     try {
-      const result = await adminApi.listVocab({ search: q, page: p, limit: PAGE_SIZE });
+      const result = await adminApi.listVocab({
+        search: letters ? undefined : q,
+        letters: letters || undefined,
+        page: p,
+        limit: PAGE_SIZE,
+      });
       setWords(result.words);
       setTotal(result.total);
       setTotalPages(result.totalPages);
@@ -123,14 +136,15 @@ export default function VocabPage() {
   }
 
   // Carga inicial
-  useEffect(() => { load(1, '', true); }, []);
+  useEffect(() => { load(1, '', '', true); }, []);
 
-  // Debounce en búsqueda
+  // Debounce en búsqueda de texto (only when no letter filter)
   useEffect(() => {
+    if (letterFilter) return; // letter filter active, ignore text search
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       setPage(1);
-      load(1, search, true);
+      load(1, search, '', true);
     }, 350);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [search]);
@@ -138,7 +152,33 @@ export default function VocabPage() {
   // Cambio de página
   function handlePageChange(p: number) {
     setPage(p);
-    load(p, search, true);
+    load(p, search, letterFilter, true);
+  }
+
+  function handleLetterChange(
+    value: string,
+    setter: (v: string) => void,
+    nextRef?: React.RefObject<HTMLInputElement | null>,
+  ) {
+    const clean = value.replace(/[^a-záéíóúñü]/gi, '').toUpperCase().slice(0, 1);
+    setter(clean);
+    if (clean && nextRef?.current) nextRef.current.focus();
+  }
+
+  function applyLetterFilter() {
+    const letters = (letter1 + letter2 + letter3).toUpperCase();
+    if (letters.length < 2) return;
+    setLetterFilter(letters);
+    setSearch('');
+    setPage(1);
+    load(1, '', letters, true);
+  }
+
+  function clearLetterFilter() {
+    setLetter1(''); setLetter2(''); setLetter3('');
+    setLetterFilter('');
+    setPage(1);
+    load(1, search, '', true);
   }
 
   async function handleToggleActive(entry: IVocabEntry) {
@@ -154,8 +194,7 @@ export default function VocabPage() {
       setWords((prev) => prev.map((w) => w.id === updated.id ? updated : w));
     } else {
       await adminApi.createVocabWord(word);
-      // recargamos para que aparezca en el lugar correcto (orden alfabético)
-      await load(page, search, false);
+      await load(page, search, letterFilter, false);
     }
     closeForm();
     setEditing(null);
@@ -181,7 +220,7 @@ export default function VocabPage() {
               <Title order={2}>Diccionario</Title>
             </Group>
             <Text size="sm" c="dimmed">
-              {total.toLocaleString('es-CL')} palabras en total
+              {total.toLocaleString('es-CL')} palabras{letterFilter ? ` compatibles con ${letterFilter.split('').join(' → ')}` : ' en total'}
               {words.length > 0 && ` · ${activeCount} activas en esta página`}
             </Text>
           </div>
@@ -193,14 +232,74 @@ export default function VocabPage() {
           </Button>
         </Group>
 
-        <TextInput
-          placeholder="Buscar palabra…"
-          leftSection={<IconSearch size={16} />}
-          value={search}
-          onChange={(e) => setSearch(e.currentTarget.value)}
-          style={{ maxWidth: 340 }}
-          ff="monospace"
-        />
+        {/* Filtros */}
+        <Paper shadow="xs" p="sm" radius="md" withBorder>
+          <Group gap="md" align="end" wrap="wrap">
+            {/* Búsqueda por texto */}
+            <TextInput
+              placeholder="Buscar palabra…"
+              leftSection={<IconSearch size={16} />}
+              value={search}
+              onChange={(e) => { setSearch(e.currentTarget.value); if (letterFilter) clearLetterFilter(); }}
+              style={{ flex: 1, minWidth: 200 }}
+              ff="monospace"
+              disabled={!!letterFilter}
+            />
+
+            <Divider orientation="vertical" />
+
+            {/* Simulador de letras */}
+            <Group gap={4} align="end">
+              <IconAbc size={18} style={{ marginBottom: 6 }} />
+              <TextInput
+                label="1ª"
+                w={46}
+                maxLength={1}
+                value={letter1}
+                onChange={(e) => handleLetterChange(e.currentTarget.value, setLetter1, ref2)}
+                ff="monospace"
+                size="sm"
+                styles={{ input: { textAlign: 'center', fontWeight: 700, fontSize: 16 } }}
+              />
+              <TextInput
+                label="2ª"
+                w={46}
+                maxLength={1}
+                value={letter2}
+                onChange={(e) => handleLetterChange(e.currentTarget.value, setLetter2, ref3)}
+                ref={ref2}
+                ff="monospace"
+                size="sm"
+                styles={{ input: { textAlign: 'center', fontWeight: 700, fontSize: 16 } }}
+              />
+              <TextInput
+                label="3ª"
+                w={46}
+                maxLength={1}
+                value={letter3}
+                onChange={(e) => handleLetterChange(e.currentTarget.value, setLetter3)}
+                ref={ref3}
+                ff="monospace"
+                size="sm"
+                styles={{ input: { textAlign: 'center', fontWeight: 700, fontSize: 16 } }}
+              />
+              <Button size="sm" onClick={applyLetterFilter} disabled={!letter1 || !letter2}>
+                Filtrar
+              </Button>
+              {letterFilter && (
+                <ActionIcon variant="subtle" color="gray" onClick={clearLetterFilter} size="lg">
+                  <IconX size={16} />
+                </ActionIcon>
+              )}
+            </Group>
+          </Group>
+        </Paper>
+
+        {letterFilter && (
+          <Badge size="lg" variant="light" color="blue" leftSection={<IconAbc size={14} />}>
+            Filtrando por letras: {letterFilter.split('').join(' → ')}
+          </Badge>
+        )}
 
         {loading ? (
           <Center h={200}><Loader /></Center>

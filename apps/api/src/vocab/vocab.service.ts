@@ -14,7 +14,7 @@ export interface VocabListResult {
 export class VocabService {
   constructor(
     @InjectRepository(VocabEntry) private readonly repo: Repository<VocabEntry>,
-  ) {}
+  ) { }
 
   async list(search: string, page: number, limit: number): Promise<VocabListResult> {
     const where = search ? { word: ILike(`%${search}%`) } : {};
@@ -25,6 +25,30 @@ export class VocabService {
       take: limit,
     });
     return { words, total, page, totalPages: Math.ceil(total / limit) };
+  }
+
+  async listByWords(matchingWords: string[], page: number, limit: number): Promise<VocabListResult> {
+    if (matchingWords.length === 0) {
+      return { words: [], total: 0, page, totalPages: 0 };
+    }
+
+    // Paginate over the pre-filtered word list
+    const total = matchingWords.length;
+    const totalPages = Math.ceil(total / limit);
+    const pageWords = matchingWords.slice((page - 1) * limit, page * limit);
+
+    if (pageWords.length === 0) {
+      return { words: [], total, page, totalPages };
+    }
+
+    // Fetch full VocabEntry objects for this page's words
+    const entries = await this.repo
+      .createQueryBuilder('v')
+      .where('LOWER(v.word) IN (:...words)', { words: pageWords.map((w) => w.toLowerCase()) })
+      .orderBy('v.word', 'ASC')
+      .getMany();
+
+    return { words: entries, total, page, totalPages };
   }
 
   async create(word: string): Promise<VocabEntry> {

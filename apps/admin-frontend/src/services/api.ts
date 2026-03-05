@@ -113,7 +113,7 @@ export const adminApi = {
   updateAdmob: (dto: Partial<IAdmobConfig>) =>
     http.put<IAdmobConfig>('/admob', dto).then((r) => r.data),
 
-  listVocab: (params: { search?: string; page?: number; limit?: number }) =>
+  listVocab: (params: { search?: string; letters?: string; page?: number; limit?: number }) =>
     http.get<IVocabList>('/vocab', { params }).then((r) => r.data),
 
   createVocabWord: (word: string) =>
@@ -124,6 +124,9 @@ export const adminApi = {
 
   deleteVocabWord: (id: string) =>
     http.delete(`/vocab/${id}`),
+
+  searchByLetters: (letters: string) =>
+    http.get<{ words: string[]; count: number }>('/vocab/search-by-letters', { params: { letters } }).then((r) => r.data),
 };
 
 export interface IVocabEntry {

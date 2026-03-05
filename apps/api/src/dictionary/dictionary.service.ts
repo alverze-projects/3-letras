@@ -57,6 +57,34 @@ export class DictionaryService implements OnModuleInit {
     return this.words.size;
   }
 
+  /**
+   * Find all active dictionary words that contain the given letters in order
+   * (same rule as the mobile game).
+   */
+  searchByLetters(letters: string[], limit = 200): string[] {
+    const upperLetters = letters.map((l) => l.toUpperCase());
+    const results: string[] = [];
+
+    for (const word of this.words) {
+      if (this.hasLettersInOrder(word.toUpperCase(), upperLetters)) {
+        results.push(word);
+        if (results.length >= limit) break;
+      }
+    }
+
+    return results.sort((a, b) => a.localeCompare(b, 'es'));
+  }
+
+  private hasLettersInOrder(word: string, letters: string[]): boolean {
+    let searchFrom = 0;
+    for (const letter of letters) {
+      const idx = word.indexOf(letter, searchFrom);
+      if (idx === -1) return false;
+      searchFrom = idx + 1;
+    }
+    return true;
+  }
+
   exists(word: string): boolean {
     return this.words.has(word.toLowerCase().trim());
   }

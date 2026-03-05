@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { Colors } from '../theme/colors';
-import LogoMain from '../../assets/logo_main.svg';
+import AnimatedLogo from '../components/AnimatedLogo';
 
 type Props = StackScreenProps<RootStackParamList, 'Welcome'>;
 
@@ -11,7 +11,7 @@ export default function WelcomeScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <LogoMain width={280} height={124} />
+        <AnimatedLogo width={280} height={124} />
         <Text style={styles.subtitle}>¡Forma palabras y suma puntos!</Text>
       </View>
 

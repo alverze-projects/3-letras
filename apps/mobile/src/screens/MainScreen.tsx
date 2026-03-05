@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ActivityIndicator, Alert, ScrollView,
 } from 'react-native';
-import LogoMain from '../../assets/logo_main.svg';
+import AnimatedLogo from '../components/AnimatedLogo';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -22,25 +22,25 @@ type Props = CompositeScreenProps<
 const ROUND_OPTIONS = [3, 5, 7, 10];
 
 const DIFFICULTIES: { value: DifficultyLevel; label: string; description: string }[] = [
-  { value: 'basic',    label: 'Básico',    description: '2 letras · Sin restricciones especiales' },
-  { value: 'medium',   label: 'Medio',     description: '3 letras · Puedes construir sobre la palabra anterior' },
-  { value: 'advanced', label: 'Avanzado',  description: '3 letras · Sin construir sobre anterior · Letra especial obligatoria' },
+  { value: 'basic', label: 'Básico', description: '2 letras · Sin restricciones especiales' },
+  { value: 'medium', label: 'Medio', description: '3 letras · Puedes construir sobre la palabra anterior' },
+  { value: 'advanced', label: 'Avanzado', description: '3 letras · Sin construir sobre anterior · Letra especial obligatoria' },
 ];
 
 // 0=menú · 'mode'=solo/multi · 'multi'=crear/unirse · 1=dificultad · 2=rondas
 type Step = 0 | 'mode' | 'multi' | 1 | 2;
 
 export default function MainScreen({ navigation }: Props) {
-  const [session, setSession]           = useState<Session | null>(null);
-  const [step, setStep]                 = useState<Step>(0);
-  const [isSolo, setIsSolo]             = useState(false);
-  const [showJoin, setShowJoin]         = useState(false);
-  const [code, setCode]                 = useState('');
-  const [difficulty, setDifficulty]     = useState<DifficultyLevel>('medium');
-  const [totalRounds, setTotalRounds]   = useState(5);
+  const [session, setSession] = useState<Session | null>(null);
+  const [step, setStep] = useState<Step>(0);
+  const [isSolo, setIsSolo] = useState(false);
+  const [showJoin, setShowJoin] = useState(false);
+  const [code, setCode] = useState('');
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
+  const [totalRounds, setTotalRounds] = useState(5);
   const [customRounds, setCustomRounds] = useState('');
-  const [isCustom, setIsCustom]         = useState(false);
-  const [loading, setLoading]           = useState(false);
+  const [isCustom, setIsCustom] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadSession().then(setSession);
@@ -128,7 +128,7 @@ export default function MainScreen({ navigation }: Props) {
 
       {/* Logo */}
       <View style={styles.logo}>
-        <LogoMain width={300} height={133} />
+        <AnimatedLogo width={300} height={133} />
       </View>
 
       <View style={styles.actions}>

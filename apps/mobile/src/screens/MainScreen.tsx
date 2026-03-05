@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ActivityIndicator, Alert, ScrollView,
 } from 'react-native';
+import LogoMain from '../../assets/logo_main.svg';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -127,8 +128,7 @@ export default function MainScreen({ navigation }: Props) {
 
       {/* Logo */}
       <View style={styles.logo}>
-        <Text style={styles.logoTitle}>TRES</Text>
-        <Text style={styles.logoAccent}>LETRAS</Text>
+        <LogoMain width={300} height={133} />
       </View>
 
       <View style={styles.actions}>
@@ -351,8 +351,6 @@ const styles = StyleSheet.create({
   logout: { color: Colors.gray, fontSize: 14, textDecorationLine: 'underline', marginTop: 4 },
 
   logo: { alignItems: 'center', marginVertical: 36 },
-  logoTitle: { fontSize: 72, fontWeight: '900', color: Colors.accent, letterSpacing: 4, lineHeight: 72 },
-  logoAccent: { fontSize: 52, fontWeight: '900', color: Colors.white, letterSpacing: 6, marginTop: -8 },
 
   actions: { gap: 14 },
 

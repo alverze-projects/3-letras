@@ -485,7 +485,6 @@ export default function GameScreen({ navigation, route }: Props) {
             onChangeText={(t) => setWord(t.toUpperCase())}
             autoCapitalize="characters"
             autoCorrect={false}
-            autoFocus
             onSubmitEditing={submitWord}
           />
           <TouchableOpacity style={styles.sendBtn} onPress={submitWord}>

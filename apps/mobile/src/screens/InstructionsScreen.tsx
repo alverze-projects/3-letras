@@ -6,6 +6,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../navigation/types';
 import { Colors } from '../theme/colors';
+import { soundManager } from '../services/sound';
 import GradientBackground from '../components/GradientBackground';
 import GameButton from '../components/GameButton';
 import GameCard from '../components/GameCard';
@@ -45,11 +46,13 @@ export default function InstructionsScreen({ navigation, route }: Props) {
   const nextRoute = route.params?.nextRoute ?? 'Welcome';
 
   async function handleContinue() {
+    soundManager.play('button_tap');
     await AsyncStorage.setItem(INSTRUCTIONS_SEEN_KEY, '1');
     navigation.replace(nextRoute as any);
   }
 
   function handleClose() {
+    soundManager.play('button_tap');
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {

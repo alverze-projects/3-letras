@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../theme/colors';
+import { soundManager } from '../services/sound';
 import LogoTape from '../../assets/logo_tape.svg';
 
 const ALPHABET = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('');
@@ -98,6 +99,7 @@ export default function SlotLetterCard({
         if (idx < STEPS_MS.length) {
           const duration = STEPS_MS[idx];
           setDisplayLetter(ALPHABET[Math.floor(Math.random() * ALPHABET.length)]);
+          soundManager.play('tick');
           translateY.setValue(-size);
           Animated.timing(translateY, {
             toValue: 0,

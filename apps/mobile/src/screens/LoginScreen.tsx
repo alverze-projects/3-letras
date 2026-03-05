@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
+  View, Text, TextInput, StyleSheet,
+  Alert, KeyboardAvoidingView, Platform, TouchableOpacity,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { authApi } from '../services/api';
 import { saveSession } from '../services/session';
 import { Colors } from '../theme/colors';
+import GradientBackground from '../components/GradientBackground';
+import GameButton from '../components/GameButton';
+import GameCard from '../components/GameCard';
 
 type Props = StackScreenProps<RootStackParamList, 'Login'>;
 
@@ -31,55 +34,56 @@ export default function LoginScreen({ navigation }: Props) {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
-        <Text style={styles.backText}>← Volver</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.title}>INICIAR SESIÓN</Text>
-
-      <View style={styles.form}>
-        <TextInput
-          style={styles.input}
-          placeholder="Correo electrónico"
-          placeholderTextColor={Colors.gray}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Contraseña"
-          placeholderTextColor={Colors.gray}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-        <TouchableOpacity style={styles.btn} onPress={handleLogin} disabled={loading}>
-          {loading
-            ? <ActivityIndicator color={Colors.dark} />
-            : <Text style={styles.btnText}>ENTRAR</Text>}
+    <GradientBackground>
+      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+          <Text style={styles.backText}>← Volver</Text>
         </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+
+        <Text style={styles.title}>INICIAR SESIÓN</Text>
+
+        <GameCard glow>
+          <View style={styles.form}>
+            <TextInput
+              style={styles.input}
+              placeholder="Correo electrónico"
+              placeholderTextColor={Colors.gray}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Contraseña"
+              placeholderTextColor={Colors.gray}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+            <GameButton title="ENTRAR" onPress={handleLogin} loading={loading} />
+          </View>
+        </GameCard>
+      </KeyboardAvoidingView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background, paddingHorizontal: 24, justifyContent: 'center' },
-  back: { position: 'absolute', top: 56, left: 24 },
-  backText: { color: Colors.primaryLight, fontSize: 16 },
-  title: { fontSize: 28, fontWeight: '900', color: Colors.white, textAlign: 'center', marginBottom: 36, letterSpacing: 3 },
+  container: { flex: 1, paddingHorizontal: 24, justifyContent: 'center' },
+  back: { position: 'absolute', top: 56, left: 24, zIndex: 10 },
+  backText: { color: Colors.primaryLight, fontSize: 16, fontWeight: '600' },
+  title: {
+    fontSize: 28, fontWeight: '900', color: Colors.white, textAlign: 'center',
+    marginBottom: 24, letterSpacing: 3,
+    textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4,
+  },
   form: { gap: 14 },
   input: {
-    backgroundColor: Colors.white, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
-    fontSize: 16, color: Colors.dark, borderWidth: 2, borderColor: Colors.primaryLight,
+    backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 12,
+    paddingHorizontal: 16, paddingVertical: 14,
+    fontSize: 16, color: Colors.dark,
+    borderWidth: 2, borderColor: Colors.primaryLight,
   },
-  btn: {
-    backgroundColor: Colors.accent, borderRadius: 12, paddingVertical: 16,
-    alignItems: 'center', marginTop: 4,
-  },
-  btnText: { fontSize: 18, fontWeight: '900', color: Colors.dark, letterSpacing: 2 },
 });

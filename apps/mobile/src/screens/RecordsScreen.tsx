@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator,
@@ -6,6 +6,8 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { recordsApi, GameRecord } from '../services/api';
 import { Colors } from '../theme/colors';
+import GradientBackground from '../components/GradientBackground';
+import GameCard from '../components/GameCard';
 
 const RECORD_META: Record<string, { icon: string; title: string; description: string; unit: (n: number) => string }> = {
   most_words_in_round: {
@@ -25,7 +27,7 @@ function RecordCard({ record }: { record: GameRecord }) {
   });
 
   return (
-    <View style={styles.card}>
+    <GameCard glow>
       {/* Ícono + título */}
       <View style={styles.cardHeader}>
         <Text style={styles.cardIcon}>{meta.icon}</Text>
@@ -57,7 +59,7 @@ function RecordCard({ record }: { record: GameRecord }) {
       </View>
 
       <Text style={styles.achievedAt}>Logrado el {date}</Text>
-    </View>
+    </GameCard>
   );
 }
 
@@ -65,7 +67,7 @@ function EmptyCard({ type }: { type: string }) {
   const meta = RECORD_META[type];
   if (!meta) return null;
   return (
-    <View style={[styles.card, styles.cardEmpty]}>
+    <GameCard style={{ opacity: 0.7 }}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardIcon}>{meta.icon}</Text>
         <View style={styles.cardHeaderText}>
@@ -79,7 +81,7 @@ function EmptyCard({ type }: { type: string }) {
         <Text style={styles.emptyHolderText}>¡Nadie lo tiene aún!</Text>
         <Text style={styles.emptyHolderSub}>Sé el primero en establecer este récord.</Text>
       </View>
-    </View>
+    </GameCard>
   );
 }
 
@@ -103,50 +105,54 @@ export default function RecordsScreen() {
 
   useFocusEffect(useCallback(() => { load(); }, []));
 
-  // Tipos de récords conocidos (en orden de aparición)
   const knownTypes = Object.keys(RECORD_META);
   const recordByType = Object.fromEntries(records.map((r) => [r.type, r]));
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>RÉCORDS</Text>
-      </View>
+    <GradientBackground sparkles={false}>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>RÉCORDS</Text>
+        </View>
 
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.accent} />
-        </View>
-      ) : error ? (
-        <View style={styles.center}>
-          <Text style={styles.errorText}>No se pudieron cargar los récords</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={load}>
-            <Text style={styles.retryText}>Reintentar</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <Text style={styles.subtitle}>Récords mundiales de todos los jugadores</Text>
-          {knownTypes.map((type) =>
-            recordByType[type]
-              ? <RecordCard key={type} record={recordByType[type]} />
-              : <EmptyCard key={type} type={type} />
-          )}
-        </ScrollView>
-      )}
-    </View>
+        {loading ? (
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color={Colors.accent} />
+          </View>
+        ) : error ? (
+          <View style={styles.center}>
+            <Text style={styles.errorText}>No se pudieron cargar los récords</Text>
+            <TouchableOpacity style={styles.retryBtn} onPress={load}>
+              <Text style={styles.retryText}>Reintentar</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+            <Text style={styles.subtitle}>Récords mundiales de todos los jugadores</Text>
+            {knownTypes.map((type) =>
+              recordByType[type]
+                ? <RecordCard key={type} record={recordByType[type]} />
+                : <EmptyCard key={type} type={type} />
+            )}
+          </ScrollView>
+        )}
+      </View>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
 
   header: {
     paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16,
     alignItems: 'center',
   },
-  title: { color: Colors.white, fontSize: 20, fontWeight: '900', letterSpacing: 3 },
+  title: {
+    color: Colors.white, fontSize: 20, fontWeight: '900', letterSpacing: 3,
+    textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4,
+  },
 
   subtitle: {
     color: Colors.primaryLight, fontSize: 13, textAlign: 'center',
@@ -155,20 +161,13 @@ const styles = StyleSheet.create({
 
   scroll: { paddingHorizontal: 16, paddingBottom: 40 },
 
-  card: {
-    backgroundColor: Colors.primaryDark, borderRadius: 18,
-    padding: 18, marginBottom: 16,
-    borderWidth: 1, borderColor: '#1A3A6E',
-  },
-  cardEmpty: { opacity: 0.7 },
-
   cardHeader: { flexDirection: 'row', gap: 14, alignItems: 'flex-start' },
   cardIcon: { fontSize: 32, marginTop: 2 },
   cardHeaderText: { flex: 1, gap: 4 },
   cardTitle: { color: Colors.white, fontSize: 16, fontWeight: '900' },
   cardDescription: { color: Colors.primaryLight, fontSize: 12, lineHeight: 18 },
 
-  divider: { height: 1, backgroundColor: '#1A3A6E', marginVertical: 14 },
+  divider: { height: 1, backgroundColor: 'rgba(94, 146, 243, 0.2)', marginVertical: 14 },
 
   holderRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   crownBadge: {
@@ -179,7 +178,10 @@ const styles = StyleSheet.create({
   crownIcon: { fontSize: 24 },
   holderInfo: { flex: 1 },
   holderNickname: { color: Colors.white, fontSize: 18, fontWeight: '900' },
-  holderValue: { color: Colors.accent, fontSize: 15, fontWeight: '700', marginTop: 2 },
+  holderValue: {
+    color: Colors.accent, fontSize: 15, fontWeight: '700', marginTop: 2,
+    textShadowColor: 'rgba(255,214,0,0.3)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 4,
+  },
 
   lettersBox: { flexDirection: 'row', gap: 5 },
   letterChip: {

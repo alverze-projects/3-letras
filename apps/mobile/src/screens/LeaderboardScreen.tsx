@@ -7,20 +7,21 @@ import { useFocusEffect } from '@react-navigation/native';
 import { leaderboardApi, LeaderboardEntry, LeaderboardDifficulty } from '../services/api';
 import { loadSession } from '../services/session';
 import { Colors } from '../theme/colors';
+import GradientBackground from '../components/GradientBackground';
 
 const TABS: { key: LeaderboardDifficulty; label: string }[] = [
-  { key: 'general',  label: 'General' },
-  { key: 'basic',    label: 'Básico' },
-  { key: 'medium',   label: 'Medio' },
+  { key: 'general', label: 'General' },
+  { key: 'basic', label: 'Básico' },
+  { key: 'medium', label: 'Medio' },
   { key: 'advanced', label: 'Avanzado' },
 ];
 
 const MEDAL = ['🥇', '🥈', '🥉'];
 
 const DIFF_COLOR: Record<LeaderboardDifficulty, string> = {
-  general:  Colors.accent,
-  basic:    '#66BB6A',
-  medium:   '#FFA726',
+  general: Colors.accent,
+  basic: '#66BB6A',
+  medium: '#FFA726',
   advanced: '#EF5350',
 };
 
@@ -50,14 +51,12 @@ export default function LeaderboardScreen() {
     }
   }, []);
 
-  // Recargar al enfocar el tab o cambiar el tab de dificultad
   useFocusEffect(
     useCallback(() => {
       load(tab, userId);
     }, [tab, userId]),
   );
 
-  // ¿El usuario ya aparece dentro del top visible?
   const myEntryInList = myEntry && userId ? entries.some((e) => e.userId === userId) : false;
   const accentColor = DIFF_COLOR[tab];
 
@@ -86,118 +85,124 @@ export default function LeaderboardScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>CLASIFICACIÓN</Text>
-      </View>
-
-      {/* Tabs de dificultad */}
-      <View style={styles.tabs}>
-        {TABS.map((t) => (
-          <TouchableOpacity
-            key={t.key}
-            style={[styles.tab, tab === t.key && { borderBottomColor: DIFF_COLOR[t.key], borderBottomWidth: 3 }]}
-            onPress={() => setTab(t.key)}
-          >
-            <Text style={[styles.tabText, tab === t.key && { color: DIFF_COLOR[t.key], fontWeight: '900' }]}>
-              {t.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Cabecera de columnas */}
-      <View style={styles.colHeader}>
-        <View style={styles.rankCol}>
-          <Text style={styles.colLabel}>#</Text>
+    <GradientBackground sparkles={false}>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>CLASIFICACIÓN</Text>
         </View>
-        <Text style={[styles.colLabel, { flex: 1 }]}>Jugador</Text>
-        <Text style={[styles.colLabel, styles.colRight]}>Puntos</Text>
-      </View>
 
-      {/* Contenido */}
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.accent} />
-        </View>
-      ) : error ? (
-        <View style={styles.center}>
-          <Text style={styles.errorText}>No se pudo cargar la clasificación</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={() => load(tab, userId)}>
-            <Text style={styles.retryText}>Reintentar</Text>
-          </TouchableOpacity>
-        </View>
-      ) : entries.length === 0 && !myEntry ? (
-        <View style={styles.center}>
-          <Text style={styles.emptyIcon}>🏆</Text>
-          <Text style={styles.emptyText}>Aún no hay partidas finalizadas</Text>
-          <Text style={styles.emptySubtext}>¡Sé el primero en aparecer aquí!</Text>
-        </View>
-      ) : (
-        <>
-          <FlatList
-            data={entries}
-            keyExtractor={(item) => item.userId + item.rank}
-            renderItem={renderItem}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-          />
-
-          {/* Mi posición fija al pie, solo si NO estoy en el top visible */}
-          {myEntry && !myEntryInList && (
-            <View style={styles.myEntryWrapper}>
-              <View style={styles.myEntrySeparator}>
-                <View style={styles.myEntrySeparatorLine} />
-                <Text style={styles.myEntrySeparatorText}>Tu posición</Text>
-                <View style={styles.myEntrySeparatorLine} />
-              </View>
-              <View style={[styles.row, styles.rowMe]}>
-                <View style={styles.rankCol}>
-                  <Text style={[styles.rank, { color: accentColor }]}>{myEntry.rank}</Text>
-                </View>
-                <Text style={[styles.nickname, { color: accentColor }]} numberOfLines={1}>
-                  {myEntry.nickname}  (tú)
+        {/* Tabs de dificultad — estilo pill */}
+        <View style={styles.tabs}>
+          {TABS.map((t) => {
+            const active = tab === t.key;
+            return (
+              <TouchableOpacity
+                key={t.key}
+                style={[styles.tab, active && { backgroundColor: DIFF_COLOR[t.key] + '30', borderColor: DIFF_COLOR[t.key] }]}
+                onPress={() => setTab(t.key)}
+              >
+                <Text style={[styles.tabText, active && { color: DIFF_COLOR[t.key], fontWeight: '900' }]}>
+                  {t.label}
                 </Text>
-                <View style={styles.statsCol}>
-                  <Text style={[styles.score, { color: accentColor }]}>
-                    {myEntry.totalScore.toLocaleString('es-CL')}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Cabecera de columnas */}
+        <View style={styles.colHeader}>
+          <View style={styles.rankCol}>
+            <Text style={styles.colLabel}>#</Text>
+          </View>
+          <Text style={[styles.colLabel, { flex: 1 }]}>Jugador</Text>
+          <Text style={[styles.colLabel, styles.colRight]}>Puntos</Text>
+        </View>
+
+        {/* Contenido */}
+        {loading ? (
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color={Colors.accent} />
+          </View>
+        ) : error ? (
+          <View style={styles.center}>
+            <Text style={styles.errorText}>No se pudo cargar la clasificación</Text>
+            <TouchableOpacity style={styles.retryBtn} onPress={() => load(tab, userId)}>
+              <Text style={styles.retryText}>Reintentar</Text>
+            </TouchableOpacity>
+          </View>
+        ) : entries.length === 0 && !myEntry ? (
+          <View style={styles.center}>
+            <Text style={styles.emptyIcon}>🏆</Text>
+            <Text style={styles.emptyText}>Aún no hay partidas finalizadas</Text>
+            <Text style={styles.emptySubtext}>¡Sé el primero en aparecer aquí!</Text>
+          </View>
+        ) : (
+          <>
+            <FlatList
+              data={entries}
+              keyExtractor={(item) => item.userId + item.rank}
+              renderItem={renderItem}
+              contentContainerStyle={styles.list}
+              showsVerticalScrollIndicator={false}
+            />
+
+            {myEntry && !myEntryInList && (
+              <View style={styles.myEntryWrapper}>
+                <View style={styles.myEntrySeparator}>
+                  <View style={styles.myEntrySeparatorLine} />
+                  <Text style={styles.myEntrySeparatorText}>Tu posición</Text>
+                  <View style={styles.myEntrySeparatorLine} />
+                </View>
+                <View style={[styles.row, styles.rowMe]}>
+                  <View style={styles.rankCol}>
+                    <Text style={[styles.rank, { color: accentColor }]}>{myEntry.rank}</Text>
+                  </View>
+                  <Text style={[styles.nickname, { color: accentColor }]} numberOfLines={1}>
+                    {myEntry.nickname}  (tú)
                   </Text>
-                  <Text style={styles.games}>{myEntry.gamesCount} {myEntry.gamesCount === 1 ? 'partida' : 'partidas'}</Text>
+                  <View style={styles.statsCol}>
+                    <Text style={[styles.score, { color: accentColor }]}>
+                      {myEntry.totalScore.toLocaleString('es-CL')}
+                    </Text>
+                    <Text style={styles.games}>{myEntry.gamesCount} {myEntry.gamesCount === 1 ? 'partida' : 'partidas'}</Text>
+                  </View>
                 </View>
               </View>
-            </View>
-          )}
-        </>
-      )}
-    </View>
+            )}
+          </>
+        )}
+      </View>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
 
   header: {
     paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16,
     alignItems: 'center',
   },
-  title: { color: Colors.white, fontSize: 20, fontWeight: '900', letterSpacing: 3 },
+  title: {
+    color: Colors.white, fontSize: 20, fontWeight: '900', letterSpacing: 3,
+    textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4,
+  },
 
   tabs: {
-    flexDirection: 'row',
-    borderBottomWidth: 1, borderBottomColor: Colors.primaryDark,
-    marginHorizontal: 16,
+    flexDirection: 'row', gap: 6,
+    marginHorizontal: 16, marginBottom: 12,
   },
   tab: {
-    flex: 1, alignItems: 'center', paddingVertical: 12,
-    borderBottomWidth: 3, borderBottomColor: 'transparent',
+    flex: 1, alignItems: 'center', paddingVertical: 10,
+    borderRadius: 20, borderWidth: 1.5, borderColor: 'transparent',
   },
-  tabText: { color: Colors.primaryLight, fontSize: 13, fontWeight: '600' },
+  tabText: { color: Colors.primaryLight, fontSize: 12, fontWeight: '600' },
 
   colHeader: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, paddingVertical: 8,
-    borderBottomWidth: 1, borderBottomColor: Colors.primaryDark,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(94, 146, 243, 0.2)',
   },
   rankCol: { width: 44, alignItems: 'center' },
   colLabel: { color: Colors.primaryLight, fontSize: 11, fontWeight: '700', letterSpacing: 1 },
@@ -208,10 +213,10 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row', alignItems: 'center',
     paddingVertical: 13,
-    borderBottomWidth: 1, borderBottomColor: Colors.primaryDark,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(94, 146, 243, 0.15)',
   },
-  rowTop: { backgroundColor: 'rgba(255, 214, 0, 0.05)', borderRadius: 8, marginVertical: 1 },
-  rowMe: { backgroundColor: 'rgba(255, 214, 0, 0.08)', borderRadius: 8 },
+  rowTop: { backgroundColor: 'rgba(255, 214, 0, 0.07)', borderRadius: 10, marginVertical: 1 },
+  rowMe: { backgroundColor: 'rgba(255, 214, 0, 0.1)', borderRadius: 10 },
 
   rank: { color: Colors.primaryLight, fontSize: 16, fontWeight: '700' },
   medal: { fontSize: 22 },
@@ -225,12 +230,12 @@ const styles = StyleSheet.create({
 
   myEntryWrapper: {
     paddingHorizontal: 16, paddingBottom: 24,
-    borderTopWidth: 1, borderTopColor: Colors.primaryDark,
+    borderTopWidth: 1, borderTopColor: 'rgba(94, 146, 243, 0.2)',
   },
   myEntrySeparator: {
     flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10,
   },
-  myEntrySeparatorLine: { flex: 1, height: 1, backgroundColor: Colors.primaryDark },
+  myEntrySeparatorLine: { flex: 1, height: 1, backgroundColor: 'rgba(94, 146, 243, 0.2)' },
   myEntrySeparatorText: { color: Colors.primaryLight, fontSize: 11, fontWeight: '700', letterSpacing: 1 },
 
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },

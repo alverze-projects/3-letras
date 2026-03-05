@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../theme/colors';
 import LogoTape from '../../assets/logo_tape.svg';
 
@@ -10,9 +11,9 @@ const STEPS_MS = [45, 48, 52, 58, 66, 78, 95, 118, 148, 186, 232, 290];
 
 interface Props {
   targetLetter: string;
-  delay?: number;    // retardo de inicio (stagger entre cartas)
+  delay?: number;
   isSpecial?: boolean;
-  size?: number;     // tamaño del card (default 80)
+  size?: number;
 }
 
 export default function SlotLetterCard({
@@ -26,17 +27,70 @@ export default function SlotLetterCard({
   );
   const [locked, setLocked] = useState(false);
 
-  // translateY anima dentro del clip (letras entran desde arriba)
   const translateY = useRef(new Animated.Value(0)).current;
-  // scale anima el card entero al hacer "clic" final
   const scale = useRef(new Animated.Value(1)).current;
 
+  // Idle breathing animation for the letter once locked
+  const breathe = useRef(new Animated.Value(0)).current;
+  // Subtle card shimmer/glow pulse
+  const glowPulse = useRef(new Animated.Value(0)).current;
+
+  // Start idle animations once locked
   useEffect(() => {
-    // Reset al cambiar targetLetter (nueva ronda)
+    if (!locked) return;
+
+    // Gentle floating up/down
+    const breatheLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breathe, {
+          toValue: 1,
+          duration: 1800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(breathe, {
+          toValue: 0,
+          duration: 1800,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+
+    // Glow pulse opacity
+    const glowLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowPulse, {
+          toValue: 1,
+          duration: 2200,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowPulse, {
+          toValue: 0,
+          duration: 2200,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+
+    breatheLoop.start();
+    glowLoop.start();
+
+    return () => {
+      breatheLoop.stop();
+      glowLoop.stop();
+    };
+  }, [locked]);
+
+  useEffect(() => {
     setLocked(false);
     setDisplayLetter(ALPHABET[Math.floor(Math.random() * ALPHABET.length)]);
     scale.setValue(1);
     translateY.setValue(0);
+    breathe.setValue(0);
+    glowPulse.setValue(0);
 
     const startTimer = setTimeout(() => {
       let idx = 0;
@@ -44,9 +98,7 @@ export default function SlotLetterCard({
       function tick() {
         if (idx < STEPS_MS.length) {
           const duration = STEPS_MS[idx];
-          // Cambia la letra
           setDisplayLetter(ALPHABET[Math.floor(Math.random() * ALPHABET.length)]);
-          // Desliza desde arriba
           translateY.setValue(-size);
           Animated.timing(translateY, {
             toValue: 0,
@@ -57,7 +109,6 @@ export default function SlotLetterCard({
           setTimeout(tick, duration);
           idx++;
         } else {
-          // Bloquea en la letra objetivo
           setDisplayLetter(targetLetter);
           setLocked(true);
           translateY.setValue(-size);
@@ -66,7 +117,6 @@ export default function SlotLetterCard({
             duration: 100,
             useNativeDriver: true,
           }).start(() => {
-            // Pequeño rebote de escala al asentarse
             Animated.sequence([
               Animated.spring(scale, {
                 toValue: 1.18,
@@ -95,6 +145,22 @@ export default function SlotLetterCard({
   const logoWidth = size * 1.0;
   const logoHeight = logoWidth * (317 / 1349);
 
+  // Breathing float: -3 to +3 px
+  const letterFloat = breathe.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -3],
+  });
+
+  // Glow opacity: 0.15 to 0.45
+  const glowOpacity = glowPulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.15, 0.45],
+  });
+
+  const gradientColors: [string, string, string] = isSpecial
+    ? ['#FFF0F0', '#FFD6D6', '#FFBABA']
+    : ['#FFFFFF', '#F0F4FF', '#DDE8FF'];
+
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
       <View
@@ -105,18 +171,50 @@ export default function SlotLetterCard({
           locked && isSpecial && styles.cardSpecialLocked,
         ]}
       >
+        {/* Gradient background */}
+        <LinearGradient
+          colors={gradientColors}
+          style={StyleSheet.absoluteFillObject}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+        />
+
+        {/* Pulsing glow overlay */}
+        {locked && (
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFillObject,
+              {
+                backgroundColor: isSpecial ? 'rgba(255,0,0,0.08)' : 'rgba(94,146,243,0.08)',
+                opacity: glowOpacity,
+              },
+            ]}
+          />
+        )}
+
         {/* Logo tape en la parte superior */}
         <View style={styles.logoTop}>
           <LogoTape width={logoWidth} height={logoHeight} />
         </View>
 
-        {/* Letra centrada en el cuadrado */}
-        <Animated.View style={[styles.letterWrap, { transform: [{ translateY }] }]}>
+        {/* Letra centrada con animación de flotación */}
+        <Animated.View
+          style={[
+            styles.letterWrap,
+            {
+              transform: [
+                { translateY: locked ? letterFloat : translateY },
+              ],
+            },
+          ]}
+        >
           <Text
             style={[
               styles.letter,
               { fontSize: size * 0.45 },
               isSpecial && styles.letterSpecial,
+              locked && styles.letterLocked,
+              locked && isSpecial && styles.letterSpecialLocked,
             ]}
           >
             {displayLetter}
@@ -136,25 +234,23 @@ const styles = StyleSheet.create({
   card: {
     borderWidth: 3,
     borderColor: Colors.cardBorderAccent,
-    backgroundColor: Colors.white,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    elevation: 8,
+    shadowColor: Colors.cardBorderAccent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
   },
   cardSpecial: {
     borderWidth: 3,
     borderColor: Colors.red,
-    backgroundColor: '#FFF3F3',
-    elevation: 6,
+    elevation: 8,
     shadowColor: Colors.red,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
   },
   cardSpecialLocked: {
-    shadowOpacity: 0.55,
+    shadowOpacity: 0.6,
   },
   logoTop: {
     position: 'absolute',
@@ -171,5 +267,15 @@ const styles = StyleSheet.create({
   },
   letterSpecial: {
     color: Colors.red,
+  },
+  letterLocked: {
+    textShadowColor: 'rgba(0,0,0,0.15)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  letterSpecialLocked: {
+    textShadowColor: 'rgba(255,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
   },
 });

@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  Animated,
+  Animated, ScrollView,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import GradientBackground from '../components/GradientBackground';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { getSocket, WS_EVENTS } from '../services/socket';
@@ -43,6 +43,13 @@ type VoteResult = {
   wasTie: boolean;
 };
 
+type WordEntry = {
+  word: string;
+  score: number;
+  nickname: string;
+  isValid: boolean;
+};
+
 type Props = StackScreenProps<RootStackParamList, 'Game'>;
 
 export default function GameScreen({ navigation, route }: Props) {
@@ -54,6 +61,7 @@ export default function GameScreen({ navigation, route }: Props) {
   const [remainingMs, setRemainingMs] = useState(15000);
   const [players, setPlayers] = useState<IGamePlayer[]>(initialPlayers ?? []);
   const [lastResult, setLastResult] = useState<{ turn: ITurn; nickname: string } | null>(null);
+  const [wordHistory, setWordHistory] = useState<WordEntry[]>([]);
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [diceRequest, setDiceRequest] = useState<DiceRollRequest | null>(null);
   const [diceResult, setDiceResult] = useState<DiceResult | null>(null);
@@ -102,6 +110,7 @@ export default function GameScreen({ navigation, route }: Props) {
       setDiceResult(null);
       setRound(newRound);
       setLastResult(null);
+      setWordHistory([]);
       setWord('');
       soundManager.play('round_start');
     });
@@ -129,6 +138,14 @@ export default function GameScreen({ navigation, route }: Props) {
 
     socket.on(WS_EVENTS.SERVER.TURN_RESULT, ({ turn, playerNickname, playerScores }) => {
       setLastResult({ turn, nickname: playerNickname });
+      if (turn.word) {
+        setWordHistory((prev) => [...prev, {
+          word: turn.word,
+          score: turn.isValid ? turn.score : 0,
+          nickname: playerNickname,
+          isValid: turn.isValid,
+        }]);
+      }
       setActiveTurn(null);
       setIsMyTurn(false);
       isMyTurnRef.current = false;
@@ -262,7 +279,7 @@ export default function GameScreen({ navigation, route }: Props) {
   // Overlay: animación del dado rodando (el resultado ya llegó)
   if (diceResult) {
     return (
-      <LinearGradient colors={[Colors.gradientTop, Colors.gradientMid, Colors.gradientBottom]} style={styles.diceOverlay}>
+      <GradientBackground style={styles.diceOverlay}>
         <Text style={styles.diceRoundLabel}>RONDA {diceResult.roundNumber}</Text>
         <Text style={styles.diceRollerName}>{diceResult.rollerNickname} lanzó el dado</Text>
         <DiceAnimation
@@ -281,7 +298,7 @@ export default function GameScreen({ navigation, route }: Props) {
               : `cada jugador tendrá ${diceResult.value} turnos con estas letras`}
           </Text>
         </Animated.View>
-      </LinearGradient>
+      </GradientBackground>
     );
   }
 
@@ -289,7 +306,7 @@ export default function GameScreen({ navigation, route }: Props) {
   if (diceRequest) {
     const isRoller = diceRequest.rollerId === player.id;
     return (
-      <LinearGradient colors={[Colors.gradientTop, Colors.gradientMid, Colors.gradientBottom]} style={styles.diceOverlay}>
+      <GradientBackground style={styles.diceOverlay}>
         <Text style={styles.diceRoundLabel}>RONDA {diceRequest.roundNumber}</Text>
 
         {isRoller ? (
@@ -314,14 +331,14 @@ export default function GameScreen({ navigation, route }: Props) {
         <Text style={[styles.diceCountdown, diceSecondsLeft <= 5 && styles.diceCountdownUrgent]}>
           {diceSecondsLeft}s
         </Text>
-      </LinearGradient>
+      </GradientBackground>
     );
   }
 
   // Overlay de resultado de votación
   if (voteResult) {
     return (
-      <LinearGradient colors={[Colors.gradientTop, Colors.gradientMid, Colors.gradientBottom]} style={styles.voteResultOverlay}>
+      <GradientBackground style={styles.voteResultOverlay}>
         <Text style={styles.voteResultIcon}>{voteResult.accepted ? '✓' : '✗'}</Text>
         <Text style={styles.voteResultTitle}>
           {voteResult.accepted ? '¡Letras aceptadas!' : 'Buscando nuevas letras...'}
@@ -332,7 +349,7 @@ export default function GameScreen({ navigation, route }: Props) {
         <Text style={styles.voteResultCount}>
           {voteResult.yesCount} sí · {voteResult.noCount} no
         </Text>
-      </LinearGradient>
+      </GradientBackground>
     );
   }
 
@@ -340,7 +357,7 @@ export default function GameScreen({ navigation, route }: Props) {
   if (voteState) {
     const voteLetters = voteState.letters;
     return (
-      <LinearGradient colors={[Colors.gradientTop, Colors.gradientMid, Colors.gradientBottom]} style={styles.voteOverlay}>
+      <GradientBackground style={styles.voteOverlay}>
         <Text style={styles.voteTitle}>RONDA {voteState.roundNumber}</Text>
         <Text style={styles.voteSubtitle}>Salieron letras especiales</Text>
         <Text style={styles.voteQuestion}>¿Aceptar estas letras?</Text>
@@ -381,12 +398,12 @@ export default function GameScreen({ navigation, route }: Props) {
         <Text style={[styles.diceCountdown, voteSecondsLeft <= 5 && styles.diceCountdownUrgent]}>
           {voteSecondsLeft}s
         </Text>
-      </LinearGradient>
+      </GradientBackground>
     );
   }
 
   return (
-    <LinearGradient colors={[Colors.gradientTop, Colors.gradientMid, Colors.gradientBottom]} style={styles.container}>
+    <GradientBackground style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.roundLabel}>RONDA {round?.roundNumber ?? '-'}</Text>
         <View style={styles.headerRight}>
@@ -475,157 +492,411 @@ export default function GameScreen({ navigation, route }: Props) {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Cuaderno de palabras */}
+      <View style={styles.notebook}>
+        {/* Header con columnas */}
+        <View style={styles.notebookHeader}>
+          <View style={styles.notebookHeaderLeft}>
+            <Text style={styles.notebookHeaderText}>PALABRAS</Text>
+          </View>
+          <View style={styles.notebookHeaderRight}>
+            <Text style={styles.notebookHeaderText}>PUNTOS</Text>
+          </View>
+        </View>
+        {/* Filas */}
+        <ScrollView style={styles.notebookBody} nestedScrollEnabled>
+          {wordHistory.length === 0 && (
+            <View style={styles.notebookRow}>
+              <Text style={styles.notebookRowNum}>1</Text>
+              <Text style={styles.notebookEmpty}>Las palabras aparecerán aquí...</Text>
+            </View>
+          )}
+          {wordHistory.map((entry, i) => (
+            <View key={i} style={styles.notebookRow}>
+              <Text style={styles.notebookRowNum}>{i + 1}</Text>
+              <View style={styles.notebookWordCol}>
+                <Text style={[styles.notebookWord, !entry.isValid && styles.notebookWordInvalid]}>
+                  {entry.word}
+                </Text>
+                <Text style={styles.notebookNickname}>{entry.nickname}</Text>
+              </View>
+              <View style={styles.notebookPointsCol}>
+                <Text style={[styles.notebookPoints, entry.isValid ? styles.notebookPointsValid : styles.notebookPointsInvalid]}>
+                  {entry.isValid ? `+${entry.score}` : '✗'}
+                </Text>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+        {/* Totales por jugador */}
+        <View style={styles.notebookFooter}>
+          {players.sort((a, b) => b.totalScore - a.totalScore).map((p) => (
+            <View key={p.playerId} style={[styles.notebookTotal, p.playerId === player.id && styles.notebookTotalMe]}>
+              <Text style={styles.notebookTotalNick}>{p.nickname}</Text>
+              <Text style={styles.notebookTotalPts}>{p.totalScore} pts</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
       {isMyTurn && (
         <TouchableOpacity style={styles.skipBtn} onPress={skipTurn}>
           <Text style={styles.skipBtnText}>{isSolo ? 'Terminar ronda' : 'Pasar turno'}</Text>
         </TouchableOpacity>
       )}
-
-      {/* Marcador */}
-      <View style={styles.scoreBoard}>
-        <Text style={styles.scoreBoardTitle}>PUNTAJES</Text>
-        {players.sort((a, b) => b.totalScore - a.totalScore).map((p) => (
-          <View key={p.playerId} style={[styles.scoreRow, p.playerId === player.id && styles.scoreRowMe]}>
-            <Text style={styles.scoreNick}>{p.nickname}</Text>
-            <Text style={styles.scorePoints}>{p.totalScore}</Text>
-          </View>
-        ))}
-      </View>
-    </LinearGradient>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 40 },
+  // ── Header ─────────────────────────────────────────────────────────────────
+  header: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    marginTop: 40, marginBottom: 4,
+  },
   headerRight: { alignItems: 'flex-end', gap: 4 },
-  roundLabel: { color: Colors.white, fontSize: 20, fontWeight: '900', textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 },
-  dieLabel: { color: Colors.primaryLight, fontSize: 14 },
-  difficultyBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 },
-  difficulty_basic: { backgroundColor: '#1B5E20' },
-  difficulty_medium: { backgroundColor: '#E65100' },
-  difficulty_advanced: { backgroundColor: '#B71C1C' },
-  difficultyText: { color: Colors.white, fontWeight: '900', fontSize: 11, letterSpacing: 1 },
+  roundLabel: {
+    color: Colors.accent, fontSize: 24, fontWeight: '900', letterSpacing: 2,
+    textShadowColor: 'rgba(255,214,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 6,
+  },
+  dieLabel: {
+    color: Colors.primaryLight, fontSize: 14, fontWeight: '600',
+    textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
+  },
+  difficultyBadge: {
+    paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  difficulty_basic: { backgroundColor: '#2E7D32' },
+  difficulty_medium: { backgroundColor: '#EF6C00' },
+  difficulty_advanced: { backgroundColor: '#C62828' },
+  difficultyText: { color: Colors.white, fontWeight: '900', fontSize: 11, letterSpacing: 1.5 },
   // ── Dado ────────────────────────────────────────────────────────────────────
   diceOverlay: {
     flex: 1,
     justifyContent: 'center', alignItems: 'center',
-    padding: 32, gap: 24,
+    padding: 32, gap: 28,
   },
   diceRoundLabel: {
-    color: Colors.primaryLight, fontSize: 13, fontWeight: '700', letterSpacing: 3,
+    color: Colors.accent, fontSize: 14, fontWeight: '900', letterSpacing: 4,
+    textShadowColor: 'rgba(255,214,0,0.4)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
   },
   diceMyTurnTitle: {
-    color: Colors.accent, fontSize: 24, fontWeight: '900', textAlign: 'center',
+    color: Colors.accent, fontSize: 26, fontWeight: '900', textAlign: 'center',
+    textShadowColor: 'rgba(255,214,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 8,
   },
   diceWaitTitle: {
-    color: Colors.white, fontSize: 20, fontWeight: '700', textAlign: 'center',
+    color: Colors.white, fontSize: 22, fontWeight: '700', textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4,
   },
   diceRollerName: {
-    color: Colors.white, fontSize: 18, fontWeight: '700',
+    color: Colors.white, fontSize: 20, fontWeight: '700',
+    textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
   },
   diceRollBtn: {
-    backgroundColor: Colors.accent, borderRadius: 20,
-    paddingVertical: 20, paddingHorizontal: 48,
-    alignItems: 'center', gap: 6,
-    elevation: 8,
+    backgroundColor: Colors.accent, borderRadius: 22,
+    paddingVertical: 22, paddingHorizontal: 52,
+    alignItems: 'center', gap: 8,
+    elevation: 10,
     shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    borderBottomWidth: 5,
+    borderBottomColor: '#C6A700',
+  },
+  diceRollBtnIcon: { fontSize: 44 },
+  diceRollBtnText: {
+    color: Colors.dark, fontSize: 22, fontWeight: '900', letterSpacing: 3,
+  },
+  dicePlaceholder: {
+    width: 120, height: 120,
+    borderRadius: 24, borderWidth: 3, borderColor: 'rgba(94,146,243,0.5)',
+    borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.15)',
+  },
+  dicePlaceholderText: { fontSize: 56 },
+  diceCountdown: {
+    color: Colors.primaryLight, fontSize: 24, fontWeight: '900',
+    textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
+  },
+  diceCountdownUrgent: { color: Colors.red },
+  diceTextArea: {
+    alignItems: 'center', gap: 8,
+  },
+  diceResultNumber: {
+    color: Colors.accent, fontSize: 80, fontWeight: '900', lineHeight: 84,
+    textShadowColor: 'rgba(255,214,0,0.6)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 12,
+  },
+  diceResultLabel: {
+    color: Colors.white, fontSize: 18, fontWeight: '600',
+    textAlign: 'center', opacity: 0.9,
+    textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
+  },
+  // ── Letras ──────────────────────────────────────────────────────────────────
+  lettersRow: {
+    flexDirection: 'row', justifyContent: 'center', gap: 12, marginVertical: 20,
+  },
+  // ── Timer ───────────────────────────────────────────────────────────────────
+  timerContainer: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderRadius: 14, height: 40, overflow: 'hidden', marginVertical: 10, padding: 4,
+    borderWidth: 2, borderColor: 'rgba(94,146,243,0.3)',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  timerBar: {
+    height: '100%', borderRadius: 10,
+    elevation: 2,
+  },
+  timerText: {
+    color: Colors.white, fontWeight: '900', fontSize: 17,
+    position: 'absolute', right: 12,
+    textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
+  },
+  // ── Turno ───────────────────────────────────────────────────────────────────
+  turnInfo: {
+    alignItems: 'center', marginVertical: 10,
+    backgroundColor: 'rgba(255,214,0,0.1)',
+    borderRadius: 14, paddingVertical: 10, paddingHorizontal: 20,
+    borderWidth: 1, borderColor: 'rgba(255,214,0,0.25)',
+  },
+  turnWho: {
+    color: Colors.accent, fontSize: 22, fontWeight: '900', letterSpacing: 2,
+    textShadowColor: 'rgba(255,214,0,0.5)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 10,
+  },
+  // ── Resultado ───────────────────────────────────────────────────────────────
+  result: {
+    borderRadius: 16, padding: 16, marginVertical: 10, alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    borderWidth: 1,
+  },
+  resultValid: {
+    backgroundColor: '#1B5E20',
+    borderColor: 'rgba(76,175,80,0.4)',
+  },
+  resultInvalid: {
+    backgroundColor: '#B71C1C',
+    borderColor: 'rgba(244,67,54,0.4)',
+  },
+  resultNickname: {
+    color: 'rgba(255,255,255,0.8)', fontSize: 13, marginBottom: 4, fontWeight: '600',
+  },
+  resultWord: {
+    color: Colors.white, fontSize: 24, fontWeight: '900', letterSpacing: 2,
+    textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3,
+  },
+  resultScore: {
+    color: Colors.accent, fontSize: 20, fontWeight: '900', marginTop: 4,
+    textShadowColor: 'rgba(255,214,0,0.6)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 8,
+  },
+  resultReason: { color: 'rgba(255,255,255,0.8)', fontSize: 13, marginTop: 4, fontStyle: 'italic' },
+  // ── Input ───────────────────────────────────────────────────────────────────
+  inputRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
+  wordInput: {
+    flex: 1, backgroundColor: Colors.white, borderRadius: 14, paddingHorizontal: 18, paddingVertical: 12,
+    fontSize: 20, fontWeight: '900', color: Colors.dark, letterSpacing: 3,
+    borderWidth: 3, borderColor: Colors.accent,
+    elevation: 4,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  sendBtn: {
+    backgroundColor: Colors.accent, borderRadius: 14, width: 56, height: 56,
+    justifyContent: 'center', alignItems: 'center',
+    elevation: 6,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    borderBottomWidth: 4,
+    borderBottomColor: '#C6A700',
+  },
+  sendBtnText: { fontSize: 26, fontWeight: '900', color: Colors.dark },
+  skipBtn: {
+    alignItems: 'center', marginTop: 10,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12, paddingVertical: 10, paddingHorizontal: 24,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
+  },
+  skipBtnText: {
+    color: 'rgba(255,255,255,0.7)', fontSize: 15, fontWeight: '700', letterSpacing: 1,
+  },
+  // ── Vote ─────────────────────────────────────────────────────────────────────
+  voteOverlay: {
+    flex: 1, justifyContent: 'center',
+    alignItems: 'center', padding: 24, gap: 18,
+  },
+  voteTitle: {
+    color: Colors.accent, fontSize: 15, fontWeight: '900', letterSpacing: 4,
+    textShadowColor: 'rgba(255,214,0,0.4)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
+  },
+  voteSubtitle: {
+    color: Colors.white, fontSize: 24, fontWeight: '900',
+    textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4,
+  },
+  voteQuestion: {
+    color: Colors.accent, fontSize: 20, fontWeight: '800', marginBottom: 8,
+    textShadowColor: 'rgba(255,214,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
+  },
+  voteLettersRow: { flexDirection: 'row', gap: 12, marginVertical: 12 },
+  voteButtons: { flexDirection: 'row', gap: 20, marginTop: 12 },
+  voteBtnYes: {
+    backgroundColor: '#2E7D32', borderRadius: 18, paddingVertical: 20, paddingHorizontal: 40,
+    elevation: 8,
+    shadowColor: '#2E7D32',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.5,
     shadowRadius: 8,
-  },
-  diceRollBtnIcon: { fontSize: 40 },
-  diceRollBtnText: {
-    color: Colors.dark, fontSize: 20, fontWeight: '900', letterSpacing: 2,
-  },
-  dicePlaceholder: {
-    width: 110, height: 110,
-    borderRadius: 20, borderWidth: 3, borderColor: Colors.primaryLight,
-    borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center',
-  },
-  dicePlaceholderText: { fontSize: 52 },
-  diceCountdown: { color: Colors.primaryLight, fontSize: 22, fontWeight: '700' },
-  diceCountdownUrgent: { color: Colors.red },
-  diceTextArea: {
-    alignItems: 'center', gap: 6,
-  },
-  diceResultNumber: {
-    color: Colors.accent, fontSize: 72, fontWeight: '900', lineHeight: 76,
-  },
-  diceResultLabel: {
-    color: Colors.white, fontSize: 17, fontWeight: '600',
-    textAlign: 'center', opacity: 0.9,
-  },
-  // ── Letras ──────────────────────────────────────────────────────────────────
-  lettersRow: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginVertical: 20 },
-  timerContainer: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: Colors.primaryDark, borderRadius: 10,
-    height: 36, overflow: 'hidden', marginVertical: 8, padding: 4,
-  },
-  timerBar: { height: '100%', borderRadius: 6 },
-  timerText: { color: Colors.white, fontWeight: '700', fontSize: 16, position: 'absolute', right: 10 },
-  turnInfo: { alignItems: 'center', marginVertical: 8 },
-  turnWho: { color: Colors.accent, fontSize: 20, fontWeight: '900', letterSpacing: 1, textShadowColor: 'rgba(255,214,0,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 8 },
-  result: { borderRadius: 12, padding: 14, marginVertical: 8, alignItems: 'center' },
-  resultValid: { backgroundColor: '#1B5E20' },
-  resultInvalid: { backgroundColor: '#B71C1C' },
-  resultNickname: { color: 'rgba(255,255,255,0.7)', fontSize: 13, marginBottom: 4 },
-  resultWord: { color: Colors.white, fontSize: 22, fontWeight: '700' },
-  resultScore: { color: Colors.accent, fontSize: 18, fontWeight: '900', marginTop: 4, textShadowColor: 'rgba(255,214,0,0.5)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 6 },
-  resultReason: { color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 4 },
-  inputRow: { flexDirection: 'row', gap: 10, marginTop: 8 },
-  wordInput: {
-    flex: 1, backgroundColor: Colors.white, borderRadius: 12, paddingHorizontal: 16,
-    fontSize: 18, fontWeight: '700', color: Colors.dark, letterSpacing: 2,
-    borderWidth: 2, borderColor: Colors.accent,
-  },
-  sendBtn: {
-    backgroundColor: Colors.accent, borderRadius: 12, width: 52,
-    justifyContent: 'center', alignItems: 'center',
-  },
-  sendBtnText: { fontSize: 22, fontWeight: '900', color: Colors.dark },
-  skipBtn: { alignItems: 'center', marginTop: 8 },
-  skipBtnText: { color: Colors.gray, fontSize: 14, textDecorationLine: 'underline' },
-  voteOverlay: {
-    flex: 1, justifyContent: 'center',
-    alignItems: 'center', padding: 24, gap: 16,
-  },
-  voteTitle: { color: Colors.primaryLight, fontSize: 14, fontWeight: '700', letterSpacing: 3 },
-  voteSubtitle: { color: Colors.white, fontSize: 22, fontWeight: '900' },
-  voteQuestion: { color: Colors.accent, fontSize: 18, fontWeight: '700', marginBottom: 8 },
-  voteLettersRow: { flexDirection: 'row', gap: 12, marginVertical: 8 },
-  voteButtons: { flexDirection: 'row', gap: 16, marginTop: 8 },
-  voteBtnYes: {
-    backgroundColor: '#1B5E20', borderRadius: 14, paddingVertical: 18, paddingHorizontal: 36,
+    borderBottomWidth: 5,
+    borderBottomColor: '#1B5E20',
   },
   voteBtnNo: {
-    backgroundColor: '#B71C1C', borderRadius: 14, paddingVertical: 18, paddingHorizontal: 36,
+    backgroundColor: '#C62828', borderRadius: 18, paddingVertical: 20, paddingHorizontal: 40,
+    elevation: 8,
+    shadowColor: '#C62828',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    borderBottomWidth: 5,
+    borderBottomColor: '#8E0000',
   },
-  voteBtnText: { color: Colors.white, fontSize: 20, fontWeight: '900', letterSpacing: 2 },
-  voteWaiting: { alignItems: 'center', gap: 8 },
-  voteWaitingText: { color: Colors.primaryLight, fontSize: 16, fontStyle: 'italic' },
-  voteProgress: { color: Colors.white, fontSize: 18, fontWeight: '700' },
+  voteBtnText: { color: Colors.white, fontSize: 22, fontWeight: '900', letterSpacing: 3 },
+  voteWaiting: {
+    alignItems: 'center', gap: 10,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 16, paddingVertical: 16, paddingHorizontal: 24,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
+  },
+  voteWaitingText: { color: Colors.primaryLight, fontSize: 17, fontWeight: '600', fontStyle: 'italic' },
+  voteProgress: { color: Colors.white, fontSize: 20, fontWeight: '900' },
   voteHint: {
-    color: Colors.gray, fontSize: 13, textAlign: 'center',
-    marginTop: 8, fontStyle: 'italic',
+    color: 'rgba(255,255,255,0.5)', fontSize: 13, textAlign: 'center',
+    marginTop: 10, fontStyle: 'italic',
   },
+  // ── Vote result ──────────────────────────────────────────────────────────────
   voteResultOverlay: {
     flex: 1, justifyContent: 'center',
-    alignItems: 'center', gap: 12,
+    alignItems: 'center', gap: 16,
   },
-  voteResultIcon: { fontSize: 72 },
-  voteResultTitle: { color: Colors.white, fontSize: 26, fontWeight: '900', textAlign: 'center' },
-  voteResultTie: { color: Colors.accent, fontSize: 14, fontStyle: 'italic' },
-  voteResultCount: { color: Colors.primaryLight, fontSize: 15 },
-  scoreBoard: {
-    flex: 1, marginTop: 16, backgroundColor: Colors.cardBg,
-    borderRadius: 14, padding: 14,
-    borderWidth: 1, borderColor: 'rgba(94, 146, 243, 0.3)',
+  voteResultIcon: { fontSize: 80 },
+  voteResultTitle: {
+    color: Colors.white, fontSize: 28, fontWeight: '900', textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 6,
   },
-  scoreBoardTitle: { color: Colors.primaryLight, fontSize: 12, fontWeight: '700', marginBottom: 8, letterSpacing: 2 },
-  scoreRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
-  scoreRowMe: { borderLeftWidth: 3, borderLeftColor: Colors.accent, paddingLeft: 8 },
-  scoreNick: { color: Colors.white, fontSize: 15 },
-  scorePoints: { color: Colors.accent, fontSize: 15, fontWeight: '700' },
+  voteResultTie: { color: Colors.accent, fontSize: 15, fontWeight: '600', fontStyle: 'italic' },
+  voteResultCount: {
+    color: Colors.primaryLight, fontSize: 16, fontWeight: '600',
+    textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
+  },
+  // ── Cuaderno (notebook word log) ─────────────────────────────────────────────
+  notebook: {
+    flex: 1, marginTop: 16,
+    backgroundColor: '#FFFEF8',
+    borderRadius: 16,
+    borderWidth: 3, borderColor: Colors.accent,
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+  },
+  notebookHeader: {
+    flexDirection: 'row',
+  },
+  notebookHeaderLeft: {
+    flex: 1,
+    backgroundColor: '#C62828',
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  notebookHeaderRight: {
+    width: 90,
+    backgroundColor: Colors.primary,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  notebookHeaderText: {
+    color: Colors.white, fontWeight: '900', fontSize: 13, letterSpacing: 2,
+  },
+  notebookBody: {
+    flex: 1,
+    paddingHorizontal: 0,
+  },
+  notebookRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 8, paddingHorizontal: 10,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(100,140,220,0.2)',
+  },
+  notebookRowNum: {
+    width: 28,
+    color: 'rgba(0,0,0,0.3)', fontSize: 13, fontWeight: '700',
+  },
+  notebookEmpty: {
+    flex: 1,
+    color: 'rgba(0,0,0,0.25)', fontSize: 14, fontStyle: 'italic',
+  },
+  notebookWordCol: {
+    flex: 1,
+  },
+  notebookWord: {
+    color: Colors.dark, fontSize: 16, fontWeight: '800', letterSpacing: 1,
+  },
+  notebookWordInvalid: {
+    color: '#C62828', textDecorationLine: 'line-through', opacity: 0.6,
+  },
+  notebookNickname: {
+    color: 'rgba(0,0,0,0.4)', fontSize: 11, fontWeight: '600', marginTop: 1,
+  },
+  notebookPointsCol: {
+    width: 90, alignItems: 'center',
+    borderLeftWidth: 1, borderLeftColor: 'rgba(100,140,220,0.2)',
+  },
+  notebookPoints: {
+    fontSize: 16, fontWeight: '900',
+  },
+  notebookPointsValid: {
+    color: '#2E7D32',
+  },
+  notebookPointsInvalid: {
+    color: '#C62828',
+  },
+  notebookFooter: {
+    borderTopWidth: 2, borderTopColor: Colors.accent,
+    backgroundColor: 'rgba(255,214,0,0.08)',
+    paddingVertical: 8, paddingHorizontal: 12,
+    gap: 4,
+  },
+  notebookTotal: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    paddingVertical: 4, paddingHorizontal: 6,
+    borderRadius: 6,
+  },
+  notebookTotalMe: {
+    backgroundColor: 'rgba(255,214,0,0.15)',
+    borderWidth: 1, borderColor: 'rgba(255,214,0,0.3)',
+  },
+  notebookTotalNick: {
+    color: Colors.dark, fontSize: 14, fontWeight: '700',
+  },
+  notebookTotalPts: {
+    color: Colors.primary, fontSize: 14, fontWeight: '900',
+  },
 });

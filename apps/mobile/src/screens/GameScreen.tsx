@@ -8,6 +8,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { getSocket, WS_EVENTS } from '../services/socket';
 import { soundManager } from '../services/sound';
+import { useMusic } from '../contexts/MusicContext';
 import { Colors } from '../theme/colors';
 import type { IRound, IActiveTurn, ITurn, IGamePlayer } from '@3letras/interfaces';
 import { SPECIAL_LETTERS } from '@3letras/constants/game-rules';
@@ -54,6 +55,12 @@ type Props = StackScreenProps<RootStackParamList, 'Game'>;
 
 export default function GameScreen({ navigation, route }: Props) {
   const { gameCode, player, settings, initialPlayers } = route.params;
+  const { play: playMusic } = useMusic();
+
+  useEffect(() => {
+    playMusic('game');
+    return () => { playMusic('menu'); };
+  }, []);
   const isSolo = (initialPlayers?.length ?? 0) === 1;
   const [round, setRound] = useState<IRound | null>(null);
   const [activeTurn, setActiveTurn] = useState<IActiveTurn | null>(null);

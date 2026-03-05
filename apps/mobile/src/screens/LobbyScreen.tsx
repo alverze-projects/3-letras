@@ -1,16 +1,25 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, FlatList,
-  Share, ActivityIndicator,
+  Share, ActivityIndicator, Animated,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { connectSocket, WS_EVENTS } from '../services/socket';
 import { Colors } from '../theme/colors';
+import GradientBackground from '../components/GradientBackground';
+import GameButton from '../components/GameButton';
+import GameCard from '../components/GameCard';
 import type { IGamePlayer } from '@3letras/interfaces';
 import type { Socket } from 'socket.io-client';
 
 type Props = StackScreenProps<RootStackParamList, 'Lobby'>;
+
+const DIFF_LABELS: Record<string, { label: string; color: string }> = {
+  basic: { label: 'BÁSICO', color: '#43A047' },
+  medium: { label: 'MEDIO', color: '#FF9800' },
+  advanced: { label: 'AVANZADO', color: '#E53935' },
+};
 
 export default function LobbyScreen({ navigation, route }: Props) {
   const { gameCode, token, player, difficulty, totalRounds, autoStart } = route.params;
@@ -18,6 +27,9 @@ export default function LobbyScreen({ navigation, route }: Props) {
   const playersRef = useRef<IGamePlayer[]>([]);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isHost, setIsHost] = useState(false);
+
+  // Pulsing dots for "waiting"
+  const dotAnim = useRef(new Animated.Value(0.4)).current;
 
   useEffect(() => {
     const s = connectSocket(token);
@@ -31,7 +43,6 @@ export default function LobbyScreen({ navigation, route }: Props) {
       const iAmHost = game.hostId === player.id;
       setIsHost(iAmHost);
 
-      // Modo solo: iniciar automáticamente en cuanto se confirme el estado
       if (autoStart && iAmHost) {
         s.emit(WS_EVENTS.CLIENT.GAME_START, {
           gameCode,
@@ -57,7 +68,20 @@ export default function LobbyScreen({ navigation, route }: Props) {
       navigation.replace('Game', { gameCode, token, player, settings, initialPlayers: playersRef.current });
     });
 
-    return () => { s.off(WS_EVENTS.SERVER.GAME_STATE); s.off(WS_EVENTS.SERVER.PLAYER_JOINED); };
+    // Dot pulse anim
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(dotAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(dotAnim, { toValue: 0.4, duration: 800, useNativeDriver: true }),
+      ]),
+    );
+    pulse.start();
+
+    return () => {
+      s.off(WS_EVENTS.SERVER.GAME_STATE);
+      s.off(WS_EVENTS.SERVER.PLAYER_JOINED);
+      pulse.stop();
+    };
   }, [gameCode, token]);
 
   function handleStart() {
@@ -71,106 +95,117 @@ export default function LobbyScreen({ navigation, route }: Props) {
     await Share.share({ message: `¡Únete a mi partida de Tres Letras! Código: ${gameCode}` });
   }
 
+  const diffInfo = DIFF_LABELS[difficulty] || DIFF_LABELS.medium;
+
   if (autoStart) {
     return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color={Colors.accent} />
-      </View>
+      <GradientBackground>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.accent} />
+        </View>
+      </GradientBackground>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>SALA DE ESPERA</Text>
+    <GradientBackground>
+      <View style={styles.container}>
+        <Text style={styles.title}>SALA DE ESPERA</Text>
 
-      <TouchableOpacity style={styles.codeBox} onPress={handleShare}>
-        <Text style={styles.codeLabel}>Código de sala</Text>
-        <Text style={styles.code}>{gameCode}</Text>
-        <Text style={styles.codeHint}>Toca para compartir</Text>
-      </TouchableOpacity>
+        <GameCard glow>
+          <TouchableOpacity onPress={handleShare}>
+            <Text style={styles.codeLabel}>Código de sala</Text>
+            <Text style={styles.code}>{gameCode}</Text>
+            <Text style={styles.codeHint}>Toca para compartir</Text>
+          </TouchableOpacity>
+        </GameCard>
 
-      <View style={styles.badgesRow}>
-        <View style={[styles.difficultyBadge, styles[`difficulty_${difficulty}`]]}>
-          <Text style={styles.difficultyText}>
-            {difficulty === 'basic' ? 'BÁSICO'
-              : difficulty === 'medium' ? 'MEDIO'
-              : 'AVANZADO'}
-          </Text>
+        <View style={styles.badgesRow}>
+          <View style={[styles.badge, { backgroundColor: diffInfo.color }]}>
+            <Text style={styles.badgeText}>{diffInfo.label}</Text>
+          </View>
+          <View style={[styles.badge, { backgroundColor: '#1A237E' }]}>
+            <Text style={styles.badgeText}>{totalRounds} RONDAS</Text>
+          </View>
         </View>
-        <View style={styles.roundsBadge}>
-          <Text style={styles.difficultyText}>{totalRounds} RONDAS</Text>
-        </View>
-      </View>
 
-      <Text style={styles.sectionTitle}>Jugadores ({players.length}/8)</Text>
-      <FlatList
-        data={players}
-        keyExtractor={(p) => p.playerId}
-        renderItem={({ item }) => (
-          <View style={styles.playerRow}>
-            <View style={[styles.playerDot, item.isConnected && styles.playerDotActive]} />
-            <Text style={styles.playerName}>{item.nickname}</Text>
-            {item.isHost && <Text style={styles.hostBadge}>HOST</Text>}
+        <Text style={styles.sectionTitle}>Jugadores ({players.length}/8)</Text>
+        <FlatList
+          data={players}
+          keyExtractor={(p) => p.playerId}
+          renderItem={({ item }) => (
+            <View style={styles.playerRow}>
+              <Animated.View style={[
+                styles.playerDot,
+                item.isConnected && styles.playerDotActive,
+                item.isConnected && { opacity: dotAnim },
+              ]} />
+              <Text style={styles.playerName}>{item.nickname}</Text>
+              {item.isHost && (
+                <View style={styles.hostBadge}>
+                  <Text style={styles.hostBadgeText}>HOST</Text>
+                </View>
+              )}
+            </View>
+          )}
+          style={styles.playerList}
+        />
+
+        {isHost ? (
+          <GameButton
+            title="INICIAR JUEGO"
+            onPress={handleStart}
+            shadowHeight={5}
+            textStyle={{ fontSize: 20 }}
+          />
+        ) : (
+          <View style={styles.waitingMsg}>
+            <Text style={styles.waitingText}>Esperando que el host inicie...</Text>
           </View>
         )}
-        style={styles.playerList}
-      />
-
-      {isHost ? (
-        <TouchableOpacity style={styles.startBtn} onPress={handleStart}>
-          <Text style={styles.startBtnText}>INICIAR JUEGO</Text>
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.waitingMsg}>
-          <Text style={styles.waitingText}>Esperando que el host inicie...</Text>
-        </View>
-      )}
-    </View>
+      </View>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  loading: { flex: 1, backgroundColor: Colors.background, justifyContent: 'center', alignItems: 'center' },
-  container: { flex: 1, backgroundColor: Colors.background, padding: 24 },
-  title: { fontSize: 28, fontWeight: '900', color: Colors.white, textAlign: 'center', marginTop: 40, letterSpacing: 4 },
-  codeBox: {
-    backgroundColor: Colors.primaryDark, borderRadius: 16, padding: 20,
-    alignItems: 'center', marginVertical: 24, borderWidth: 2, borderColor: Colors.accent,
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, padding: 24 },
+  title: {
+    fontSize: 28, fontWeight: '900', color: Colors.white, textAlign: 'center',
+    marginTop: 40, letterSpacing: 4,
+    textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4,
   },
-  codeLabel: { color: Colors.primaryLight, fontSize: 13, marginBottom: 4 },
-  code: { fontSize: 40, fontWeight: '900', color: Colors.accent, letterSpacing: 10 },
-  codeHint: { color: Colors.gray, fontSize: 12, marginTop: 4 },
-  badgesRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 20 },
-  difficultyBadge: {
+  codeLabel: { color: Colors.primaryLight, fontSize: 13, marginBottom: 4, textAlign: 'center' },
+  code: {
+    fontSize: 40, fontWeight: '900', color: Colors.accent, letterSpacing: 10, textAlign: 'center',
+    textShadowColor: 'rgba(255,214,0,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 10,
+  },
+  codeHint: { color: Colors.gray, fontSize: 12, marginTop: 4, textAlign: 'center' },
+  badgesRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginVertical: 16 },
+  badge: {
     paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 3, elevation: 3,
   },
-  roundsBadge: {
-    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
-    backgroundColor: '#1A237E',
+  badgeText: { color: Colors.white, fontWeight: '900', fontSize: 13, letterSpacing: 2 },
+  sectionTitle: {
+    color: Colors.white, fontSize: 16, fontWeight: '700', marginBottom: 12,
+    textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },
-  difficulty_basic: { backgroundColor: '#1B5E20' },
-  difficulty_medium: { backgroundColor: '#E65100' },
-  difficulty_advanced: { backgroundColor: '#B71C1C' },
-  difficultyText: { color: Colors.white, fontWeight: '900', fontSize: 13, letterSpacing: 2 },
-  sectionTitle: { color: Colors.white, fontSize: 16, fontWeight: '700', marginBottom: 12 },
   playerList: { flex: 1 },
   playerRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: Colors.primaryDark, borderRadius: 10, padding: 14, marginBottom: 8,
+    backgroundColor: Colors.cardBg, borderRadius: 12, padding: 14, marginBottom: 8,
+    borderWidth: 1, borderColor: 'rgba(94, 146, 243, 0.2)',
   },
   playerDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.gray },
   playerDotActive: { backgroundColor: Colors.green },
   playerName: { flex: 1, color: Colors.white, fontSize: 16, fontWeight: '600' },
   hostBadge: {
-    backgroundColor: Colors.accent, color: Colors.dark, fontSize: 11,
-    fontWeight: '900', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
+    backgroundColor: Colors.accent, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8,
+    borderBottomWidth: 2, borderBottomColor: Colors.buttonShadow,
   },
-  startBtn: {
-    backgroundColor: Colors.accent, borderRadius: 14, paddingVertical: 18,
-    alignItems: 'center', marginTop: 16,
-  },
-  startBtnDisabled: { opacity: 0.5 },
-  startBtnText: { fontSize: 20, fontWeight: '900', color: Colors.dark, letterSpacing: 2 },
+  hostBadgeText: { color: Colors.dark, fontSize: 11, fontWeight: '900' },
   waitingMsg: { alignItems: 'center', paddingVertical: 20 },
   waitingText: { color: Colors.primaryLight, fontSize: 15, fontStyle: 'italic' },
 });

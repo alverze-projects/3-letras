@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   Animated,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { getSocket, WS_EVENTS } from '../services/socket';
@@ -63,8 +64,8 @@ export default function GameScreen({ navigation, route }: Props) {
   const voteCountdownRef = useRef<NodeJS.Timeout | null>(null);
   const [voteState, setVoteState] = useState<VoteState | null>(null);
   const [voteResult, setVoteResult] = useState<VoteResult | null>(null);
-  const diceRequestRef  = useRef<DiceRollRequest | null>(null);
-  const isMyTurnRef     = useRef(false);
+  const diceRequestRef = useRef<DiceRollRequest | null>(null);
+  const isMyTurnRef = useRef(false);
   const diceTextOpacity = useRef(new Animated.Value(0)).current;
   const diceTextSlide = useRef(new Animated.Value(18)).current;
   const timerWidth = useRef(new Animated.Value(1)).current;
@@ -254,14 +255,14 @@ export default function GameScreen({ navigation, route }: Props) {
 
   const timerColor = remainingMs > 9000 ? Colors.green
     : remainingMs > 4500 ? Colors.accent
-    : Colors.red;
+      : Colors.red;
 
   const letters = round?.letters ?? [];
 
   // Overlay: animación del dado rodando (el resultado ya llegó)
   if (diceResult) {
     return (
-      <View style={styles.diceOverlay}>
+      <LinearGradient colors={[Colors.gradientTop, Colors.gradientMid, Colors.gradientBottom]} style={styles.diceOverlay}>
         <Text style={styles.diceRoundLabel}>RONDA {diceResult.roundNumber}</Text>
         <Text style={styles.diceRollerName}>{diceResult.rollerNickname} lanzó el dado</Text>
         <DiceAnimation
@@ -280,7 +281,7 @@ export default function GameScreen({ navigation, route }: Props) {
               : `cada jugador tendrá ${diceResult.value} turnos con estas letras`}
           </Text>
         </Animated.View>
-      </View>
+      </LinearGradient>
     );
   }
 
@@ -288,7 +289,7 @@ export default function GameScreen({ navigation, route }: Props) {
   if (diceRequest) {
     const isRoller = diceRequest.rollerId === player.id;
     return (
-      <View style={styles.diceOverlay}>
+      <LinearGradient colors={[Colors.gradientTop, Colors.gradientMid, Colors.gradientBottom]} style={styles.diceOverlay}>
         <Text style={styles.diceRoundLabel}>RONDA {diceRequest.roundNumber}</Text>
 
         {isRoller ? (
@@ -313,14 +314,14 @@ export default function GameScreen({ navigation, route }: Props) {
         <Text style={[styles.diceCountdown, diceSecondsLeft <= 5 && styles.diceCountdownUrgent]}>
           {diceSecondsLeft}s
         </Text>
-      </View>
+      </LinearGradient>
     );
   }
 
   // Overlay de resultado de votación
   if (voteResult) {
     return (
-      <View style={styles.voteResultOverlay}>
+      <LinearGradient colors={[Colors.gradientTop, Colors.gradientMid, Colors.gradientBottom]} style={styles.voteResultOverlay}>
         <Text style={styles.voteResultIcon}>{voteResult.accepted ? '✓' : '✗'}</Text>
         <Text style={styles.voteResultTitle}>
           {voteResult.accepted ? '¡Letras aceptadas!' : 'Buscando nuevas letras...'}
@@ -331,7 +332,7 @@ export default function GameScreen({ navigation, route }: Props) {
         <Text style={styles.voteResultCount}>
           {voteResult.yesCount} sí · {voteResult.noCount} no
         </Text>
-      </View>
+      </LinearGradient>
     );
   }
 
@@ -339,7 +340,7 @@ export default function GameScreen({ navigation, route }: Props) {
   if (voteState) {
     const voteLetters = voteState.letters;
     return (
-      <View style={styles.voteOverlay}>
+      <LinearGradient colors={[Colors.gradientTop, Colors.gradientMid, Colors.gradientBottom]} style={styles.voteOverlay}>
         <Text style={styles.voteTitle}>RONDA {voteState.roundNumber}</Text>
         <Text style={styles.voteSubtitle}>Salieron letras especiales</Text>
         <Text style={styles.voteQuestion}>¿Aceptar estas letras?</Text>
@@ -380,12 +381,12 @@ export default function GameScreen({ navigation, route }: Props) {
         <Text style={[styles.diceCountdown, voteSecondsLeft <= 5 && styles.diceCountdownUrgent]}>
           {voteSecondsLeft}s
         </Text>
-      </View>
+      </LinearGradient>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <LinearGradient colors={[Colors.gradientTop, Colors.gradientMid, Colors.gradientBottom]} style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.roundLabel}>RONDA {round?.roundNumber ?? '-'}</Text>
         <View style={styles.headerRight}>
@@ -397,7 +398,7 @@ export default function GameScreen({ navigation, route }: Props) {
             <Text style={styles.difficultyText}>
               {settings.difficulty === 'basic' ? 'BÁSICO'
                 : settings.difficulty === 'medium' ? 'MEDIO'
-                : 'AVANZADO'}
+                  : 'AVANZADO'}
             </Text>
           </View>
         </View>
@@ -446,10 +447,10 @@ export default function GameScreen({ navigation, route }: Props) {
             <Text style={styles.resultReason}>
               {lastResult.turn.invalidReason === 'order' ? 'Orden de letras incorrecto'
                 : lastResult.turn.invalidReason === 'not_found' ? 'Palabra no encontrada'
-                : lastResult.turn.invalidReason === 'no_special_letter' ? 'Falta letra especial (Ñ/W/X/Y/Z)'
-                : lastResult.turn.invalidReason === 'builds_on_previous' ? 'No puedes construir sobre la anterior'
-                : lastResult.turn.invalidReason === 'already_used' ? 'Palabra ya usada en esta ronda'
-                : 'Palabra inválida'}
+                  : lastResult.turn.invalidReason === 'no_special_letter' ? 'Falta letra especial (Ñ/W/X/Y/Z)'
+                    : lastResult.turn.invalidReason === 'builds_on_previous' ? 'No puedes construir sobre la anterior'
+                      : lastResult.turn.invalidReason === 'already_used' ? 'Palabra ya usada en esta ronda'
+                        : 'Palabra inválida'}
             </Text>
           )}
         </View>
@@ -490,15 +491,15 @@ export default function GameScreen({ navigation, route }: Props) {
           </View>
         ))}
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background, padding: 16 },
+  container: { flex: 1, padding: 16 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 40 },
   headerRight: { alignItems: 'flex-end', gap: 4 },
-  roundLabel: { color: Colors.white, fontSize: 20, fontWeight: '900' },
+  roundLabel: { color: Colors.white, fontSize: 20, fontWeight: '900', textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 },
   dieLabel: { color: Colors.primaryLight, fontSize: 14 },
   difficultyBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 },
   difficulty_basic: { backgroundColor: '#1B5E20' },
@@ -507,7 +508,7 @@ const styles = StyleSheet.create({
   difficultyText: { color: Colors.white, fontWeight: '900', fontSize: 11, letterSpacing: 1 },
   // ── Dado ────────────────────────────────────────────────────────────────────
   diceOverlay: {
-    flex: 1, backgroundColor: Colors.background,
+    flex: 1,
     justifyContent: 'center', alignItems: 'center',
     padding: 32, gap: 24,
   },
@@ -565,13 +566,13 @@ const styles = StyleSheet.create({
   timerBar: { height: '100%', borderRadius: 6 },
   timerText: { color: Colors.white, fontWeight: '700', fontSize: 16, position: 'absolute', right: 10 },
   turnInfo: { alignItems: 'center', marginVertical: 8 },
-  turnWho: { color: Colors.accent, fontSize: 20, fontWeight: '900', letterSpacing: 1 },
+  turnWho: { color: Colors.accent, fontSize: 20, fontWeight: '900', letterSpacing: 1, textShadowColor: 'rgba(255,214,0,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 8 },
   result: { borderRadius: 12, padding: 14, marginVertical: 8, alignItems: 'center' },
   resultValid: { backgroundColor: '#1B5E20' },
   resultInvalid: { backgroundColor: '#B71C1C' },
   resultNickname: { color: 'rgba(255,255,255,0.7)', fontSize: 13, marginBottom: 4 },
   resultWord: { color: Colors.white, fontSize: 22, fontWeight: '700' },
-  resultScore: { color: Colors.accent, fontSize: 18, fontWeight: '900', marginTop: 4 },
+  resultScore: { color: Colors.accent, fontSize: 18, fontWeight: '900', marginTop: 4, textShadowColor: 'rgba(255,214,0,0.5)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 6 },
   resultReason: { color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 4 },
   inputRow: { flexDirection: 'row', gap: 10, marginTop: 8 },
   wordInput: {
@@ -587,7 +588,7 @@ const styles = StyleSheet.create({
   skipBtn: { alignItems: 'center', marginTop: 8 },
   skipBtnText: { color: Colors.gray, fontSize: 14, textDecorationLine: 'underline' },
   voteOverlay: {
-    flex: 1, backgroundColor: Colors.background, justifyContent: 'center',
+    flex: 1, justifyContent: 'center',
     alignItems: 'center', padding: 24, gap: 16,
   },
   voteTitle: { color: Colors.primaryLight, fontSize: 14, fontWeight: '700', letterSpacing: 3 },
@@ -610,7 +611,7 @@ const styles = StyleSheet.create({
     marginTop: 8, fontStyle: 'italic',
   },
   voteResultOverlay: {
-    flex: 1, backgroundColor: Colors.background, justifyContent: 'center',
+    flex: 1, justifyContent: 'center',
     alignItems: 'center', gap: 12,
   },
   voteResultIcon: { fontSize: 72 },
@@ -618,8 +619,9 @@ const styles = StyleSheet.create({
   voteResultTie: { color: Colors.accent, fontSize: 14, fontStyle: 'italic' },
   voteResultCount: { color: Colors.primaryLight, fontSize: 15 },
   scoreBoard: {
-    flex: 1, marginTop: 16, backgroundColor: Colors.primaryDark,
+    flex: 1, marginTop: 16, backgroundColor: Colors.cardBg,
     borderRadius: 14, padding: 14,
+    borderWidth: 1, borderColor: 'rgba(94, 146, 243, 0.3)',
   },
   scoreBoardTitle: { color: Colors.primaryLight, fontSize: 12, fontWeight: '700', marginBottom: 8, letterSpacing: 2 },
   scoreRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },

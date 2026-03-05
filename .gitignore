@@ -12,6 +12,8 @@ apps/api/data/*.db
 apps/api/data/*.db-shm
 apps/api/data/*.db-wal
 
+for-development/
+
 # Archivos de datos pesados (no van en git)
 files/CREA_total.TXT
 

@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from './types';
 import { Colors } from '../theme/colors';
+import { soundManager } from '../services/sound';
 import MainScreen from '../screens/MainScreen';
 import LeaderboardScreen from '../screens/LeaderboardScreen';
 import RecordsScreen from '../screens/RecordsScreen';
@@ -185,6 +186,10 @@ export default function MainTabs() {
           tabBarIcon: ({ color, focused }) => (
             <TabIcon name="trophy" color={color} focused={focused} label="Ranking" />
           ),
+          tabBarLabel: 'Ranking',
+        }}
+        listeners={{
+          tabPress: () => soundManager.play('tick'),
         }}
       />
       <Tab.Screen
@@ -194,6 +199,10 @@ export default function MainTabs() {
           tabBarIcon: ({ color, focused }) => (
             <TabIcon name="game-controller" color={color} focused={focused} label="Jugar" />
           ),
+          tabBarLabel: 'Jugar',
+        }}
+        listeners={{
+          tabPress: () => soundManager.play('tick'),
         }}
       />
       <Tab.Screen
@@ -203,6 +212,10 @@ export default function MainTabs() {
           tabBarIcon: ({ color, focused }) => (
             <TabIcon name="ribbon" color={color} focused={focused} label="Récords" />
           ),
+          tabBarLabel: 'Récords',
+        }}
+        listeners={{
+          tabPress: () => soundManager.play('tick'),
         }}
       />
     </Tab.Navigator>

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { Colors } from '../theme/colors';
+import LogoMain from '../../assets/logo_main.svg';
 
 type Props = StackScreenProps<RootStackParamList, 'Welcome'>;
 
@@ -10,8 +11,7 @@ export default function WelcomeScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>TRES</Text>
-        <Text style={styles.titleAccent}>LETRAS</Text>
+        <LogoMain width={280} height={124} />
         <Text style={styles.subtitle}>¡Forma palabras y suma puntos!</Text>
       </View>
 
@@ -35,8 +35,6 @@ export default function WelcomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background, justifyContent: 'center', paddingHorizontal: 24 },
   header: { alignItems: 'center', marginBottom: 56 },
-  title: { fontSize: 72, fontWeight: '900', color: Colors.accent, letterSpacing: 4, lineHeight: 72 },
-  titleAccent: { fontSize: 52, fontWeight: '900', color: Colors.white, letterSpacing: 6, marginTop: -8 },
   subtitle: { color: Colors.primaryLight, fontSize: 16, marginTop: 14, fontStyle: 'italic' },
   buttons: { gap: 14 },
   btnPrimary: {

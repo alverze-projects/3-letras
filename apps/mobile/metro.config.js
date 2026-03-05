@@ -12,4 +12,9 @@ config.watchFolders = [libsRoot];
 // Soporte explícito para archivos de audio
 config.resolver.assetExts = [...config.resolver.assetExts, 'wav', 'mp3', 'ogg'];
 
+// Soporte para archivos SVG como componentes React
+config.transformer.babelTransformerPath = require.resolve('react-native-svg-transformer');
+config.resolver.assetExts = config.resolver.assetExts.filter((ext) => ext !== 'svg');
+config.resolver.sourceExts = [...config.resolver.sourceExts, 'svg'];
+
 module.exports = config;

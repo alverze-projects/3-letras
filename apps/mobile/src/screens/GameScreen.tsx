@@ -62,6 +62,7 @@ export default function GameScreen({ navigation, route }: Props) {
   const [players, setPlayers] = useState<IGamePlayer[]>(initialPlayers ?? []);
   const [lastResult, setLastResult] = useState<{ turn: ITurn; nickname: string } | null>(null);
   const [wordHistory, setWordHistory] = useState<WordEntry[]>([]);
+  const [notebookTab, setNotebookTab] = useState<'scores' | 'words'>('words');
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [diceRequest, setDiceRequest] = useState<DiceRollRequest | null>(null);
   const [diceResult, setDiceResult] = useState<DiceResult | null>(null);
@@ -493,51 +494,65 @@ export default function GameScreen({ navigation, route }: Props) {
         </View>
       )}
 
-      {/* Cuaderno de palabras */}
+      {/* Panel con tabs: Puntajes / Palabras */}
       <View style={styles.notebook}>
-        {/* Header con columnas */}
-        <View style={styles.notebookHeader}>
-          <View style={styles.notebookHeaderLeft}>
-            <Text style={styles.notebookHeaderText}>PALABRAS</Text>
-          </View>
-          <View style={styles.notebookHeaderRight}>
-            <Text style={styles.notebookHeaderText}>PUNTOS</Text>
-          </View>
+        {/* Tabs */}
+        <View style={styles.notebookTabs}>
+          <TouchableOpacity
+            style={[styles.notebookTab, notebookTab === 'scores' && styles.notebookTabActive]}
+            onPress={() => setNotebookTab('scores')}
+          >
+            <Text style={[styles.notebookTabText, notebookTab === 'scores' && styles.notebookTabTextActive]}>🏆 PUNTAJES</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.notebookTab, notebookTab === 'words' && styles.notebookTabActiveWords]}
+            onPress={() => setNotebookTab('words')}
+          >
+            <Text style={[styles.notebookTabText, notebookTab === 'words' && styles.notebookTabTextActive]}>📝 PALABRAS</Text>
+          </TouchableOpacity>
         </View>
-        {/* Filas */}
+
+        {/* Contenido */}
         <ScrollView style={styles.notebookBody} nestedScrollEnabled>
-          {wordHistory.length === 0 && (
-            <View style={styles.notebookRow}>
-              <Text style={styles.notebookRowNum}>1</Text>
-              <Text style={styles.notebookEmpty}>Las palabras aparecerán aquí...</Text>
-            </View>
+          {notebookTab === 'scores' ? (
+            // Vista de puntajes
+            players.sort((a, b) => b.totalScore - a.totalScore).map((p, i) => (
+              <View key={p.playerId} style={[styles.scoreRow, p.playerId === player.id && styles.scoreRowMe]}>
+                <Text style={styles.scoreRank}>#{i + 1}</Text>
+                <Text style={styles.scoreNick}>{p.nickname}</Text>
+                <Text style={styles.scorePoints}>{p.totalScore} pts</Text>
+              </View>
+            ))
+          ) : (
+            // Vista de palabras
+            <>
+              {wordHistory.length === 0 && (
+                <View style={styles.notebookRow}>
+                  <Text style={styles.notebookEmpty}>Las palabras aparecerán aquí...</Text>
+                </View>
+              )}
+              {[...wordHistory].reverse().map((entry, i) => {
+                const originalIdx = wordHistory.length - i;
+                return (
+                  <View key={i} style={styles.notebookRow}>
+                    <Text style={styles.notebookRowNum}>{originalIdx}</Text>
+                    <View style={styles.notebookWordCol}>
+                      <Text style={[styles.notebookWord, !entry.isValid && styles.notebookWordInvalid]}>
+                        {entry.word}
+                      </Text>
+                      <Text style={styles.notebookNickname}>{entry.nickname}</Text>
+                    </View>
+                    <View style={styles.notebookPointsCol}>
+                      <Text style={[styles.notebookPoints, entry.isValid ? styles.notebookPointsValid : styles.notebookPointsInvalid]}>
+                        {entry.isValid ? `+${entry.score}` : '✗'}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </>
           )}
-          {wordHistory.map((entry, i) => (
-            <View key={i} style={styles.notebookRow}>
-              <Text style={styles.notebookRowNum}>{i + 1}</Text>
-              <View style={styles.notebookWordCol}>
-                <Text style={[styles.notebookWord, !entry.isValid && styles.notebookWordInvalid]}>
-                  {entry.word}
-                </Text>
-                <Text style={styles.notebookNickname}>{entry.nickname}</Text>
-              </View>
-              <View style={styles.notebookPointsCol}>
-                <Text style={[styles.notebookPoints, entry.isValid ? styles.notebookPointsValid : styles.notebookPointsInvalid]}>
-                  {entry.isValid ? `+${entry.score}` : '✗'}
-                </Text>
-              </View>
-            </View>
-          ))}
         </ScrollView>
-        {/* Totales por jugador */}
-        <View style={styles.notebookFooter}>
-          {players.sort((a, b) => b.totalScore - a.totalScore).map((p) => (
-            <View key={p.playerId} style={[styles.notebookTotal, p.playerId === player.id && styles.notebookTotalMe]}>
-              <Text style={styles.notebookTotalNick}>{p.nickname}</Text>
-              <Text style={styles.notebookTotalPts}>{p.totalScore} pts</Text>
-            </View>
-          ))}
-        </View>
       </View>
 
       {isMyTurn && (
@@ -805,7 +820,7 @@ const styles = StyleSheet.create({
     color: Colors.primaryLight, fontSize: 16, fontWeight: '600',
     textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2,
   },
-  // ── Cuaderno (notebook word log) ─────────────────────────────────────────────
+  // ── Cuaderno (notebook panel) ────────────────────────────────────────────────
   notebook: {
     flex: 1, marginTop: 16,
     backgroundColor: '#FFFEF8',
@@ -818,28 +833,52 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
   },
-  notebookHeader: {
+  notebookTabs: {
     flexDirection: 'row',
   },
-  notebookHeaderLeft: {
+  notebookTab: {
     flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.06)',
+  },
+  notebookTabActive: {
     backgroundColor: '#C62828',
-    paddingVertical: 8,
-    alignItems: 'center',
   },
-  notebookHeaderRight: {
-    width: 90,
+  notebookTabActiveWords: {
     backgroundColor: Colors.primary,
-    paddingVertical: 8,
-    alignItems: 'center',
   },
-  notebookHeaderText: {
-    color: Colors.white, fontWeight: '900', fontSize: 13, letterSpacing: 2,
+  notebookTabText: {
+    color: 'rgba(0,0,0,0.35)', fontWeight: '900', fontSize: 12, letterSpacing: 1.5,
+  },
+  notebookTabTextActive: {
+    color: Colors.white,
   },
   notebookBody: {
     flex: 1,
     paddingHorizontal: 0,
   },
+  // Score rows (PUNTAJES tab)
+  scoreRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 10, paddingHorizontal: 12,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(100,140,220,0.15)',
+  },
+  scoreRowMe: {
+    backgroundColor: 'rgba(255,214,0,0.12)',
+  },
+  scoreRank: {
+    width: 32,
+    color: 'rgba(0,0,0,0.3)', fontSize: 14, fontWeight: '900',
+  },
+  scoreNick: {
+    flex: 1,
+    color: Colors.dark, fontSize: 16, fontWeight: '700',
+  },
+  scorePoints: {
+    color: Colors.primary, fontSize: 16, fontWeight: '900',
+  },
+  // Word rows (PALABRAS tab)
   notebookRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingVertical: 8, paddingHorizontal: 10,
@@ -852,6 +891,7 @@ const styles = StyleSheet.create({
   notebookEmpty: {
     flex: 1,
     color: 'rgba(0,0,0,0.25)', fontSize: 14, fontStyle: 'italic',
+    paddingHorizontal: 10,
   },
   notebookWordCol: {
     flex: 1,
@@ -877,26 +917,5 @@ const styles = StyleSheet.create({
   },
   notebookPointsInvalid: {
     color: '#C62828',
-  },
-  notebookFooter: {
-    borderTopWidth: 2, borderTopColor: Colors.accent,
-    backgroundColor: 'rgba(255,214,0,0.08)',
-    paddingVertical: 8, paddingHorizontal: 12,
-    gap: 4,
-  },
-  notebookTotal: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    paddingVertical: 4, paddingHorizontal: 6,
-    borderRadius: 6,
-  },
-  notebookTotalMe: {
-    backgroundColor: 'rgba(255,214,0,0.15)',
-    borderWidth: 1, borderColor: 'rgba(255,214,0,0.3)',
-  },
-  notebookTotalNick: {
-    color: Colors.dark, fontSize: 14, fontWeight: '700',
-  },
-  notebookTotalPts: {
-    color: Colors.primary, fontSize: 14, fontWeight: '900',
   },
 });

@@ -39,36 +39,35 @@ export default function SlotLetterCard({
   useEffect(() => {
     if (!locked) return;
 
-    // Gentle floating up/down
+    // Floating up/down
     const breatheLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(breathe, {
           toValue: 1,
-          duration: 1800,
+          duration: 1000,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
         Animated.timing(breathe, {
           toValue: 0,
-          duration: 1800,
+          duration: 1000,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
       ]),
     );
 
-    // Glow pulse opacity
     const glowLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(glowPulse, {
           toValue: 1,
-          duration: 2200,
+          duration: 1400,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
         Animated.timing(glowPulse, {
           toValue: 0,
-          duration: 2200,
+          duration: 1400,
           easing: Easing.inOut(Easing.sin),
           useNativeDriver: true,
         }),
@@ -145,16 +144,22 @@ export default function SlotLetterCard({
   const logoWidth = size * 1.0;
   const logoHeight = logoWidth * (317 / 1349);
 
-  // Breathing float: -3 to +3 px
+  // Breathing float: -8px
   const letterFloat = breathe.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -3],
+    outputRange: [3, -8],
   });
 
-  // Glow opacity: 0.15 to 0.45
+  // Letter scale breathing
+  const letterScale = breathe.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 1.08, 1],
+  });
+
+  // Glow opacity: 0.1 to 0.6
   const glowOpacity = glowPulse.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.15, 0.45],
+    outputRange: [0.1, 0.6],
   });
 
   const gradientColors: [string, string, string] = isSpecial
@@ -204,6 +209,7 @@ export default function SlotLetterCard({
             {
               transform: [
                 { translateY: locked ? letterFloat : translateY },
+                { scale: locked ? letterScale : 1 },
               ],
             },
           ]}

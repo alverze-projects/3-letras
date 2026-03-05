@@ -1,10 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { Platform, StyleSheet, View, Text, Animated, Easing } from 'react-native';
+import { Platform, StyleSheet, View, Text, Animated, Easing, TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from './types';
 import { Colors } from '../theme/colors';
 import { soundManager } from '../services/sound';
+import { useMusic } from '../contexts/MusicContext';
 import MainScreen from '../screens/MainScreen';
 import LeaderboardScreen from '../screens/LeaderboardScreen';
 import RecordsScreen from '../screens/RecordsScreen';
@@ -157,68 +158,89 @@ function TabIcon({ name, color, focused, label }: {
 }
 
 export default function MainTabs() {
+  const { muted, toggleMute, play } = useMusic();
+
+  useEffect(() => {
+    play('menu');
+  }, []);
+
   return (
-    <Tab.Navigator
-      initialRouteName="Inicio"
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: '#0B1D42',
-          borderTopWidth: 0,
-          height: Platform.OS === 'ios' ? 96 : 78,
-          paddingBottom: Platform.OS === 'ios' ? 22 : 6,
-          paddingTop: 8,
-          shadowColor: Colors.primary,
-          shadowOffset: { width: 0, height: -3 },
-          shadowOpacity: 0.25,
-          shadowRadius: 14,
-          elevation: 20,
-        },
-        tabBarShowLabel: false,
-        tabBarActiveTintColor: Colors.accent,
-        tabBarInactiveTintColor: 'rgba(150,180,255,0.45)',
-      }}
-    >
-      <Tab.Screen
-        name="Clasificacion"
-        component={LeaderboardScreen}
-        options={{
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="trophy" color={color} focused={focused} label="Ranking" />
-          ),
-          tabBarLabel: 'Ranking',
+    <View style={{ flex: 1 }}>
+      {/* Mute toggle */}
+      <TouchableOpacity
+        onPress={toggleMute}
+        style={styles.muteButton}
+        activeOpacity={0.7}
+      >
+        <Ionicons
+          name={muted ? 'volume-mute' : 'volume-high'}
+          size={20}
+          color={muted ? 'rgba(150,180,255,0.4)' : Colors.accent}
+        />
+      </TouchableOpacity>
+
+      <Tab.Navigator
+        initialRouteName="Inicio"
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: {
+            backgroundColor: '#0B1D42',
+            borderTopWidth: 0,
+            height: Platform.OS === 'ios' ? 96 : 78,
+            paddingBottom: Platform.OS === 'ios' ? 22 : 6,
+            paddingTop: 8,
+            shadowColor: Colors.primary,
+            shadowOffset: { width: 0, height: -3 },
+            shadowOpacity: 0.25,
+            shadowRadius: 14,
+            elevation: 20,
+          },
+          tabBarShowLabel: false,
+          tabBarActiveTintColor: Colors.accent,
+          tabBarInactiveTintColor: 'rgba(150,180,255,0.45)',
         }}
-        listeners={{
-          tabPress: () => soundManager.play('tick'),
-        }}
-      />
-      <Tab.Screen
-        name="Inicio"
-        component={MainScreen}
-        options={{
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="game-controller" color={color} focused={focused} label="Jugar" />
-          ),
-          tabBarLabel: 'Jugar',
-        }}
-        listeners={{
-          tabPress: () => soundManager.play('tick'),
-        }}
-      />
-      <Tab.Screen
-        name="Records"
-        component={RecordsScreen}
-        options={{
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="ribbon" color={color} focused={focused} label="Récords" />
-          ),
-          tabBarLabel: 'Récords',
-        }}
-        listeners={{
-          tabPress: () => soundManager.play('tick'),
-        }}
-      />
-    </Tab.Navigator>
+      >
+        <Tab.Screen
+          name="Clasificacion"
+          component={LeaderboardScreen}
+          options={{
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon name="trophy" color={color} focused={focused} label="Ranking" />
+            ),
+            tabBarLabel: 'Ranking',
+          }}
+          listeners={{
+            tabPress: () => soundManager.play('tick'),
+          }}
+        />
+        <Tab.Screen
+          name="Inicio"
+          component={MainScreen}
+          options={{
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon name="game-controller" color={color} focused={focused} label="Jugar" />
+            ),
+            tabBarLabel: 'Jugar',
+          }}
+          listeners={{
+            tabPress: () => soundManager.play('tick'),
+          }}
+        />
+        <Tab.Screen
+          name="Records"
+          component={RecordsScreen}
+          options={{
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon name="ribbon" color={color} focused={focused} label="Récords" />
+            ),
+            tabBarLabel: 'Récords',
+          }}
+          listeners={{
+            tabPress: () => soundManager.play('tick'),
+          }}
+        />
+      </Tab.Navigator>
+    </View>
   );
 }
 
@@ -281,5 +303,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 4,
     elevation: 3,
+  },
+  muteButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 54 : 16,
+    right: 16,
+    zIndex: 100,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(11,29,66,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(94,146,243,0.2)',
   },
 });

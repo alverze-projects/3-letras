@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(node:*)",
+      "Bash(npx:*)",
+      "Bash(npm install:*)",
+      "Bash(timeout 20 npm run:*)",
+      "Bash(lsof:*)",
+      "Bash(npm create:*)",
+      "Bash(npm run:*)",
+      "Bash(iconv:*)",
+      "Bash(git reset:*)",
+      "Bash(git:*)"
+    ]
+  }
+}

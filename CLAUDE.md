@@ -74,21 +74,27 @@ The gateway holds per-session Maps that are **not persisted**:
 - `lastValidWord` — last valid word per round (for medium/advanced difficulty)
 - `usedWords` — Set of used words per round (prevents duplicates)
 - `pendingVotes` — vote state for special letter votes
+- `pendingDice` — dice roll state (rollerId, result, resolve callback, timeout)
+- `soloGames` — Set of game codes currently in solo mode (no timer, no dice, no vote)
 
 This state is lost on server restart. A crashed server terminates active games.
 
 ## WebSocket Event Flow
 
-All game logic runs server-side. Clients only emit: `game:ready`, `game:start`, `turn:submit`, `turn:skip`, `vote:submit`.
+All game logic runs server-side. Clients only emit: `game:ready`, `game:start`, `turn:submit`, `turn:skip`, `vote:submit`, `dice:roll`.
 
 ```
 game:start → startNewRound()
+  → (multiplayer only) dice:roll_request → client emits dice:roll → dice:result + 4.5s animation wait
   → if special letters + basic/medium difficulty → vote:start (15s timeout)
     → vote:submit from all players → vote:result → round:new or redraw
   → else → round:new → turn:start
     → 15s timer → turn:timer (every 1s)
     → turn:submit or timeout → turn:result → next turn
   → all turns done → round:summary → next round or game:end
+
+Solo mode: no dice, no vote, no timer. Skip ends the round immediately.
+Die result determines turns-per-player-per-round (1–6).
 ```
 
 ## Mobile Screens Flow
@@ -96,11 +102,19 @@ game:start → startNewRound()
 ```
 App start
   └─ loadSession() from AsyncStorage
-       ├─ session exists → Main
-       └─ no session → Welcome → Login / Register / Guest → Main
+       ├─ session exists → MainTabs
+       └─ no session → Welcome → Login / Register / Guest → MainTabs
 
-Main → CREAR PARTIDA (2-step wizard: difficulty → rounds) → Lobby → Game → Results
-     → UNIRSE A PARTIDA (code input) → Lobby → Game → Results
+MainTabs (bottom tab navigator):
+  ├─ Leaderboard
+  ├─ Inicio (MainScreen) → wizard:
+  │     step 0: menú principal (JUGAR)
+  │     step 'mode': Solo | Multijugador
+  │     step 'multi': Crear sala | Unirse a partida (código)
+  │     step 1: Dificultad
+  │     step 2: Número de rondas
+  │     → Lobby → Game → Results
+  └─ Records
 ```
 
 Session (JWT + player) persists in `AsyncStorage` via `src/services/session.ts`.

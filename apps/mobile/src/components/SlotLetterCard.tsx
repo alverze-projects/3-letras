@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../theme/colors';
+import LogoTape from '../../assets/logo_tape.svg';
 
 const ALPHABET = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('');
 
@@ -91,11 +92,11 @@ export default function SlotLetterCard({
   }, [targetLetter, delay, size]);
 
   const cardSize = { width: size, height: size, borderRadius: size * 0.15 };
+  const logoWidth = size * 1.0;
+  const logoHeight = logoWidth * (317 / 1349);
 
   return (
-    // scale en el contenedor externo (sin clipping, para que el rebote no se corte)
     <Animated.View style={{ transform: [{ scale }] }}>
-      {/* Clip: oculta la letra que entra desde fuera del card */}
       <View
         style={[
           styles.clip,
@@ -104,12 +105,17 @@ export default function SlotLetterCard({
           locked && isSpecial && styles.cardSpecialLocked,
         ]}
       >
-        {/* Contenido que se desliza */}
-        <Animated.View style={{ transform: [{ translateY }] }}>
+        {/* Logo tape en la parte superior */}
+        <View style={styles.logoTop}>
+          <LogoTape width={logoWidth} height={logoHeight} />
+        </View>
+
+        {/* Letra centrada en el cuadrado */}
+        <Animated.View style={[styles.letterWrap, { transform: [{ translateY }] }]}>
           <Text
             style={[
               styles.letter,
-              { fontSize: size * 0.5 },
+              { fontSize: size * 0.45 },
               isSpecial && styles.letterSpecial,
             ]}
           >
@@ -148,8 +154,16 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
   },
   cardSpecialLocked: {
-    // sombra roja más intensa cuando ya está fija
     shadowOpacity: 0.55,
+  },
+  logoTop: {
+    position: 'absolute',
+    top: 4,
+    alignItems: 'center',
+  },
+  letterWrap: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   letter: {
     fontWeight: '900',

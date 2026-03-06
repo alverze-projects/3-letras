@@ -18,9 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed:vocab": "ts-node -r tsconfig-paths/register src/scripts/seed-vocab.ts",
-    "seed:vocab:prod": "node dist/seed-vocab.js",
-    "seed:vocab:native": "node src/scripts/seed-native.js"
+    "seed:vocab": "node src/scripts/seed-native.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

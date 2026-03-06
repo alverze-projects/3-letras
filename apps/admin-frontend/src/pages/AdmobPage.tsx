@@ -170,7 +170,7 @@ export default function AdmobPage() {
                 label="App ID"
                 description="Ej: ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX"
                 placeholder="ca-app-pub-..."
-                value={config.androidAppId}
+                value={config.androidAppId || ''}
                 onChange={(e) => set('androidAppId', e.currentTarget.value)}
                 ff="monospace"
               />
@@ -179,7 +179,7 @@ export default function AdmobPage() {
                 label="Banner"
                 description="Se muestra como barra fija en pantalla"
                 placeholder="ca-app-pub-..."
-                value={config.bannerAndroid}
+                value={config.bannerAndroid || ''}
                 onChange={(e) => set('bannerAndroid', e.currentTarget.value)}
                 ff="monospace"
               />
@@ -187,7 +187,7 @@ export default function AdmobPage() {
                 label="Intersticial"
                 description="Anuncio a pantalla completa entre pantallas"
                 placeholder="ca-app-pub-..."
-                value={config.interstitialAndroid}
+                value={config.interstitialAndroid || ''}
                 onChange={(e) => set('interstitialAndroid', e.currentTarget.value)}
                 ff="monospace"
               />
@@ -195,7 +195,7 @@ export default function AdmobPage() {
                 label="Recompensado"
                 description="El usuario ve el anuncio a cambio de una recompensa"
                 placeholder="ca-app-pub-..."
-                value={config.rewardedAndroid}
+                value={config.rewardedAndroid || ''}
                 onChange={(e) => set('rewardedAndroid', e.currentTarget.value)}
                 ff="monospace"
               />
@@ -210,7 +210,7 @@ export default function AdmobPage() {
                 label="App ID"
                 description="Ej: ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX"
                 placeholder="ca-app-pub-..."
-                value={config.iosAppId}
+                value={config.iosAppId || ''}
                 onChange={(e) => set('iosAppId', e.currentTarget.value)}
                 ff="monospace"
               />
@@ -219,7 +219,7 @@ export default function AdmobPage() {
                 label="Banner"
                 description="Se muestra como barra fija en pantalla"
                 placeholder="ca-app-pub-..."
-                value={config.bannerIos}
+                value={config.bannerIos || ''}
                 onChange={(e) => set('bannerIos', e.currentTarget.value)}
                 ff="monospace"
               />
@@ -227,7 +227,7 @@ export default function AdmobPage() {
                 label="Intersticial"
                 description="Anuncio a pantalla completa entre pantallas"
                 placeholder="ca-app-pub-..."
-                value={config.interstitialIos}
+                value={config.interstitialIos || ''}
                 onChange={(e) => set('interstitialIos', e.currentTarget.value)}
                 ff="monospace"
               />
@@ -235,7 +235,7 @@ export default function AdmobPage() {
                 label="Recompensado"
                 description="El usuario ve el anuncio a cambio de una recompensa"
                 placeholder="ca-app-pub-..."
-                value={config.rewardedIos}
+                value={config.rewardedIos || ''}
                 onChange={(e) => set('rewardedIos', e.currentTarget.value)}
                 ff="monospace"
               />

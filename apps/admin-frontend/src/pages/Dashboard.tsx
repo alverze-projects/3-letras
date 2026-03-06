@@ -41,7 +41,7 @@ interface ConfirmModalProps {
   onClose: () => void;
 }
 
-function ConfirmModal({ title, message, confirmLabel, confirmColor = 'red', onConfirm, onClose }: ConfirmModalProps) {
+function ConfirmModal({ message, confirmLabel, confirmColor = 'red', onConfirm, onClose }: ConfirmModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

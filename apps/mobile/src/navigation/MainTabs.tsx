@@ -306,9 +306,10 @@ const styles = StyleSheet.create({
   },
   muteButton: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 54 : 16,
+    top: Platform.OS === 'ios' ? 54 : 40,
     right: 16,
     zIndex: 100,
+    elevation: 100,
     width: 36,
     height: 36,
     borderRadius: 18,

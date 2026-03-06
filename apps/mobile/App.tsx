@@ -9,6 +9,7 @@ import { RootStackParamList } from './src/navigation/types';
 import { loadSession } from './src/services/session';
 import { Colors } from './src/theme/colors';
 import { MusicProvider } from './src/contexts/MusicContext';
+import { soundManager } from './src/services/sound';
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
@@ -26,6 +27,7 @@ export default function App() {
   const [instructionsNextRoute, setInstructionsNextRoute] = useState<'Welcome' | 'Main'>('Welcome');
 
   useEffect(() => {
+    soundManager.preload();
     Promise.all([
       loadSession(),
       AsyncStorage.getItem(INSTRUCTIONS_SEEN_KEY),

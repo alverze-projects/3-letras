@@ -3,6 +3,14 @@ const { resolve } = require('path');
 module.exports = (options, webpack) => {
   return {
     ...options,
+    entry: {
+      main: options.entry,
+      'seed-vocab': resolve(__dirname, 'src/scripts/seed-vocab.ts')
+    },
+    output: {
+      ...options.output,
+      filename: '[name].js',
+    },
     externals: {
       'better-sqlite3': 'commonjs better-sqlite3',
       'bcrypt': 'commonjs bcrypt',

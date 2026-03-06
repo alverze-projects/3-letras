@@ -1,92 +1,111 @@
-import { Audio } from 'expo-av';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Asset } from 'expo-asset';
+import { createAudioPlayer, setAudioModeAsync, setIsAudioActiveAsync, AudioPlayer } from 'expo-audio';
 
 export type MusicTrack = 'menu' | 'game';
 
-const TRACKS: Record<MusicTrack, number> = {
-    menu: require('../../assets/music/lo-fi_game.mp3'),
-    game: require('../../assets/music/puzzle_game.mp3'),
+// Pre-load assets instead of requiring inline to fix Expo Go module loading
+const TRACKS = {
+    menu: Asset.fromModule(require('../../assets/music/lo-fi_game.mp3')),
+    game: Asset.fromModule(require('../../assets/music/puzzle_game.mp3')),
 };
 
+function getTrackSource(track: MusicTrack) {
+    return TRACKS[track];
+}
+
 const MUTE_KEY = '@tresletras_music_muted';
-const FADE_STEPS = 15;
-const FADE_INTERVAL = 40; // ms per step → ~600ms total fade
 const DEFAULT_VOLUME = 0.35;
 
 class MusicManager {
-    private sounds: Partial<Record<MusicTrack, Audio.Sound>> = {};
+    private players: Partial<Record<MusicTrack, AudioPlayer>> = {};
     private currentTrack: MusicTrack | null = null;
     private muted = false;
-    private volume = DEFAULT_VOLUME;
-    private fading = false;
+    private audioReady = false;
 
-    /** Load mute preference from storage */
     async init(): Promise<void> {
         try {
             const val = await AsyncStorage.getItem(MUTE_KEY);
             this.muted = val === '1';
         } catch { /* ignore */ }
+
+        // Ensure audio mode is set
+        try {
+            await setAudioModeAsync({
+                playsInSilentMode: true,
+                shouldPlayInBackground: false,
+            });
+            await setIsAudioActiveAsync(true);
+            this.audioReady = true;
+        } catch (e) {
+            console.warn('[MusicManager] Audio module not available:', e);
+            this.audioReady = false;
+        }
     }
 
-    /** Play a track with optional crossfade from the current one */
     async play(track: MusicTrack): Promise<void> {
+        if (!this.audioReady) return;
         if (this.currentTrack === track) return;
 
-        // Fade out current
-        if (this.currentTrack && this.sounds[this.currentTrack]) {
-            await this.fadeOut(this.sounds[this.currentTrack]!);
+        // Pause current
+        if (this.currentTrack && this.players[this.currentTrack]) {
+            try { this.players[this.currentTrack]!.pause(); } catch { /* */ }
         }
 
         this.currentTrack = track;
 
-        // Create or reuse the sound
-        if (!this.sounds[track]) {
+        // Create or reuse the player
+        if (!this.players[track]) {
             try {
-                const { sound } = await Audio.Sound.createAsync(TRACKS[track], {
-                    shouldPlay: false,
-                    isLooping: true,
-                    volume: 0,
-                });
-                this.sounds[track] = sound;
-            } catch {
+                const player = createAudioPlayer(getTrackSource(track));
+                player.loop = true;
+                this.players[track] = player;
+            } catch (e) {
+                console.warn('[MusicManager] Failed to create player:', e);
                 return;
             }
         }
 
-        const sound = this.sounds[track]!;
+        const player = this.players[track]!;
 
         try {
-            await sound.setPositionAsync(0);
-            await sound.setVolumeAsync(0);
             if (!this.muted) {
-                await sound.playAsync();
-                await this.fadeIn(sound);
+                player.volume = DEFAULT_VOLUME;
+                player.seekTo(0);
+                player.play();
+            } else {
+                player.volume = 0;
             }
-        } catch { /* ignore */ }
-    }
-
-    /** Stop all music */
-    async stop(): Promise<void> {
-        if (this.currentTrack && this.sounds[this.currentTrack]) {
-            await this.fadeOut(this.sounds[this.currentTrack]!);
+        } catch (e) {
+            console.warn('[MusicManager] Failed to play:', e);
         }
-        this.currentTrack = null;
     }
 
-    /** Toggle mute and persist the preference */
+    async stop(): Promise<void> {
+        if (this.currentTrack && this.players[this.currentTrack]) {
+            try { this.players[this.currentTrack]!.pause(); } catch { /* */ }
+            this.currentTrack = null;
+        }
+    }
+
     async toggleMute(): Promise<boolean> {
         this.muted = !this.muted;
         try {
             await AsyncStorage.setItem(MUTE_KEY, this.muted ? '1' : '0');
         } catch { /* ignore */ }
 
-        if (this.currentTrack && this.sounds[this.currentTrack]) {
-            const sound = this.sounds[this.currentTrack]!;
+        if (this.currentTrack && this.players[this.currentTrack]) {
+            const player = this.players[this.currentTrack]!;
             if (this.muted) {
-                await this.fadeOut(sound);
+                try {
+                    player.volume = 0;
+                    player.pause();
+                } catch { /* */ }
             } else {
-                await sound.playAsync();
-                await this.fadeIn(sound);
+                try {
+                    player.volume = DEFAULT_VOLUME;
+                    player.play();
+                } catch { /* ignore */ }
             }
         }
         return this.muted;
@@ -96,48 +115,11 @@ class MusicManager {
         return this.muted;
     }
 
-    /** Gradually increase volume */
-    private fadeIn(sound: Audio.Sound): Promise<void> {
-        return new Promise((resolve) => {
-            if (this.fading) { resolve(); return; }
-            this.fading = true;
-            let step = 0;
-            const interval = setInterval(async () => {
-                step++;
-                const vol = (step / FADE_STEPS) * this.volume;
-                try { await sound.setVolumeAsync(Math.min(vol, this.volume)); } catch { /* */ }
-                if (step >= FADE_STEPS) {
-                    clearInterval(interval);
-                    this.fading = false;
-                    resolve();
-                }
-            }, FADE_INTERVAL);
-        });
-    }
-
-    /** Gradually decrease volume then pause */
-    private fadeOut(sound: Audio.Sound): Promise<void> {
-        return new Promise((resolve) => {
-            let step = FADE_STEPS;
-            const interval = setInterval(async () => {
-                step--;
-                const vol = (step / FADE_STEPS) * this.volume;
-                try { await sound.setVolumeAsync(Math.max(vol, 0)); } catch { /* */ }
-                if (step <= 0) {
-                    clearInterval(interval);
-                    try { await sound.pauseAsync(); } catch { /* */ }
-                    resolve();
-                }
-            }, FADE_INTERVAL);
-        });
-    }
-
-    /** Unload all sounds */
     async unload(): Promise<void> {
-        for (const s of Object.values(this.sounds)) {
-            try { await s?.unloadAsync(); } catch { /* */ }
+        for (const player of Object.values(this.players)) {
+            try { if (player) player.remove(); } catch { /* */ }
         }
-        this.sounds = {};
+        this.players = {};
         this.currentTrack = null;
     }
 }

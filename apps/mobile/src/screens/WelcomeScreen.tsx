@@ -4,6 +4,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { Colors } from '../theme/colors';
 import { useSound } from '../services/sound';
+import { useMusic } from '../contexts/MusicContext';
 import AnimatedLogo from '../components/AnimatedLogo';
 import GradientBackground from '../components/GradientBackground';
 import GameButton from '../components/GameButton';
@@ -15,8 +16,11 @@ export default function WelcomeScreen({ navigation }: Props) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(40)).current;
   const { play: playSound } = useSound();
+  const { play: playMusic } = useMusic();
 
   useEffect(() => {
+    playMusic('menu');
+
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1, duration: 600, useNativeDriver: true,

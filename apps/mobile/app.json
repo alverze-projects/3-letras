@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "tresletrasmobileapp",
+    "slug": "tresletrasmobileapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -27,7 +27,8 @@
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
-      ]
+      ],
+      "package": "com.tresletras.mobileapp"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -36,6 +37,11 @@
     "plugins": [
       "expo-asset",
       "expo-audio"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b1bdaf2c-6f1d-47b0-979b-e3103244e869"
+      }
+    }
   }
 }

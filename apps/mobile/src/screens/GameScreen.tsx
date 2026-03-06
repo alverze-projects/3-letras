@@ -7,7 +7,7 @@ import GradientBackground from '../components/GradientBackground';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { getSocket, WS_EVENTS } from '../services/socket';
-import { soundManager } from '../services/sound';
+import { useSound } from '../services/sound';
 import { useMusic } from '../contexts/MusicContext';
 import { Colors } from '../theme/colors';
 import type { IRound, IActiveTurn, ITurn, IGamePlayer } from '@3letras/interfaces';
@@ -87,11 +87,11 @@ export default function GameScreen({ navigation, route }: Props) {
   const timerWidth = useRef(new Animated.Value(1)).current;
 
   const socket = getSocket();
+  const { play: playSound } = useSound();
 
   // Precargar sonidos al montar la pantalla
   useEffect(() => {
-    soundManager.preload();
-    return () => { soundManager.unload(); };
+    // soundManager no longer needed since SoundProvider preloads hooks
   }, []);
 
   useEffect(() => {
@@ -120,7 +120,7 @@ export default function GameScreen({ navigation, route }: Props) {
       setLastResult(null);
       setWordHistory([]);
       setWord('');
-      soundManager.play('round_start');
+      playSound('round_start');
     });
 
     socket.on(WS_EVENTS.SERVER.TURN_START, ({ activeTurn: at }) => {
@@ -131,7 +131,7 @@ export default function GameScreen({ navigation, route }: Props) {
       setRemainingMs(15000);
       setWord('');
       Animated.timing(timerWidth, { toValue: 1, duration: 0, useNativeDriver: false }).start();
-      if (mine) soundManager.play('turn_start');
+      if (mine) playSound('turn_start');
     });
 
     socket.on(WS_EVENTS.SERVER.TURN_TIMER, ({ remainingMs: ms }) => {
@@ -141,7 +141,7 @@ export default function GameScreen({ navigation, route }: Props) {
         duration: 900,
         useNativeDriver: false,
       }).start();
-      if (isMyTurnRef.current && ms <= 5000 && ms > 0) soundManager.play('tick');
+      if (isMyTurnRef.current && ms <= 5000 && ms > 0) playSound('tick');
     });
 
     socket.on(WS_EVENTS.SERVER.TURN_RESULT, ({ turn, playerNickname, playerScores }) => {
@@ -158,11 +158,11 @@ export default function GameScreen({ navigation, route }: Props) {
       setIsMyTurn(false);
       isMyTurnRef.current = false;
       if (turn.isValid) {
-        soundManager.play('valid_word');
+        playSound('valid_word');
       } else if (turn.word) {
-        soundManager.play('invalid_word');
+        playSound('invalid_word');
       } else {
-        soundManager.play(isSolo ? 'skip' : 'timer_end');
+        playSound(isSolo ? 'skip' : 'timer_end');
       }
       if (playerScores) {
         setPlayers((prev) => prev.map((p) => {
@@ -174,7 +174,7 @@ export default function GameScreen({ navigation, route }: Props) {
 
     socket.on(WS_EVENTS.SERVER.ROUND_SUMMARY, () => {
       setRound(null);
-      soundManager.play('round_end');
+      playSound('round_end');
     });
 
     socket.on(WS_EVENTS.SERVER.DICE_ROLL_REQUEST, (data: DiceRollRequest) => {
@@ -240,7 +240,7 @@ export default function GameScreen({ navigation, route }: Props) {
     });
 
     socket.on(WS_EVENTS.SERVER.GAME_END, ({ finalScores, winnerId }) => {
-      soundManager.play(winnerId === player.id ? 'victory' : 'defeat');
+      playSound(winnerId === player.id ? 'victory' : 'defeat');
       navigation.replace('Results', { finalScores, winnerId, gameCode });
     });
 

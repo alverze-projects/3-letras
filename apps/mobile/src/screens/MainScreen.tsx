@@ -12,7 +12,7 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList, MainTabParamList } from '../navigation/types';
 import { gamesApi } from '../services/api';
-import { soundManager } from '../services/sound';
+import { useSound } from '../services/sound';
 import { loadSession, clearSession, Session } from '../services/session';
 import { Colors } from '../theme/colors';
 import type { DifficultyLevel } from '@3letras/interfaces';
@@ -45,12 +45,13 @@ export default function MainScreen({ navigation }: Props) {
   const [isCustom, setIsCustom] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const { play: playSound } = useSound();
+
   // Pulsing play button
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     loadSession().then(setSession);
-    soundManager.preload();
 
     const pulse = Animated.loop(
       Animated.sequence([
@@ -68,7 +69,7 @@ export default function MainScreen({ navigation }: Props) {
   }
 
   function selectMode(solo: boolean) {
-    soundManager.play('button_tap');
+    playSound('button_tap');
     setIsSolo(solo);
     setStep(solo ? 1 : 'multi');
   }
@@ -113,7 +114,7 @@ export default function MainScreen({ navigation }: Props) {
 
   async function handleLogout() {
     await clearSession();
-    navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+    navigation.reset({ index: 0, routes: [{ name: 'Inicio' }] });
   }
 
   if (!session) {
@@ -157,7 +158,7 @@ export default function MainScreen({ navigation }: Props) {
             <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
               <GameButton
                 title="JUGAR"
-                onPress={() => { soundManager.play('button_tap'); setStep('mode'); }}
+                onPress={() => { playSound('button_tap'); setStep('mode'); }}
                 shadowHeight={6}
                 textStyle={{ fontSize: 24 }}
               />
@@ -187,7 +188,7 @@ export default function MainScreen({ navigation }: Props) {
                 </View>
               </TouchableOpacity>
 
-              <GameButton title="Cancelar" variant="ghost" onPress={() => { soundManager.play('button_tap'); reset(); }} />
+              <GameButton title="Cancelar" variant="ghost" onPress={() => { playSound('button_tap'); reset(); }} />
             </GameCard>
           )}
 
@@ -198,11 +199,11 @@ export default function MainScreen({ navigation }: Props) {
                 <Text style={styles.stepTitle}>Multijugador</Text>
               </View>
 
-              <GameButton title="CREAR SALA" onPress={() => { soundManager.play('button_tap'); setStep(1); }} />
+              <GameButton title="CREAR SALA" onPress={() => { playSound('button_tap'); setStep(1); }} />
               <View style={{ height: 10 }} />
-              <GameButton title="UNIRSE A PARTIDA" variant="secondary" onPress={() => { soundManager.play('button_tap'); setShowJoin(true); }} />
+              <GameButton title="UNIRSE A PARTIDA" variant="secondary" onPress={() => { playSound('button_tap'); setShowJoin(true); }} />
               <View style={{ height: 10 }} />
-              <GameButton title="← Atrás" variant="ghost" onPress={() => { soundManager.play('button_tap'); setStep('mode'); }} />
+              <GameButton title="← Atrás" variant="ghost" onPress={() => { playSound('button_tap'); setStep('mode'); }} />
             </GameCard>
           )}
 
@@ -225,7 +226,7 @@ export default function MainScreen({ navigation }: Props) {
                 autoFocus
               />
               <View style={styles.stepButtons}>
-                <GameButton title="← Atrás" variant="ghost" onPress={() => { soundManager.play('button_tap'); setShowJoin(false); setCode(''); }} style={{ flex: 1 }} />
+                <GameButton title="← Atrás" variant="ghost" onPress={() => { playSound('button_tap'); setShowJoin(false); setCode(''); }} style={{ flex: 1 }} />
                 <GameButton title="UNIRSE" onPress={handleJoin} loading={loading} style={{ flex: 2 }} />
               </View>
             </GameCard>
@@ -243,7 +244,7 @@ export default function MainScreen({ navigation }: Props) {
                 <TouchableOpacity
                   key={d.value}
                   style={[styles.difficultyOption, difficulty === d.value && { borderColor: d.color, backgroundColor: 'rgba(255,255,255,0.07)' }]}
-                  onPress={() => { soundManager.play('tick'); setDifficulty(d.value); }}
+                  onPress={() => { playSound('tick'); setDifficulty(d.value); }}
                 >
                   <View style={styles.optionRow}>
                     <View style={[styles.radio, difficulty === d.value && { borderColor: d.color, backgroundColor: d.color }]} />
@@ -258,8 +259,8 @@ export default function MainScreen({ navigation }: Props) {
               ))}
 
               <View style={styles.stepButtons}>
-                <GameButton title="← Atrás" variant="ghost" onPress={() => { soundManager.play('button_tap'); setStep(isSolo ? 'mode' : 'multi'); }} style={{ flex: 1 }} />
-                <GameButton title="SIGUIENTE →" variant="secondary" onPress={() => { soundManager.play('button_tap'); setStep(2); }} style={{ flex: 2 }} />
+                <GameButton title="← Atrás" variant="ghost" onPress={() => { playSound('button_tap'); setStep(isSolo ? 'mode' : 'multi'); }} style={{ flex: 1 }} />
+                <GameButton title="SIGUIENTE →" variant="secondary" onPress={() => { playSound('button_tap'); setStep(2); }} style={{ flex: 2 }} />
               </View>
             </GameCard>
           )}
@@ -282,7 +283,7 @@ export default function MainScreen({ navigation }: Props) {
                   <TouchableOpacity
                     key={n}
                     style={[styles.roundOption, !isCustom && totalRounds === n && styles.roundOptionSelected]}
-                    onPress={() => { soundManager.play('tick'); setTotalRounds(n); setIsCustom(false); }}
+                    onPress={() => { playSound('tick'); setTotalRounds(n); setIsCustom(false); }}
                   >
                     <Text style={[styles.roundNumber, !isCustom && totalRounds === n && styles.roundNumberSelected]}>
                       {n}
@@ -295,7 +296,7 @@ export default function MainScreen({ navigation }: Props) {
               </View>
 
               {!isCustom ? (
-                <TouchableOpacity style={styles.btnCustom} onPress={() => { soundManager.play('button_tap'); setIsCustom(true); }}>
+                <TouchableOpacity style={styles.btnCustom} onPress={() => { playSound('button_tap'); setIsCustom(true); }}>
                   <Text style={styles.btnCustomText}>Personalizada</Text>
                 </TouchableOpacity>
               ) : (
@@ -310,15 +311,15 @@ export default function MainScreen({ navigation }: Props) {
                     maxLength={2}
                     autoFocus
                   />
-                  <TouchableOpacity style={styles.btnCustom} onPress={() => { soundManager.play('button_tap'); setIsCustom(false); setCustomRounds(''); }}>
+                  <TouchableOpacity style={styles.btnCustom} onPress={() => { playSound('button_tap'); setIsCustom(false); setCustomRounds(''); }}>
                     <Text style={styles.btnCustomText}>Usar opciones fijas</Text>
                   </TouchableOpacity>
                 </View>
               )}
 
               <View style={styles.stepButtons}>
-                <GameButton title="← Atrás" variant="ghost" onPress={() => { soundManager.play('button_tap'); setStep(1); }} style={{ flex: 1 }} />
-                <GameButton title="CREAR" onPress={() => { soundManager.play('round_start'); handleCreate(); }} loading={loading} style={{ flex: 2 }} />
+                <GameButton title="← Atrás" variant="ghost" onPress={() => { playSound('button_tap'); setStep(1); }} style={{ flex: 1 }} />
+                <GameButton title="CREAR" onPress={() => { playSound('round_start'); handleCreate(); }} loading={loading} style={{ flex: 2 }} />
               </View>
             </GameCard>
           )}
@@ -329,7 +330,7 @@ export default function MainScreen({ navigation }: Props) {
         {step === 0 && (
           <TouchableOpacity
             style={styles.howToPlayBtn}
-            onPress={() => { soundManager.play('button_tap'); navigation.navigate('Instructions', { nextRoute: 'Main' }); }}
+            onPress={() => { playSound('button_tap'); navigation.navigate('Instructions', { nextRoute: 'Main' }); }}
           >
             <Text style={styles.howToPlay}>¿Cómo se juega?  →</Text>
           </TouchableOpacity>

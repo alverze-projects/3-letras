@@ -7,6 +7,8 @@ import AnimatedLogo from '../components/AnimatedLogo';
 import GradientBackground from '../components/GradientBackground';
 import GameButton from '../components/GameButton';
 import GameCard from '../components/GameCard';
+// @ts-ignore
+import { Ionicons } from '@expo/vector-icons';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -39,8 +41,8 @@ export default function MainScreen({ navigation }: Props) {
   const [isSolo, setIsSolo] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
   const [code, setCode] = useState('');
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
-  const [totalRounds, setTotalRounds] = useState(5);
+  const [difficulty, setDifficulty] = useState<DifficultyLevel | null>(null);
+  const [totalRounds, setTotalRounds] = useState<number | null>(null);
   const [customRounds, setCustomRounds] = useState('');
   const [isCustom, setIsCustom] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -65,7 +67,7 @@ export default function MainScreen({ navigation }: Props) {
 
   function reset() {
     setStep(0); setIsSolo(false); setShowJoin(false); setCode('');
-    setDifficulty('medium'); setTotalRounds(5); setCustomRounds(''); setIsCustom(false);
+    setDifficulty(null); setTotalRounds(null); setCustomRounds(''); setIsCustom(false);
   }
 
   function selectMode(solo: boolean) {
@@ -74,19 +76,24 @@ export default function MainScreen({ navigation }: Props) {
     setStep(solo ? 1 : 'multi');
   }
 
-  async function handleCreate() {
+  async function handleCreate(overrideRounds?: number) {
     if (!session) return;
-    const rounds = isCustom ? parseInt(customRounds, 10) : totalRounds;
+
+    // Fallback if not set
+    const userDiff = difficulty || 'medium';
+    const rounds = overrideRounds ?? (isCustom ? parseInt(customRounds, 10) : (totalRounds || 5));
+
     if (!rounds || rounds < 1 || rounds > 50) {
       Alert.alert('Número de rondas inválido', 'Debe ser un número entre 1 y 50');
       return;
     }
+
     setLoading(true);
     try {
-      const { game } = await gamesApi.create({ difficulty, totalRounds: rounds });
+      const { game } = await gamesApi.create({ difficulty: userDiff, totalRounds: rounds });
       navigation.navigate('Lobby', {
         gameCode: game.code, token: session.token, player: session.player,
-        difficulty, totalRounds: rounds, autoStart: isSolo,
+        difficulty: userDiff, totalRounds: rounds, autoStart: isSolo,
       });
     } catch (e: any) {
       Alert.alert('Error', e?.response?.data?.message ?? 'No se pudo crear la partida');
@@ -168,7 +175,10 @@ export default function MainScreen({ navigation }: Props) {
           {/* ── Elegir modo ── */}
           {step === 'mode' && (
             <GameCard glow>
-              <View style={styles.stepHeader}>
+              <View style={styles.stepHeaderWithBack}>
+                <TouchableOpacity onPress={() => { playSound('button_tap'); reset(); }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <Ionicons name="arrow-back" size={24} color={Colors.accent} />
+                </TouchableOpacity>
                 <Text style={styles.stepTitle}>¿Cómo quieres jugar?</Text>
               </View>
 
@@ -188,29 +198,32 @@ export default function MainScreen({ navigation }: Props) {
                 </View>
               </TouchableOpacity>
 
-              <GameButton title="Cancelar" variant="ghost" onPress={() => { playSound('button_tap'); reset(); }} />
             </GameCard>
           )}
 
           {/* ── Multijugador: Crear sala / Unirse ── */}
           {step === 'multi' && !showJoin && (
             <GameCard glow>
-              <View style={styles.stepHeader}>
+              <View style={styles.stepHeaderWithBack}>
+                <TouchableOpacity onPress={() => { playSound('button_tap'); setStep('mode'); }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <Ionicons name="arrow-back" size={24} color={Colors.accent} />
+                </TouchableOpacity>
                 <Text style={styles.stepTitle}>Multijugador</Text>
               </View>
 
               <GameButton title="CREAR SALA" onPress={() => { playSound('button_tap'); setStep(1); }} />
               <View style={{ height: 10 }} />
               <GameButton title="UNIRSE A PARTIDA" variant="secondary" onPress={() => { playSound('button_tap'); setShowJoin(true); }} />
-              <View style={{ height: 10 }} />
-              <GameButton title="← Atrás" variant="ghost" onPress={() => { playSound('button_tap'); setStep('mode'); }} />
             </GameCard>
           )}
 
           {/* ── Unirse: ingreso de código ── */}
           {step === 'multi' && showJoin && (
             <GameCard glow>
-              <View style={styles.stepHeader}>
+              <View style={styles.stepHeaderWithBack}>
+                <TouchableOpacity onPress={() => { playSound('button_tap'); setShowJoin(false); setCode(''); }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <Ionicons name="arrow-back" size={24} color={Colors.accent} />
+                </TouchableOpacity>
                 <Text style={styles.stepTitle}>Unirse a partida</Text>
               </View>
 
@@ -225,9 +238,8 @@ export default function MainScreen({ navigation }: Props) {
                 autoCorrect={false}
                 autoFocus
               />
-              <View style={styles.stepButtons}>
-                <GameButton title="← Atrás" variant="ghost" onPress={() => { playSound('button_tap'); setShowJoin(false); setCode(''); }} style={{ flex: 1 }} />
-                <GameButton title="UNIRSE" onPress={handleJoin} loading={loading} style={{ flex: 2 }} />
+              <View style={[styles.stepButtons, { marginTop: 12 }]}>
+                <GameButton title="UNIRSE" onPress={handleJoin} loading={loading} style={{ flex: 1 }} />
               </View>
             </GameCard>
           )}
@@ -235,16 +247,26 @@ export default function MainScreen({ navigation }: Props) {
           {/* ── Paso 1: Dificultad ── */}
           {step === 1 && (
             <GameCard>
-              <View style={styles.stepHeader}>
-                <Text style={styles.stepIndicator}>PASO 1 DE 2</Text>
-                <Text style={styles.stepTitle}>Elige la dificultad</Text>
+              <View style={styles.stepHeaderWithBack}>
+                <TouchableOpacity onPress={() => { playSound('button_tap'); setStep(isSolo ? 'mode' : 'multi'); }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <Ionicons name="arrow-back" size={24} color={Colors.accent} />
+                </TouchableOpacity>
+                <View>
+                  <Text style={styles.stepIndicator}>PASO 1 DE 2</Text>
+                  <Text style={styles.stepTitle}>Elige la dificultad</Text>
+                </View>
               </View>
 
               {DIFFICULTIES.map((d) => (
                 <TouchableOpacity
                   key={d.value}
                   style={[styles.difficultyOption, difficulty === d.value && { borderColor: d.color, backgroundColor: 'rgba(255,255,255,0.07)' }]}
-                  onPress={() => { playSound('tick'); setDifficulty(d.value); }}
+                  onPress={() => {
+                    playSound('tick');
+                    setDifficulty(d.value);
+                    // Automatically next step
+                    setTimeout(() => setStep(2), 50);
+                  }}
                 >
                   <View style={styles.optionRow}>
                     <View style={[styles.radio, difficulty === d.value && { borderColor: d.color, backgroundColor: d.color }]} />
@@ -257,25 +279,25 @@ export default function MainScreen({ navigation }: Props) {
                   </View>
                 </TouchableOpacity>
               ))}
-
-              <View style={styles.stepButtons}>
-                <GameButton title="← Atrás" variant="ghost" onPress={() => { playSound('button_tap'); setStep(isSolo ? 'mode' : 'multi'); }} style={{ flex: 1 }} />
-                <GameButton title="SIGUIENTE →" variant="secondary" onPress={() => { playSound('button_tap'); setStep(2); }} style={{ flex: 2 }} />
-              </View>
             </GameCard>
           )}
 
           {/* ── Paso 2: Rondas ── */}
           {step === 2 && (
             <GameCard>
-              <View style={styles.stepHeader}>
-                <Text style={styles.stepIndicator}>PASO 2 DE 2</Text>
-                <Text style={styles.stepTitle}>Número de rondas</Text>
-                <Text style={styles.stepSubtitle}>
-                  Dificultad: <Text style={styles.stepSubtitleAccent}>
-                    {DIFFICULTIES.find((d) => d.value === difficulty)?.label}
+              <View style={styles.stepHeaderWithBack}>
+                <TouchableOpacity onPress={() => { playSound('button_tap'); setStep(1); }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <Ionicons name="arrow-back" size={24} color={Colors.accent} />
+                </TouchableOpacity>
+                <View>
+                  <Text style={styles.stepIndicator}>PASO 2 DE 2</Text>
+                  <Text style={styles.stepTitle}>Número de rondas</Text>
+                  <Text style={styles.stepSubtitle}>
+                    Dificultad: <Text style={styles.stepSubtitleAccent}>
+                      {DIFFICULTIES.find((d) => d.value === difficulty)?.label}
+                    </Text>
                   </Text>
-                </Text>
+                </View>
               </View>
 
               <View style={styles.roundsGrid}>
@@ -283,7 +305,13 @@ export default function MainScreen({ navigation }: Props) {
                   <TouchableOpacity
                     key={n}
                     style={[styles.roundOption, !isCustom && totalRounds === n && styles.roundOptionSelected]}
-                    onPress={() => { playSound('tick'); setTotalRounds(n); setIsCustom(false); }}
+                    onPress={() => {
+                      playSound('tick');
+                      setTotalRounds(n);
+                      setIsCustom(false);
+                      // Automatically create
+                      handleCreate(n);
+                    }}
                   >
                     <Text style={[styles.roundNumber, !isCustom && totalRounds === n && styles.roundNumberSelected]}>
                       {n}
@@ -311,16 +339,14 @@ export default function MainScreen({ navigation }: Props) {
                     maxLength={2}
                     autoFocus
                   />
-                  <TouchableOpacity style={styles.btnCustom} onPress={() => { playSound('button_tap'); setIsCustom(false); setCustomRounds(''); }}>
+                  <View style={[styles.stepButtons, { marginBottom: 16 }]}>
+                    <GameButton title="JUGAR" onPress={() => { playSound('round_start'); handleCreate(); }} loading={loading} style={{ flex: 1 }} />
+                  </View>
+                  <TouchableOpacity style={[styles.btnCustom, { marginTop: 0 }]} onPress={() => { playSound('button_tap'); setIsCustom(false); setCustomRounds(''); }}>
                     <Text style={styles.btnCustomText}>Usar opciones fijas</Text>
                   </TouchableOpacity>
                 </View>
               )}
-
-              <View style={styles.stepButtons}>
-                <GameButton title="← Atrás" variant="ghost" onPress={() => { playSound('button_tap'); setStep(1); }} style={{ flex: 1 }} />
-                <GameButton title="CREAR" onPress={() => { playSound('round_start'); handleCreate(); }} loading={loading} style={{ flex: 2 }} />
-              </View>
             </GameCard>
           )}
 
@@ -361,6 +387,7 @@ const styles = StyleSheet.create({
 
   // Steps
   stepHeader: { gap: 2, marginBottom: 12 },
+  stepHeaderWithBack: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
   stepIndicator: { color: Colors.accent, fontSize: 12, fontWeight: '900', letterSpacing: 2 },
   stepTitle: {
     color: Colors.white, fontSize: 22, fontWeight: '900',

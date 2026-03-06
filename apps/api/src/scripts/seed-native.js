@@ -66,7 +66,7 @@ async function run() {
     let totalProcessed = 0;
     let insertedCount = 0;
 
-    const insertWord = db.prepare('INSERT OR IGNORE INTO vocab_entries (id, word, isActive, createdAt) VALUES (?, ?, 1, datetime("now"))');
+    const insertWord = db.prepare(`INSERT OR IGNORE INTO vocab_entries (id, word, isActive, createdAt) VALUES (?, ?, 1, datetime('now'))`);
 
     // Usamos una transacción para agrupamiento e inserciones muy rápidas (~1000 veces más rápido que de a una)
     const insertBatch = db.transaction((words) => {

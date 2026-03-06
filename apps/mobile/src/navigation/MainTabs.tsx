@@ -159,7 +159,7 @@ function TabIcon({ name, color, focused, label }: {
 }
 
 export default function MainTabs() {
-  const { muted, toggleMute, play: playMusic } = useMusic();
+  const { play: playMusic } = useMusic();
   const { play: playSound } = useSound();
 
   useEffect(() => {
@@ -168,19 +168,6 @@ export default function MainTabs() {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Mute toggle */}
-      <TouchableOpacity
-        onPress={toggleMute}
-        style={styles.muteButton}
-        activeOpacity={0.7}
-      >
-        <Ionicons
-          name={muted ? 'volume-mute' : 'volume-high'}
-          size={20}
-          color={muted ? 'rgba(150,180,255,0.4)' : Colors.accent}
-        />
-      </TouchableOpacity>
-
       <Tab.Navigator
         initialRouteName="Inicio"
         screenOptions={{

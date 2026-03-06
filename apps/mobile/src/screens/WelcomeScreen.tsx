@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { Colors } from '../theme/colors';
+import { useSound } from '../services/sound';
 import AnimatedLogo from '../components/AnimatedLogo';
 import GradientBackground from '../components/GradientBackground';
 import GameButton from '../components/GameButton';
@@ -13,6 +14,7 @@ export default function WelcomeScreen({ navigation }: Props) {
   // Entrada animada
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(40)).current;
+  const { play: playSound } = useSound();
 
   useEffect(() => {
     Animated.parallel([
@@ -37,14 +39,14 @@ export default function WelcomeScreen({ navigation }: Props) {
           <GameButton
             title="INICIAR SESIÓN"
             variant="primary"
-            onPress={() => navigation.navigate('Login')}
+            onPress={() => { playSound('button_tap'); navigation.navigate('Login'); }}
           />
           <GameButton
             title="REGISTRARSE"
             variant="secondary"
-            onPress={() => navigation.navigate('Register')}
+            onPress={() => { playSound('button_tap'); navigation.navigate('Register'); }}
           />
-          <TouchableOpacity style={styles.btnGhost} onPress={() => navigation.navigate('Guest')}>
+          <TouchableOpacity style={styles.btnGhost} onPress={() => { playSound('button_tap'); navigation.navigate('Guest'); }}>
             <Text style={styles.btnGhostText}>Jugar como invitado</Text>
           </TouchableOpacity>
         </Animated.View>

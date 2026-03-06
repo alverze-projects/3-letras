@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAudioPlayer } from 'expo-audio';
+import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
 
 export type MusicTrack = 'menu' | 'game';
 
@@ -41,6 +41,22 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
     if (menuPlayer) menuPlayer.loop = true;
     if (gamePlayer) gamePlayer.loop = true;
+
+    // Initialize Global Audio Session (Production Fix)
+    useEffect(() => {
+        const initAudio = async () => {
+            try {
+                await setAudioModeAsync({
+                    playsInSilentMode: true,
+                    shouldPlayInBackground: false,
+                    interruptionMode: 'doNotMix',
+                });
+            } catch (err) {
+                console.warn('Silent Mode init error', err);
+            }
+        };
+        initAudio();
+    }, []);
 
     const getPlayer = (track: MusicTrack | null) => {
         if (track === 'menu') return menuPlayer;
@@ -85,8 +101,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         };
     }, [muted]);
 
-    const playTrack = (track: MusicTrack, isMuted: boolean) => {
-        // Use ref for reliable previous track detection (avoids stale closure)
+    const playTrack = async (track: MusicTrack, isMuted: boolean) => {
         const prev = currentTrackRef.current;
         if (prev && prev !== track) {
             const prevPlayer = getPlayer(prev);
@@ -104,7 +119,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         if (!isMuted) {
             nextPlayer.volume = DEFAULT_VOLUME;
             try { nextPlayer.seekTo(0); } catch { /* */ }
-            try { nextPlayer.play(); } catch { /* */ }
+            try { await nextPlayer.play(); } catch { /* */ }
         } else {
             nextPlayer.volume = 0;
         }
@@ -137,7 +152,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
     const play = useCallback(async (track: MusicTrack) => {
         pendingTrack.current = track;
-        if (!initDone.current || !audioUnlocked.current) return;
+        if (!initDone.current) return;
+        if (Platform.OS === 'web' && !audioUnlocked.current) return;
         playTrack(track, muted);
     }, [muted]);
 
@@ -151,6 +167,15 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
             setCurrentTrack(null);
         }
     }, [currentTrack]);
+
+    // Handle initial track play once players load
+    useEffect(() => {
+        if (!initDone.current) return;
+        if (Platform.OS === 'web' && !audioUnlocked.current) return;
+        if (pendingTrack.current && (menuPlayer || gamePlayer)) {
+            playTrack(pendingTrack.current, muted);
+        }
+    }, [menuPlayer, gamePlayer, muted]);
 
     return (
         <MusicContext.Provider value={{ muted, toggleMute, play, stop }}>

@@ -50,28 +50,6 @@ async function bootstrap() {
   if (!entry) throw new Error(`${TXT_FILENAME} no encontrado dentro del ZIP`);
 
   const txtBuffer = entry.getData();
-  const content = txtBuffer.toString('latin1');  // ISO-8859-1 → string JS
-  const lines = content.split('\r\n');          // CRLF
-
-  // ── Parsear palabras ─────────────────────────────────────────────────────────
-  const words: string[] = [];
-  for (const line of lines) {
-    if (!line.trim()) continue;
-
-    // Columnas separadas por tabulación: "   N.\t palabra \t freq \t norm"
-    const parts = line.split('\t');
-    if (parts.length < 2) continue;
-
-    // Primera columna: número seguido de punto
-    if (!/^\s*\d+\.\s*$/.test(parts[0])) continue;
-
-    const word = parts[1].trim();
-    if (!word) continue;
-
-    words.push(word);
-  }
-
-  console.log(`Palabras parseadas: ${words.length.toLocaleString('es-CL')}`);
 
   // ── Estado actual ─────────────────────────────────────────────────────────────
   const existing = await repo.count();
@@ -80,35 +58,74 @@ async function bootstrap() {
     console.log('    Las nuevas se agregarán; las duplicadas se ignorarán.\n');
   }
 
-  // ── Insertar en transacción ───────────────────────────────────────────────────
-  console.log('Insertando palabras...');
+  // ── Parsear e Insertar por Lotes (Low Memory footprint) ─────────────────────
+  console.log('Procesando e insertando palabras bajo consumo de RAM...');
   const start = Date.now();
   const now = new Date();
 
-  await repo.manager.transaction(async (manager) => {
-    for (let i = 0; i < words.length; i += BATCH) {
-      const batch = words.slice(i, i + BATCH);
+  let batchBuffer: Partial<VocabEntry>[] = [];
+  let totalProcessed = 0;
+  let insertedCount = 0;
 
-      await manager
-        .createQueryBuilder()
+  // Creamos un stream falso a partir del buffer para no cargar strings gigantes en RAM
+  const { Readable } = require('stream');
+  const bufferStream = new Readable();
+  bufferStream.push(txtBuffer);
+  bufferStream.push(null);
+
+  const readline = require('readline');
+  const rl = readline.createInterface({
+    input: bufferStream,
+    crlfDelay: Infinity,
+  });
+
+  for await (let line of rl) {
+    line = line.toString('latin1'); // Decodificar correctamente ISO-8859-1
+    if (!line.trim()) continue;
+
+    const parts = line.split('\t');
+    if (parts.length < 2) continue;
+    if (!/^\s*\d+\.\s*$/.test(parts[0])) continue;
+
+    const word = parts[1].trim();
+    if (!word) continue;
+
+    totalProcessed++;
+    batchBuffer.push({
+      id: randomUUID(),
+      word,
+      isActive: true,
+      createdAt: now,
+    });
+
+    // Insertar cuando el batch se llena
+    if (batchBuffer.length >= BATCH) {
+      await repo.createQueryBuilder()
         .insert()
         .into(VocabEntry)
-        .values(batch.map((word) => ({
-          id: randomUUID(),
-          word,
-          isActive: true,
-          createdAt: now,
-        })))
+        .values(batchBuffer)
         .orIgnore()
         .execute();
 
-      const done = Math.min(i + BATCH, words.length);
-      const pct = Math.round((done / words.length) * 100);
-      process.stdout.write(
-        `\r  ${pct}%  (${done.toLocaleString('es-CL')} / ${words.length.toLocaleString('es-CL')})`,
-      );
+      insertedCount += batchBuffer.length;
+      batchBuffer = []; // Limpiar RAM
+
+      if (insertedCount % 10000 === 0) {
+        process.stdout.write(`\r  Progreso: ${insertedCount.toLocaleString('es-CL')} palabras insertadas...`);
+      }
     }
-  });
+  }
+
+  // Insertar remanente si sobran palabras al acabar el archivo
+  if (batchBuffer.length > 0) {
+    await repo.createQueryBuilder()
+      .insert()
+      .into(VocabEntry)
+      .values(batchBuffer)
+      .orIgnore()
+      .execute();
+    insertedCount += batchBuffer.length;
+  }
 
   const elapsed = ((Date.now() - start) / 1000).toFixed(1);
   const total = await repo.count();
@@ -116,8 +133,8 @@ async function bootstrap() {
 
   console.log('\n');
   console.log(`✅  Insertadas : ${inserted.toLocaleString('es-CL')}`);
-  if (words.length - inserted > 0)
-    console.log(`⏭️   Ignoradas  : ${(words.length - inserted).toLocaleString('es-CL')} (ya existían)`);
+  if (totalProcessed - inserted > 0)
+    console.log(`⏭️   Ignoradas  : ${(totalProcessed - inserted).toLocaleString('es-CL')} (ya existían)`);
   console.log(`⏱️   Tiempo     : ${elapsed}s`);
 
   await app.close();

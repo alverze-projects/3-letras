@@ -1,0 +1,50 @@
+diff --git a/node_modules/expo-audio/build/ExpoAudio.js b/node_modules/expo-audio/build/ExpoAudio.js
+index 98eca9f..239c8f8 100644
+--- a/node_modules/expo-audio/build/ExpoAudio.js
++++ b/node_modules/expo-audio/build/ExpoAudio.js
+@@ -79,11 +79,10 @@ export function useAudioPlayer(source = null, options = {}) {
+     const initialSource = useMemo(() => {
+         return downloadFirst ? null : resolveSource(source);
+     }, [JSON.stringify(source), downloadFirst]);
+-    const player = useReleasingSharedObject(() => new AudioModule.AudioPlayer(initialSource, updateInterval, keepAudioSessionActive, preferredForwardBufferDuration), [
++    const player = useReleasingSharedObject(() => new AudioModule.AudioPlayer(initialSource, updateInterval, keepAudioSessionActive), [
+         JSON.stringify(initialSource),
+         updateInterval,
+         keepAudioSessionActive,
+-        preferredForwardBufferDuration,
+     ]);
+     // Handle async source resolution for downloadFirst
+     useEffect(() => {
+@@ -386,21 +385,21 @@ export function createAudioPlaylist(options = {}) {
+ export function createAudioPlayer(source = null, options = {}) {
+     const { updateInterval = 500, downloadFirst = false, keepAudioSessionActive = false, preferredForwardBufferDuration = 0, } = options;
+     const initialSource = downloadFirst ? null : resolveSource(source);
+-    const player = new AudioModule.AudioPlayer(initialSource, updateInterval, keepAudioSessionActive, preferredForwardBufferDuration);
++    const player = new AudioModule.AudioPlayer(initialSource, updateInterval, keepAudioSessionActive);
+     if (downloadFirst && source) {
+         resolveSourceWithDownload(source)
+             .then((resolved) => {
+-            if (resolved) {
+-                player.replace(resolved);
+-            }
+-        })
++                if (resolved) {
++                    player.replace(resolved);
++                }
++            })
+             .catch((error) => {
+-            console.warn('expo-audio: Failed to download source, using fallback:', error);
+-            const fallback = resolveSource(source);
+-            if (fallback) {
+-                player.replace(fallback);
+-            }
+-        });
++                console.warn('expo-audio: Failed to download source, using fallback:', error);
++                const fallback = resolveSource(source);
++                if (fallback) {
++                    player.replace(fallback);
++                }
++            });
+     }
+     return player;
+ }

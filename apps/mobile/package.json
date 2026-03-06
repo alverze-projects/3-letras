@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "BROWSER=none expo start --web"
+    "web": "BROWSER=none expo start --web",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@expo/metro-runtime": "~55.0.6",
@@ -36,6 +37,8 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "patch-package": "^8.0.1",
+    "postinstall-postinstall": "^2.1.0",
     "react-native-svg-transformer": "^1.5.3",
     "typescript": "~5.9.2"
   },

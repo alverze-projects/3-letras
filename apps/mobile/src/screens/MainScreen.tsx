@@ -15,6 +15,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList, MainTabParamList } from '../navigation/types';
 import { gamesApi } from '../services/api';
 import { useSound } from '../services/sound';
+import { useMusic } from '../contexts/MusicContext';
 import { loadSession, clearSession, Session } from '../services/session';
 import { Colors } from '../theme/colors';
 import { AuthContext } from '../../App';
@@ -50,6 +51,7 @@ export default function MainScreen({ navigation }: Props) {
 
   const { play: playSound } = useSound();
   const { logout } = useContext(AuthContext);
+  const { unlockAudioWeb } = useMusic();
 
   // Pulsing play button
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -73,6 +75,7 @@ export default function MainScreen({ navigation }: Props) {
   }
 
   function selectMode(solo: boolean) {
+    unlockAudioWeb();
     playSound('button_tap');
     setIsSolo(solo);
     setStep(solo ? 1 : 'multi');
@@ -167,7 +170,7 @@ export default function MainScreen({ navigation }: Props) {
             <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
               <GameButton
                 title="JUGAR"
-                onPress={() => { playSound('button_tap'); setStep('mode'); }}
+                onPress={() => { unlockAudioWeb(); playSound('button_tap'); setStep('mode'); }}
                 shadowHeight={6}
                 textStyle={{ fontSize: 24 }}
               />

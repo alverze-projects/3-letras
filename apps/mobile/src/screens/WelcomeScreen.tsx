@@ -16,7 +16,7 @@ export default function WelcomeScreen({ navigation }: Props) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(40)).current;
   const { play: playSound } = useSound();
-  const { play: playMusic } = useMusic();
+  const { play: playMusic, unlockAudioWeb } = useMusic();
 
   useEffect(() => {
     playMusic('menu');
@@ -43,14 +43,14 @@ export default function WelcomeScreen({ navigation }: Props) {
           <GameButton
             title="INICIAR SESIÓN"
             variant="primary"
-            onPress={() => { playSound('button_tap'); navigation.navigate('Login'); }}
+            onPress={() => { unlockAudioWeb(); playSound('button_tap'); navigation.navigate('Login'); }}
           />
           <GameButton
             title="REGISTRARSE"
             variant="secondary"
-            onPress={() => { playSound('button_tap'); navigation.navigate('Register'); }}
+            onPress={() => { unlockAudioWeb(); playSound('button_tap'); navigation.navigate('Register'); }}
           />
-          <TouchableOpacity style={styles.btnGhost} onPress={() => { playSound('button_tap'); navigation.navigate('Guest'); }}>
+          <TouchableOpacity style={styles.btnGhost} onPress={() => { unlockAudioWeb(); playSound('button_tap'); navigation.navigate('Guest'); }}>
             <Text style={styles.btnGhostText}>Jugar como invitado</Text>
           </TouchableOpacity>
         </Animated.View>

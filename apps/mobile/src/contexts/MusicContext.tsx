@@ -18,6 +18,7 @@ interface MusicContextValue {
     toggleMute: () => Promise<void>;
     play: (track: MusicTrack) => Promise<void>;
     stop: () => Promise<void>;
+    unlockAudioWeb: () => void;
 }
 
 const MusicContext = createContext<MusicContextValue>({
@@ -25,6 +26,7 @@ const MusicContext = createContext<MusicContextValue>({
     toggleMute: async () => { },
     play: async () => { },
     stop: async () => { },
+    unlockAudioWeb: () => { },
 });
 
 export function MusicProvider({ children }: { children: React.ReactNode }) {
@@ -75,31 +77,34 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         });
     }, []);
 
-    // Web: unlock audio on first user interaction
+    // Web: unlock audio natively to bypass React Native Web's async boundaries
     useEffect(() => {
         if (Platform.OS !== 'web') return;
 
-        function handleInteraction() {
+        const handleNativeInteraction = () => {
             if (audioUnlocked.current) return;
             audioUnlocked.current = true;
+
+            // Fire synchronously inside the active browser event tick
             if (initDone.current && pendingTrack.current) {
+                // Ensure React's async rendering doesn't yield before the play() natively executes
                 playTrack(pendingTrack.current, muted);
             }
-            document.removeEventListener('click', handleInteraction, true);
-            document.removeEventListener('touchstart', handleInteraction, true);
-            document.removeEventListener('keydown', handleInteraction, true);
-        }
 
-        document.addEventListener('click', handleInteraction, true);
-        document.addEventListener('touchstart', handleInteraction, true);
-        document.addEventListener('keydown', handleInteraction, true);
+            document.removeEventListener('click', handleNativeInteraction, { capture: true } as EventListenerOptions);
+            document.removeEventListener('touchstart', handleNativeInteraction, { capture: true } as EventListenerOptions);
+        };
+
+        document.addEventListener('click', handleNativeInteraction, { capture: true } as EventListenerOptions);
+        document.addEventListener('touchstart', handleNativeInteraction, { capture: true } as EventListenerOptions);
 
         return () => {
-            document.removeEventListener('click', handleInteraction, true);
-            document.removeEventListener('touchstart', handleInteraction, true);
-            document.removeEventListener('keydown', handleInteraction, true);
+            document.removeEventListener('click', handleNativeInteraction, { capture: true } as EventListenerOptions);
+            document.removeEventListener('touchstart', handleNativeInteraction, { capture: true } as EventListenerOptions);
         };
-    }, [muted]);
+    }, [menuPlayer, gamePlayer, muted]);
+
+    const unlockAudioWeb = () => { }; // No-op now since we handle it natively
 
     const playTrack = async (track: MusicTrack, isMuted: boolean) => {
         const prev = currentTrackRef.current;
@@ -118,8 +123,36 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
         if (!isMuted) {
             nextPlayer.volume = DEFAULT_VOLUME;
-            try { nextPlayer.seekTo(0); } catch { /* */ }
-            try { await nextPlayer.play(); } catch { /* */ }
+
+            if (Platform.OS === 'web') {
+                const mediaElement = (nextPlayer as any).media as HTMLAudioElement;
+                if (mediaElement) {
+                    if (mediaElement.currentTime > 0) {
+                        try { mediaElement.currentTime = 0; } catch { /* */ }
+                    }
+                    try {
+                        const playPromise = mediaElement.play();
+                        if (playPromise && typeof playPromise.catch === 'function') {
+                            playPromise.catch(() => { });
+                        }
+                    } catch (e) {
+                        // silent catch
+                    }
+                } else {
+                    try { nextPlayer.seekTo(0); nextPlayer.play(); } catch { /* */ }
+                }
+            } else {
+                try { nextPlayer.seekTo(0); } catch { /* */ }
+                try {
+                    const playFn = nextPlayer.play as unknown as () => Promise<void>;
+                    const p = playFn();
+                    if (p && typeof p.catch === 'function') {
+                        p.catch(() => { });
+                    }
+                } catch (e) {
+                    console.warn('Play track failed sync:', e);
+                }
+            }
         } else {
             nextPlayer.volume = 0;
         }
@@ -178,7 +211,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     }, [menuPlayer, gamePlayer, muted]);
 
     return (
-        <MusicContext.Provider value={{ muted, toggleMute, play, stop }}>
+        <MusicContext.Provider value={{ muted, toggleMute, play, stop, unlockAudioWeb }}>
             {children}
         </MusicContext.Provider>
     );

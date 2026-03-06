@@ -19,7 +19,7 @@ import { VocabEntry } from '../entities/vocab-entry.entity';
 
 const ZIP_URL = 'https://corpus.rae.es/frec/CREA_total.zip';
 const TXT_FILENAME = 'CREA_total.TXT';
-const LOCAL_ZIP_PATH = require('path').join(__dirname, '../../data/CREA_total.zip');
+const LOCAL_ZIP_PATH = require('path').join(process.cwd(), 'data/CREA_total.zip');
 const BATCH = 200;
 
 // ── Main ─────────────────────────────────────────────────────────────────────
@@ -39,17 +39,21 @@ async function bootstrap() {
     process.exit(1);
   }
 
-  console.log(`Leyendo ZIP local desde: ${LOCAL_ZIP_PATH}`);
-  const zipBuffer = require('fs').readFileSync(LOCAL_ZIP_PATH);
-  console.log(`ZIP cargado en memoria: ${(zipBuffer.length / 1_048_576).toFixed(1)} MB`);
+  console.log(`Verificando TXT extraído en disco...`);
+  const fs = require('fs');
+  const path = require('path');
+  const targetDataDir = path.join(process.cwd(), 'data');
+  const extractedTxtPath = path.join(targetDataDir, TXT_FILENAME);
 
-  // ── Extraer TXT del ZIP en memoria ───────────────────────────────────────────
-  console.log(`Extrayendo ${TXT_FILENAME}...`);
-  const zip = new AdmZip(zipBuffer);
-  const entry = zip.getEntry(TXT_FILENAME);
-  if (!entry) throw new Error(`${TXT_FILENAME} no encontrado dentro del ZIP`);
-
-  const txtBuffer = entry.getData();
+  if (!fs.existsSync(extractedTxtPath)) {
+    console.log(`Extrayendo ${TXT_FILENAME} a disco... esto ahorra mucha memoria RAM.`);
+    // Pasamos la ruta del archivo a AdmZip, para evitar cargar todo el ZIP en memoria principal con readFileSync
+    const zip = new AdmZip(LOCAL_ZIP_PATH);
+    zip.extractEntryTo(TXT_FILENAME, targetDataDir, false, true);
+    console.log(`✅ Extracción completada en ${extractedTxtPath}`);
+  } else {
+    console.log(`✅ Archivo TXT ya existe en: ${extractedTxtPath}`);
+  }
 
   // ── Estado actual ─────────────────────────────────────────────────────────────
   const existing = await repo.count();
@@ -59,7 +63,7 @@ async function bootstrap() {
   }
 
   // ── Parsear e Insertar por Lotes (Low Memory footprint) ─────────────────────
-  console.log('Procesando e insertando palabras bajo consumo de RAM...');
+  console.log('Procesando e insertando palabras leyendo directo de disco (stream)...');
   const start = Date.now();
   const now = new Date();
 
@@ -67,20 +71,16 @@ async function bootstrap() {
   let totalProcessed = 0;
   let insertedCount = 0;
 
-  // Creamos un stream falso a partir del buffer para no cargar strings gigantes en RAM
-  const { Readable } = require('stream');
-  const bufferStream = new Readable();
-  bufferStream.push(txtBuffer);
-  bufferStream.push(null);
+  // Creamos un stream real desde disco para no cargar strings en RAM
+  const fileStream = fs.createReadStream(extractedTxtPath, { encoding: 'latin1' });
 
   const readline = require('readline');
   const rl = readline.createInterface({
-    input: bufferStream,
+    input: fileStream,
     crlfDelay: Infinity,
   });
 
-  for await (let line of rl) {
-    line = line.toString('latin1'); // Decodificar correctamente ISO-8859-1
+  for await (const line of rl) {
     if (!line.trim()) continue;
 
     const parts = line.split('\t');

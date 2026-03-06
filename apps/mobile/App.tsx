@@ -30,15 +30,21 @@ export default function App() {
     Promise.all([
       loadSession(),
       AsyncStorage.getItem(INSTRUCTIONS_SEEN_KEY),
-    ]).then(([session, seen]) => {
-      const next = session ? 'Main' : 'Welcome';
-      if (!seen) {
-        setInstructionsNextRoute(next);
-        setInitialRoute('Instructions');
-      } else {
-        setInitialRoute(next);
-      }
-    });
+    ])
+      .then(([session, seen]) => {
+        const next = session ? 'Main' : 'Welcome';
+        if (!seen) {
+          setInstructionsNextRoute(next);
+          setInitialRoute('Instructions');
+        } else {
+          setInitialRoute(next);
+        }
+      })
+      .catch((err) => {
+        console.warn('Startup Promise Error:', err);
+        // Default safe fallback if storage read completely fails
+        setInitialRoute('Welcome');
+      });
   }, []);
 
   if (!initialRoute) {

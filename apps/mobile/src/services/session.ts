@@ -14,11 +14,16 @@ export async function saveSession(s: Session): Promise<void> {
 }
 
 export async function loadSession(): Promise<Session | null> {
-  const raw = await AsyncStorage.getItem(KEY);
-  if (!raw) return null;
-  const s: Session = JSON.parse(raw);
-  setAuthToken(s.token);
-  return s;
+  try {
+    const raw = await AsyncStorage.getItem(KEY);
+    if (!raw) return null;
+    const s: Session = JSON.parse(raw);
+    setAuthToken(s.token);
+    return s;
+  } catch (err) {
+    console.warn('Error loading session:', err);
+    return null; /* Return null on corrupted session */
+  }
 }
 
 export async function clearSession(): Promise<void> {

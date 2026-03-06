@@ -39,8 +39,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     const menuPlayer = useAudioPlayer(TRACKS.menu);
     const gamePlayer = useAudioPlayer(TRACKS.game);
 
-    menuPlayer.loop = true;
-    gamePlayer.loop = true;
+    if (menuPlayer) menuPlayer.loop = true;
+    if (gamePlayer) gamePlayer.loop = true;
 
     const getPlayer = (track: MusicTrack | null) => {
         if (track === 'menu') return menuPlayer;

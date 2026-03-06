@@ -2,8 +2,9 @@ import axios from 'axios';
 import type { IGameSummary } from '@3letras/interfaces';
 
 const TOKEN_KEY = 'admin_token';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
-const http = axios.create({ baseURL: '/api' });
+const http = axios.create({ baseURL: API_URL + '/api' });
 
 http.interceptors.request.use((config) => {
   const token = localStorage.getItem(TOKEN_KEY);

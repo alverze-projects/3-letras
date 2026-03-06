@@ -28,13 +28,13 @@ const DIFF_LABELS: Record<string, string> = {
 };
 const TURN_STATUS_LABELS: Record<string, { label: string; color: string; icon: React.FC<{ size: number }> }> = {
   submitted: { label: 'Enviada', color: 'green', icon: IconCheck },
-  skipped:   { label: 'Saltó', color: 'orange', icon: IconChevronsRight },
-  timeout:   { label: 'Tiempo', color: 'red', icon: IconClock },
-  pending:   { label: 'Pendiente', color: 'gray', icon: IconClock },
-  active:    { label: 'Activo', color: 'blue', icon: IconClock },
+  skipped: { label: 'Saltó', color: 'orange', icon: IconChevronsRight },
+  timeout: { label: 'Tiempo', color: 'red', icon: IconClock },
+  pending: { label: 'Pendiente', color: 'gray', icon: IconClock },
+  active: { label: 'Activo', color: 'blue', icon: IconClock },
 };
 
-function RoundPanel({ round, rank }: { round: IAdminRound; rank: number }) {
+function RoundPanel({ round }: { round: IAdminRound; rank: number }) {
   const validTurns = round.turns.filter((t) => t.isValid);
   const roundScore = validTurns.reduce((s, t) => s + t.score, 0);
 

@@ -4,6 +4,7 @@ export type MainTabParamList = {
   Clasificacion: undefined;
   Inicio: undefined;
   Records: undefined;
+  Help: undefined;
 };
 
 export type RootStackParamList = {

@@ -4,7 +4,7 @@ import {
   FlatList, ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { soundManager } from '../services/sound';
+import { useSound } from '../services/sound';
 import { leaderboardApi, LeaderboardEntry, LeaderboardDifficulty } from '../services/api';
 import { loadSession } from '../services/session';
 import { Colors } from '../theme/colors';
@@ -33,6 +33,8 @@ export default function LeaderboardScreen() {
   const [myEntry, setMyEntry] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  const { play: playSound } = useSound();
 
   useEffect(() => {
     loadSession().then((s) => setUserId(s?.player.id ?? null));
@@ -101,7 +103,7 @@ export default function LeaderboardScreen() {
               <TouchableOpacity
                 key={t.key}
                 style={[styles.tab, active && { backgroundColor: DIFF_COLOR[t.key] + '30', borderColor: DIFF_COLOR[t.key] }]}
-                onPress={() => { soundManager.play('tick'); setTab(t.key); }}
+                onPress={() => { playSound('tick'); setTab(t.key); }}
               >
                 <Text style={[styles.tabText, active && { color: DIFF_COLOR[t.key], fontWeight: '900' }]}>
                   {t.label}

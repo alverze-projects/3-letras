@@ -4,13 +4,18 @@ import {
   ActivityIndicator, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { authApi, gamesApi, setAuthToken } from '../services/api';
+import { useSound } from '../services/sound';
 import { Colors } from '../theme/colors';
 
-type Props = StackScreenProps<RootStackParamList, 'Home'>;
+type Props = StackScreenProps<RootStackParamList, 'Main'>;
 
-export default function HomeScreen({ navigation }: Props) {
+export default function HomeScreen({ route }: Props) {
+  const { play: playSound } = useSound();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [nickname, setNickname] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,7 +27,7 @@ export default function HomeScreen({ navigation }: Props) {
       const auth = await authApi.guest({ nickname: nickname.trim() });
       setAuthToken(auth.accessToken);
       const { game } = await gamesApi.create({ difficulty: 'medium', totalRounds: 5 });
-      navigation.replace('Lobby', { gameCode: game.code, token: auth.accessToken, player: auth.player });
+      navigation.replace('Lobby', { gameCode: game.code, token: auth.accessToken, player: auth.player, difficulty: 'medium', totalRounds: 5 });
     } catch (e: any) {
       Alert.alert('Error', e?.response?.data?.message ?? 'No se pudo crear la partida');
     } finally {
@@ -38,7 +43,7 @@ export default function HomeScreen({ navigation }: Props) {
       const auth = await authApi.guest({ nickname: nickname.trim() });
       setAuthToken(auth.accessToken);
       const { game } = await gamesApi.join(code.trim().toUpperCase());
-      navigation.replace('Lobby', { gameCode: game.code, token: auth.accessToken, player: auth.player });
+      navigation.replace('Lobby', { gameCode: game.code, token: auth.accessToken, player: auth.player, difficulty: 'medium', totalRounds: 5 });
     } catch (e: any) {
       Alert.alert('Error', e?.response?.data?.message ?? 'No se pudo unirse a la partida');
     } finally {

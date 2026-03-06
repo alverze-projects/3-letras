@@ -1,10 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { Platform, StyleSheet, View, Text, Animated, Easing, TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+// @ts-ignore - Expo vector icons typing issue
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from './types';
 import { Colors } from '../theme/colors';
-import { soundManager } from '../services/sound';
+import { useSound } from '../services/sound';
 import { useMusic } from '../contexts/MusicContext';
 import MainScreen from '../screens/MainScreen';
 import LeaderboardScreen from '../screens/LeaderboardScreen';
@@ -136,7 +137,7 @@ function TabIcon({ name, color, focused, label }: {
         ]}
       >
         <Ionicons
-          name={focused ? name : (`${name}-outline` as keyof typeof Ionicons.glyphMap)}
+          name={focused ? name : (`${String(name)}-outline` as keyof typeof Ionicons.glyphMap)}
           size={focused ? 28 : 24}
           color={focused ? '#FFF' : color}
         />
@@ -158,10 +159,11 @@ function TabIcon({ name, color, focused, label }: {
 }
 
 export default function MainTabs() {
-  const { muted, toggleMute, play } = useMusic();
+  const { muted, toggleMute, play: playMusic } = useMusic();
+  const { play: playSound } = useSound();
 
   useEffect(() => {
-    play('menu');
+    playMusic('menu');
   }, []);
 
   return (
@@ -210,7 +212,7 @@ export default function MainTabs() {
             tabBarLabel: 'Ranking',
           }}
           listeners={{
-            tabPress: () => soundManager.play('tick'),
+            tabPress: () => playSound('tick'),
           }}
         />
         <Tab.Screen
@@ -223,21 +225,22 @@ export default function MainTabs() {
             tabBarLabel: 'Jugar',
           }}
           listeners={{
-            tabPress: () => soundManager.play('tick'),
+            tabPress: () => playSound('tick'),
           }}
         />
         <Tab.Screen
           name="Records"
           component={RecordsScreen}
           options={{
+            title: 'Récords',
             tabBarIcon: ({ color, focused }) => (
               <TabIcon name="ribbon" color={color} focused={focused} label="Récords" />
             ),
             tabBarLabel: 'Récords',
           }}
-          listeners={{
-            tabPress: () => soundManager.play('tick'),
-          }}
+          listeners={({ navigation, route }) => ({
+            tabPress: () => playSound('tick'),
+          })}
         />
       </Tab.Navigator>
     </View>

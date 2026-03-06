@@ -17,48 +17,10 @@ import { randomUUID } from 'crypto';
 import { AppModule } from '../app.module';
 import { VocabEntry } from '../entities/vocab-entry.entity';
 
-const ZIP_URL      = 'https://corpus.rae.es/frec/CREA_total.zip';
+const ZIP_URL = 'https://corpus.rae.es/frec/CREA_total.zip';
 const TXT_FILENAME = 'CREA_total.TXT';
-const BATCH        = 200;
-
-// ── Descarga con soporte de redirecciones y progreso ────────────────────────
-function downloadBuffer(url: string, depth = 0): Promise<Buffer> {
-  if (depth > 5) return Promise.reject(new Error('Demasiadas redirecciones'));
-
-  return new Promise((resolve, reject) => {
-    const get = url.startsWith('https://') ? https.get : http.get;
-
-    get(url, (res) => {
-      // Seguir redirecciones
-      if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        return downloadBuffer(res.headers.location, depth + 1).then(resolve).catch(reject);
-      }
-
-      if (res.statusCode !== 200) {
-        return reject(new Error(`HTTP ${res.statusCode} al descargar ${url}`));
-      }
-
-      const total = parseInt(res.headers['content-length'] ?? '0', 10);
-      const chunks: Buffer[] = [];
-      let received = 0;
-
-      res.on('data', (chunk: Buffer) => {
-        chunks.push(chunk);
-        received += chunk.length;
-        const mb  = (received / 1_048_576).toFixed(1);
-        const pct = total ? `${Math.round((received / total) * 100)}%` : `${mb} MB`;
-        process.stdout.write(`\r  Descargando... ${pct}  (${mb} MB)`);
-      });
-
-      res.on('end', () => {
-        process.stdout.write('\n');
-        resolve(Buffer.concat(chunks));
-      });
-
-      res.on('error', reject);
-    }).on('error', reject);
-  });
-}
+const LOCAL_ZIP_PATH = require('path').join(__dirname, '../../data/CREA_total.zip');
+const BATCH = 200;
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 async function bootstrap() {
@@ -70,20 +32,26 @@ async function bootstrap() {
 
   const repo = app.get<Repository<VocabEntry>>(getRepositoryToken(VocabEntry));
 
-  // ── Descargar ZIP ────────────────────────────────────────────────────────────
-  console.log(`Descargando ${ZIP_URL}`);
-  const zipBuffer = await downloadBuffer(ZIP_URL);
-  console.log(`ZIP descargado: ${(zipBuffer.length / 1_048_576).toFixed(1)} MB`);
+  // ── Leer ZIP Local ────────────────────────────────────────────────────────
+  if (!require('fs').existsSync(LOCAL_ZIP_PATH)) {
+    console.error(`❌ El archivo local no se encontró en: ${LOCAL_ZIP_PATH}`);
+    console.error(`💡 Por favor descarga manualmente el ZIP desde ${ZIP_URL} y colócalo en la carpeta apps/api/data/`);
+    process.exit(1);
+  }
+
+  console.log(`Leyendo ZIP local desde: ${LOCAL_ZIP_PATH}`);
+  const zipBuffer = require('fs').readFileSync(LOCAL_ZIP_PATH);
+  console.log(`ZIP cargado en memoria: ${(zipBuffer.length / 1_048_576).toFixed(1)} MB`);
 
   // ── Extraer TXT del ZIP en memoria ───────────────────────────────────────────
   console.log(`Extrayendo ${TXT_FILENAME}...`);
-  const zip   = new AdmZip(zipBuffer);
+  const zip = new AdmZip(zipBuffer);
   const entry = zip.getEntry(TXT_FILENAME);
   if (!entry) throw new Error(`${TXT_FILENAME} no encontrado dentro del ZIP`);
 
   const txtBuffer = entry.getData();
-  const content   = txtBuffer.toString('latin1');  // ISO-8859-1 → string JS
-  const lines     = content.split('\r\n');          // CRLF
+  const content = txtBuffer.toString('latin1');  // ISO-8859-1 → string JS
+  const lines = content.split('\r\n');          // CRLF
 
   // ── Parsear palabras ─────────────────────────────────────────────────────────
   const words: string[] = [];
@@ -115,7 +83,7 @@ async function bootstrap() {
   // ── Insertar en transacción ───────────────────────────────────────────────────
   console.log('Insertando palabras...');
   const start = Date.now();
-  const now   = new Date();
+  const now = new Date();
 
   await repo.manager.transaction(async (manager) => {
     for (let i = 0; i < words.length; i += BATCH) {
@@ -126,24 +94,24 @@ async function bootstrap() {
         .insert()
         .into(VocabEntry)
         .values(batch.map((word) => ({
-          id:        randomUUID(),
+          id: randomUUID(),
           word,
-          isActive:  true,
+          isActive: true,
           createdAt: now,
         })))
         .orIgnore()
         .execute();
 
       const done = Math.min(i + BATCH, words.length);
-      const pct  = Math.round((done / words.length) * 100);
+      const pct = Math.round((done / words.length) * 100);
       process.stdout.write(
         `\r  ${pct}%  (${done.toLocaleString('es-CL')} / ${words.length.toLocaleString('es-CL')})`,
       );
     }
   });
 
-  const elapsed  = ((Date.now() - start) / 1000).toFixed(1);
-  const total    = await repo.count();
+  const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+  const total = await repo.count();
   const inserted = total - existing;
 
   console.log('\n');

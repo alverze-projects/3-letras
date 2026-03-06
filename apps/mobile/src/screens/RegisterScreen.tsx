@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View, Text, TextInput, StyleSheet,
   Alert, KeyboardAvoidingView, Platform, TouchableOpacity,
@@ -11,6 +11,7 @@ import { Colors } from '../theme/colors';
 import GradientBackground from '../components/GradientBackground';
 import GameButton from '../components/GameButton';
 import GameCard from '../components/GameCard';
+import { AuthContext } from '../../App';
 
 type Props = StackScreenProps<RootStackParamList, 'Register'>;
 
@@ -19,6 +20,7 @@ export default function RegisterScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const { setSession } = useContext(AuthContext);
 
   async function handleRegister() {
     if (!nickname.trim() || !email.trim() || !password) { Alert.alert('Completa todos los campos'); return; }
@@ -27,7 +29,7 @@ export default function RegisterScreen({ navigation }: Props) {
     try {
       const auth = await authApi.register({ nickname: nickname.trim(), email: email.trim(), password });
       await saveSession({ token: auth.accessToken, player: auth.player });
-      navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+      setSession({ token: auth.accessToken, player: auth.player });
     } catch (e: any) {
       Alert.alert('Error', e?.response?.data?.message ?? 'No se pudo crear la cuenta');
     } finally {

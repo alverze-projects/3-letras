@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View, Text, TextInput, StyleSheet,
   Alert, KeyboardAvoidingView, Platform, TouchableOpacity,
@@ -11,12 +11,14 @@ import { Colors } from '../theme/colors';
 import GradientBackground from '../components/GradientBackground';
 import GameButton from '../components/GameButton';
 import GameCard from '../components/GameCard';
+import { AuthContext } from '../../App';
 
 type Props = StackScreenProps<RootStackParamList, 'Guest'>;
 
 export default function GuestScreen({ navigation }: Props) {
   const [nickname, setNickname] = useState('');
   const [loading, setLoading] = useState(false);
+  const { setSession } = useContext(AuthContext);
 
   async function handleGuest() {
     if (!nickname.trim()) { Alert.alert('Ingresa tu nombre de jugador'); return; }
@@ -24,7 +26,7 @@ export default function GuestScreen({ navigation }: Props) {
     try {
       const auth = await authApi.guest({ nickname: nickname.trim() });
       await saveSession({ token: auth.accessToken, player: auth.player });
-      navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+      setSession({ token: auth.accessToken, player: auth.player });
     } catch (e: any) {
       Alert.alert('Error', e?.response?.data?.message ?? 'No se pudo iniciar sesión');
     } finally {

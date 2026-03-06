@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useContext } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ActivityIndicator, Alert, ScrollView, Animated,
@@ -17,6 +17,7 @@ import { gamesApi } from '../services/api';
 import { useSound } from '../services/sound';
 import { loadSession, clearSession, Session } from '../services/session';
 import { Colors } from '../theme/colors';
+import { AuthContext } from '../../App';
 import type { DifficultyLevel } from '@3letras/interfaces';
 
 type Props = CompositeScreenProps<
@@ -48,6 +49,7 @@ export default function MainScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
 
   const { play: playSound } = useSound();
+  const { logout } = useContext(AuthContext);
 
   // Pulsing play button
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -120,8 +122,8 @@ export default function MainScreen({ navigation }: Props) {
   }
 
   async function handleLogout() {
-    await clearSession();
-    navigation.reset({ index: 0, routes: [{ name: 'Inicio' }] });
+    await logout();
+    // App.tsx automatically unmounts Main stack when session becomes null
   }
 
   if (!session) {

@@ -36,7 +36,12 @@
     },
     "plugins": [
       "expo-asset",
-      "expo-audio"
+      [
+        "expo-audio",
+        {
+          "allowsBackgroundPlayback": true
+        }
+      ]
     ],
     "extra": {
       "eas": {

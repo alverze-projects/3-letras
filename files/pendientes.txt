@@ -3,3 +3,4 @@
 - Sistema para crear partidas offline, todos los jugadores desde el mismo dispositivo.
 - Sistema para poder ocupar la app móvil en una Web.
 - Sistema para poder ver la lista de salas abiertas para poder entrar a alguna.
+- Sistema para permitir cambiar la duración de los turnos desde el panel de administración.

@@ -65,7 +65,7 @@ export default function GameScreen({ navigation, route }: Props) {
   const [round, setRound] = useState<IRound | null>(null);
   const [activeTurn, setActiveTurn] = useState<IActiveTurn | null>(null);
   const [word, setWord] = useState('');
-  const [remainingMs, setRemainingMs] = useState(15000);
+  const [remainingMs, setRemainingMs] = useState(0);
   const [players, setPlayers] = useState<IGamePlayer[]>(initialPlayers ?? []);
   const [lastResult, setLastResult] = useState<{ turn: ITurn; nickname: string } | null>(null);
   const [wordHistory, setWordHistory] = useState<WordEntry[]>([]);
@@ -128,16 +128,24 @@ export default function GameScreen({ navigation, route }: Props) {
       const mine = at.playerId === player.id;
       setIsMyTurn(mine);
       isMyTurnRef.current = mine;
-      setRemainingMs(15000);
+
+      let initialMs = 15000;
+      if (at.timeoutAt && at.startedAt) {
+        initialMs = new Date(at.timeoutAt).getTime() - new Date(at.startedAt).getTime();
+      }
+      setRemainingMs(initialMs);
+
       setWord('');
       Animated.timing(timerWidth, { toValue: 1, duration: 0, useNativeDriver: false }).start();
       if (mine) playSound('turn_start');
     });
 
-    socket.on(WS_EVENTS.SERVER.TURN_TIMER, ({ remainingMs: ms }) => {
+    socket.on(WS_EVENTS.SERVER.TURN_TIMER, (data: any) => {
+      const ms = data.remainingMs;
+      const totalMs = data.totalMs || 15000;
       setRemainingMs(ms);
       Animated.timing(timerWidth, {
-        toValue: ms / 15000,
+        toValue: ms / totalMs,
         duration: 900,
         useNativeDriver: false,
       }).start();

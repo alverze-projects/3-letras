@@ -17,7 +17,7 @@ import { Round } from '../entities/round.entity';
 import { Turn } from '../entities/turn.entity';
 import { User } from '../entities/user.entity';
 import { WS_EVENTS } from '@3letras/events/websocket.events';
-import { TURN_DURATION_MS, SPECIAL_LETTERS, SpanishLetter } from '@3letras/constants/game-rules';
+import { SPECIAL_LETTERS, SpanishLetter } from '@3letras/constants/game-rules';
 
 const VOTE_DURATION_MS = 15_000;
 const DICE_DURATION_MS = 15_000;
@@ -62,7 +62,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @InjectRepository(Round) private readonly roundRepo: Repository<Round>,
     @InjectRepository(Turn) private readonly turnRepo: Repository<Turn>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
-  ) {}
+  ) { }
+
+  private get turnDurationMs(): number {
+    return parseInt(process.env.GAME_TURN_DURATION || '15', 10) * 1000;
+  }
 
   async handleConnection(client: AuthenticatedSocket) {
     const token = client.handshake.auth?.token as string | undefined;
@@ -325,7 +329,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         playerId: currentPlayer.userId,
         nickname: currentPlayer.user.nickname,
         startedAt: now.toISOString(),
-        timeoutAt: isSolo ? null : new Date(now.getTime() + TURN_DURATION_MS).toISOString(),
+        timeoutAt: isSolo ? null : new Date(now.getTime() + this.turnDurationMs).toISOString(),
         turnNumber,
         totalTurns: isSolo ? null : dieResult,
       },
@@ -347,12 +351,13 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     turnNumber: number,
     turnId: string,
   ) {
-    let remaining = TURN_DURATION_MS;
+    const duration = this.turnDurationMs;
+    let remaining = duration;
     const interval = setInterval(() => {
       remaining -= 1000;
       this.server.to(code).emit(WS_EVENTS.SERVER.TURN_TIMER, {
         remainingMs: Math.max(0, remaining),
-        totalMs: TURN_DURATION_MS,
+        totalMs: duration,
       });
     }, 1000);
 
@@ -373,7 +378,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
 
       await this.startNextTurn(code, gameId, roundId, letters, players, playerIndex + 1, dieResult, turnNumber);
-    }, TURN_DURATION_MS);
+    }, duration);
 
     this.turnTimers.set(turnId, timeout);
     (timeout as any)._interval = interval;

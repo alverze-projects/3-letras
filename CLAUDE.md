@@ -129,7 +129,7 @@ The gateway holds per-session Maps that are **not persisted**:
   - **Basic:** 2 base letters, special letters optional (player vote per round)
   - **Medium:** 3 base letters, can build on previous valid word, special letters optional (vote)
   - **Advanced:** 3 base letters, cannot build on previous, special letters mandatory if drawn
-  - Timer: 15s per turn, server-controlled
+  - Timer: Default 15s per turn, server-controlled (configurable via `GAME_TURN_DURATION`)
   - Scoring: normal letters = 2pts, special (Ñ/W/X/Y/Z) = 4pts
   - Bonuses: ≥14 letters +5pts, ≥16 letters +10pts, ≥3 special letters +15pts
   - Words must contain base letters **in order**

@@ -28,3 +28,5 @@ dist-ssr
 
 # Seed data
 data/*.zip
+data/*.TXT
+data/*.db

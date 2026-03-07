@@ -9,6 +9,9 @@ export class VocabEntry {
   @Column({ type: 'text' })
   word: string;
 
+  @Column({ type: 'int', default: 0 })
+  frequency: number;
+
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 

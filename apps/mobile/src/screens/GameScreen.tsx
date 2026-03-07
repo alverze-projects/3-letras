@@ -15,6 +15,47 @@ import { SPECIAL_LETTERS } from '@3letras/constants/game-rules';
 import SlotLetterCard from '../components/SlotLetterCard';
 import DiceAnimation from '../components/DiceAnimation';
 
+// ---- Subcomponente para Resaltar Letras Base ----
+function HighlightedWord({ word, baseLetters, isValid, baseStyle, invalidStyle }: {
+  word: string;
+  baseLetters: string[];
+  isValid: boolean;
+  baseStyle?: any;
+  invalidStyle?: any;
+}) {
+  if (!word) return <Text style={[baseStyle, !isValid && invalidStyle]}>'(sin respuesta)'</Text>;
+
+  let targetIdx = 0;
+  const elements = word.split('').map((char, i) => {
+    let isMatch = false;
+    if (targetIdx < baseLetters.length && char.toUpperCase() === baseLetters[targetIdx].toUpperCase()) {
+      isMatch = true;
+      targetIdx++;
+    }
+
+    if (isMatch) {
+      return (
+        <Text key={i} style={[
+          baseStyle,
+          !isValid && invalidStyle,
+          { color: isValid ? Colors.accent : '#FF8A80', fontWeight: '900', textShadowRadius: 6 }
+        ]}>
+          {char}
+        </Text>
+      );
+    }
+
+    return (
+      <Text key={i} style={[baseStyle, !isValid && invalidStyle]}>
+        {char}
+      </Text>
+    );
+  });
+
+  return <Text>{elements}</Text>;
+}
+// --------------------------------------------------
+
 type DiceRollRequest = {
   rollerId: string;
   rollerNickname: string;
@@ -471,7 +512,12 @@ export default function GameScreen({ navigation, route }: Props) {
         <View style={[styles.result, lastResult.turn.isValid ? styles.resultValid : styles.resultInvalid]}>
           <Text style={styles.resultNickname}>{lastResult.nickname}</Text>
           <Text style={styles.resultWord}>
-            {lastResult.turn.word ?? '(sin respuesta)'}
+            <HighlightedWord
+              word={lastResult.turn.word || ''}
+              baseLetters={round?.letters || []}
+              isValid={lastResult.turn.isValid}
+              baseStyle={styles.resultWord}
+            />
           </Text>
           {lastResult.turn.isValid && (
             <Text style={styles.resultScore}>+{lastResult.turn.score} pts</Text>
@@ -552,9 +598,13 @@ export default function GameScreen({ navigation, route }: Props) {
                   <View key={i} style={styles.notebookRow}>
                     <Text style={styles.notebookRowNum}>{originalIdx}</Text>
                     <View style={styles.notebookWordCol}>
-                      <Text style={[styles.notebookWord, !entry.isValid && styles.notebookWordInvalid]}>
-                        {entry.word}
-                      </Text>
+                      <HighlightedWord
+                        word={entry.word || '(nada)'}
+                        baseLetters={round?.letters || []}
+                        isValid={entry.isValid}
+                        baseStyle={styles.notebookWord}
+                        invalidStyle={styles.notebookWordInvalid}
+                      />
                       <Text style={styles.notebookNickname}>{entry.nickname}</Text>
                     </View>
                     <View style={styles.notebookPointsCol}>

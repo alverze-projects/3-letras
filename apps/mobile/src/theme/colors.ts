@@ -17,10 +17,10 @@ export const Colors = {
   special: '#E53935',
   background: '#0D47A1',
 
-  // — Gradientes (familia azul, fiel a la caja) —
-  gradientTop: '#061B4E',
-  gradientMid: '#0D47A1',
-  gradientBottom: '#1565C0',
+  // — Gradientes (familia azul) —
+  gradientTop: '#00419e',
+  gradientMid: '#0750b4',
+  gradientBottom: '#28a1df',
 
   // — Efectos visuales —
   cardGlow: 'rgba(255, 214, 0, 0.25)',

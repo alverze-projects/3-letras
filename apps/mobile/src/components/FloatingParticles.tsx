@@ -3,8 +3,19 @@ import { Animated, StyleSheet, Dimensions, View, Easing, Platform } from 'react-
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
-const STAR_COUNT = 28;
+const STAR_COUNT = 120;
 const USE_NATIVE = Platform.OS !== 'web';
+
+const CONFETTI_COLORS = [
+    '#FFD600', // Yellow/Gold
+    '#E53935', // Red
+    '#43A047', // Green
+    '#FF9800', // Orange
+    '#9C27B0', // Purple
+    '#03A9F4', // Light Blue
+    '#FFFFFF', // White
+    '#FF4081', // Pink
+];
 
 interface StarConfig {
     x: number;
@@ -16,6 +27,7 @@ interface StarConfig {
     driftY: number;
     driftDuration: number;
     scalePulse: number;
+    color: string;
 }
 
 function generateStars(): StarConfig[] {
@@ -30,6 +42,7 @@ function generateStars(): StarConfig[] {
         driftY: (Math.random() - 0.5) * 60,
         driftDuration: 4000 + Math.random() * 6000,
         scalePulse: 1.3 + Math.random() * 0.7,
+        color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
     }));
 }
 
@@ -154,6 +167,8 @@ function Star({ config }: { config: StarConfig }) {
                     width: config.size,
                     height: config.size,
                     borderRadius: config.size / 2,
+                    backgroundColor: config.color,
+                    shadowColor: config.color,
                     opacity,
                     transform: [
                         { translateX },
@@ -189,9 +204,7 @@ const styles = StyleSheet.create({
     },
     star: {
         position: 'absolute',
-        backgroundColor: '#FFFFFF',
         // Glow effect
-        shadowColor: '#FFFFFF',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.8,
         shadowRadius: 4,

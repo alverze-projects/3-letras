@@ -458,6 +458,22 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  howToPlayBtn: { alignItems: 'center', paddingVertical: 20, marginTop: 8 },
-  howToPlay: { color: Colors.primaryLight, fontSize: 14, textDecorationLine: 'underline' },
+  howToPlayBtn: {
+    alignSelf: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginTop: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  howToPlay: {
+    color: Colors.white,
+    fontSize: 15,
+    fontWeight: '600',
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
 });

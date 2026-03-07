@@ -19,7 +19,7 @@ export default function GradientBackground({ children, style, sparkles = true }:
     return (
         <LinearGradient
             colors={[Colors.gradientTop, Colors.gradientMid, Colors.gradientBottom]}
-            locations={[0, 0.5, 1]}
+            locations={[0, 0.3, 1]}
             style={[styles.gradient, style]}
         >
             {sparkles && <FloatingParticles />}

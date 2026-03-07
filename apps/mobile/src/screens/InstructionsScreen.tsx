@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  View, Text, ScrollView, StyleSheet,
+  View, Text, ScrollView, StyleSheet
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -10,6 +10,7 @@ import { useSound } from '../services/sound';
 import GradientBackground from '../components/GradientBackground';
 import GameButton from '../components/GameButton';
 import GameCard from '../components/GameCard';
+import AnimatedLogo from '../components/AnimatedLogo';
 
 export const INSTRUCTIONS_SEEN_KEY = '@tresletras_instructions_seen';
 
@@ -78,8 +79,7 @@ export default function InstructionsScreen({ navigation, route }: Props) {
         >
           {/* Encabezado */}
           <View style={styles.header}>
-            <Text style={styles.headerSub}>CÓMO SE JUEGA</Text>
-            <Text style={styles.headerTitle}>TRES LETRAS</Text>
+            <AnimatedLogo width={280} height={100} />
           </View>
 
           {/* Objetivo */}
@@ -195,14 +195,9 @@ const styles = StyleSheet.create({
   container: { paddingHorizontal: 20, paddingTop: 56, paddingBottom: 8 },
 
   header: { alignItems: 'center', marginBottom: 28 },
-  headerSub: {
-    color: Colors.primaryLight, fontSize: 12, fontWeight: '700',
-    letterSpacing: 4, marginBottom: 4,
-  },
-  headerTitle: {
-    fontSize: 48, fontWeight: '900', color: Colors.accent,
-    letterSpacing: 4, lineHeight: 52,
-    textShadowColor: 'rgba(255,214,0,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 12,
+  logo: {
+    width: 280,
+    height: 100,
   },
 
   section: { marginBottom: 14, gap: 10 },

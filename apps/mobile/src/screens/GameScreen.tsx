@@ -669,41 +669,52 @@ export default function GameScreen({ navigation, route }: Props) {
 
       {/* Input flotante cuando el teclado está abierto */}
       {isMyTurn && isKeyboardVisible && (
-        <Animated.View style={[
-          styles.inputRow, 
-          { 
-            position: 'absolute', 
-            bottom: keyboardHeight + (Platform.OS === 'android' ? 45 : 20),
-            left: 16, 
-            right: 16, 
-            zIndex: 1000,
-            backgroundColor: Colors.white,
-            padding: 8,
-            borderRadius: 18,
-            borderWidth: 4,
-            borderColor: Colors.accent,
-            shadowColor: Colors.accent,
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.8,
-            shadowRadius: 10,
-            elevation: 10
-          }
-        ]}>
-          <TextInput
-            style={[styles.wordInput, { borderWidth: 0, elevation: 0, shadowOpacity: 0 }]}
-            placeholder="Escribe tu palabra..."
-            placeholderTextColor={Colors.gray}
-            value={word}
-            onChangeText={(t) => setWord(t.toUpperCase())}
-            autoCapitalize="characters"
-            autoCorrect={false}
-            returnKeyType="send"
-            onSubmitEditing={submitWord}
-            autoFocus
-          />
-          <TouchableOpacity style={styles.sendBtn} onPress={submitWord}>
-            <Text style={styles.sendBtnText}>✓</Text>
+        <Animated.View style={{ 
+          position: 'absolute', 
+          bottom: keyboardHeight + (Platform.OS === 'android' ? 45 : 20),
+          left: 16, 
+          right: 16, 
+          zIndex: 1000,
+          alignItems: 'center',
+          gap: 12
+        }}>
+          <TouchableOpacity style={[styles.skipBtn, { marginTop: 0, backgroundColor: 'rgba(0,0,0,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' }]} onPress={skipTurn}>
+            <Text style={styles.skipBtnText}>{isSolo ? 'Terminar ronda' : 'Pasar turno'}</Text>
           </TouchableOpacity>
+          
+          <View style={[
+            styles.inputRow, 
+            { 
+              marginTop: 0,
+              width: '100%',
+              backgroundColor: Colors.white,
+              padding: 8,
+              borderRadius: 18,
+              borderWidth: 4,
+              borderColor: Colors.accent,
+              shadowColor: Colors.accent,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.8,
+              shadowRadius: 10,
+              elevation: 10
+            }
+          ]}>
+            <TextInput
+              style={[styles.wordInput, { borderWidth: 0, elevation: 0, shadowOpacity: 0 }]}
+              placeholder="Escribe tu palabra..."
+              placeholderTextColor={Colors.gray}
+              value={word}
+              onChangeText={(t) => setWord(t.toUpperCase())}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              returnKeyType="send"
+              onSubmitEditing={submitWord}
+              autoFocus
+            />
+            <TouchableOpacity style={styles.sendBtn} onPress={submitWord}>
+              <Text style={styles.sendBtnText}>✓</Text>
+            </TouchableOpacity>
+          </View>
         </Animated.View>
       )}
 

@@ -8,6 +8,7 @@ import { GamePlayer } from '../entities/game-player.entity';
 import { Round } from '../entities/round.entity';
 import { Turn } from '../entities/turn.entity';
 import { User } from '../entities/user.entity';
+import { DictionaryService } from '../dictionary/dictionary.service';
 import {
   SPANISH_ALPHABET, SPECIAL_LETTERS, DIE_MIN, DIE_MAX, ROOM_CODE_LENGTH, MAX_PLAYERS,
   SpanishLetter,
@@ -24,7 +25,8 @@ export class GamesService {
     @InjectRepository(Round) private readonly roundRepo: Repository<Round>,
     @InjectRepository(Turn) private readonly turnRepo: Repository<Turn>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
-  ) {}
+    private readonly dictionaryService: DictionaryService,
+  ) { }
 
   async create(hostId: string, difficulty: DifficultyLevel = 'medium', totalRounds = 5): Promise<IGame> {
     const code = await this.generateUniqueCode();
@@ -206,16 +208,75 @@ export class GamesService {
   }
 
   private drawLetters(count: 2 | 3 = 3): string[] {
-    const shuffle = [...SPANISH_ALPHABET].sort(() => Math.random() - 0.5);
-    return shuffle.slice(0, count);
+    return this.generateDynamicLetters(count, true);
   }
 
   private drawLettersNoSpecial(count: 2 | 3 = 3): string[] {
-    const nonSpecial = SPANISH_ALPHABET.filter(
-      (l) => !(SPECIAL_LETTERS as readonly string[]).includes(l),
-    );
-    const shuffle = [...nonSpecial].sort(() => Math.random() - 0.5);
-    return shuffle.slice(0, count);
+    return this.generateDynamicLetters(count, false);
+  }
+
+  private generateDynamicLetters(count: number, allowSpecials: boolean): string[] {
+    const seedPoolSize = parseInt(process.env.GAME_CONFIG_SEED_POOL_SIZE || '100000', 10);
+    const minWordsRequired = parseInt(process.env.GAME_CONFIG_MIN_WORDS_REQUIRED || '20', 10);
+    const maxRetries = parseInt(process.env.GAME_CONFIG_MAX_RETRIES || '15', 10);
+    const maxDictionarySize = this.dictionaryService.size;
+    const effectiveSeedPool = Math.min(seedPoolSize, maxDictionarySize);
+
+    if (effectiveSeedPool < 100) return this.fallbackRandomShuffle(count, allowSpecials);
+
+    let bestCombination: string[] | null = null;
+    let maxYield = -1;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      // 1. Pick a random word from the TOP N most frequent words
+      // Using quadratic RNG strongly biases selection towards the heavily-used words near index 0
+      const rngIndex = Math.floor(Math.pow(Math.random(), 2) * effectiveSeedPool);
+      const seedWord = this.dictionaryService.getWordByIndex(rngIndex);
+
+      if (!seedWord || seedWord.length < count) continue;
+
+      // 2. Extract exactly 'count' letters while preserving their natural sequence
+      const indices = new Set<number>();
+      while (indices.size < count) {
+        indices.add(Math.floor(Math.random() * seedWord.length));
+      }
+
+      const sortedIndices = Array.from(indices).sort((a, b) => a - b);
+      const extractedLetters = sortedIndices.map(idx => seedWord[idx].toUpperCase());
+
+      // Validate allowed character sets
+      if (!allowSpecials) {
+        const hasSpecial = extractedLetters.some((l) => (SPECIAL_LETTERS as readonly string[]).includes(l));
+        if (hasSpecial) continue;
+      }
+
+      // 3. Dry-run the sequence against the entire RAM Dictionary to guarantee playability
+      // Limit the internal search to `minWordsRequired` for ultra-fast performance
+      const matchingWords = this.dictionaryService.searchByLetters(extractedLetters, minWordsRequired);
+      const yieldCount = matchingWords.length;
+
+      if (yieldCount >= minWordsRequired) {
+        return extractedLetters; // Successful attempt: Meets the C variable guaranteed minimum
+      }
+
+      // 4. Save the highest-yielding fallback just in case we burn through all maxRetries
+      if (yieldCount > maxYield) {
+        maxYield = yieldCount;
+        bestCombination = extractedLetters;
+      }
+    }
+
+    // 5. If we exhausted retries and no set reached the minimum, fallback to the heaviest combination found
+    if (bestCombination && maxYield > 0) return bestCombination;
+
+    // 6. Absolute edge-case fallback (should mathematically never hit with a 400k CREA dictionary)
+    return this.fallbackRandomShuffle(count, allowSpecials);
+  }
+
+  private fallbackRandomShuffle(count: number, allowSpecials: boolean): string[] {
+    let pool = [...SPANISH_ALPHABET];
+    if (!allowSpecials) pool = pool.filter((l) => !(SPECIAL_LETTERS as readonly string[]).includes(l));
+    return pool.sort(() => Math.random() - 0.5).slice(0, count);
   }
 
   private rollDie(): number {

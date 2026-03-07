@@ -7,6 +7,7 @@ import { VocabEntry } from '../entities/vocab-entry.entity';
 export class DictionaryService implements OnModuleInit {
   private readonly logger = new Logger(DictionaryService.name);
   private words: Set<string> = new Set();
+  private orderedWords: string[] = [];
 
   constructor(
     @InjectRepository(VocabEntry)
@@ -22,6 +23,7 @@ export class DictionaryService implements OnModuleInit {
       const startMs = Date.now();
 
       // Stream rows in batches to keep memory pressure low during loading
+      // DB ordered by ID naturally represents the CREA_Total frequency ranking
       const BATCH = 10_000;
       let offset = 0;
       let fetched: VocabEntry[];
@@ -31,12 +33,15 @@ export class DictionaryService implements OnModuleInit {
           .createQueryBuilder('v')
           .select('v.word')
           .where('v.isActive = :active', { active: true })
+          .orderBy('v.id', 'ASC')
           .skip(offset)
           .take(BATCH)
           .getMany();
 
         for (const entry of fetched) {
-          this.words.add(entry.word.toLowerCase());
+          const w = entry.word.toLowerCase();
+          this.words.add(w);
+          this.orderedWords.push(w);
         }
         offset += BATCH;
       } while (fetched.length === BATCH);
@@ -53,8 +58,15 @@ export class DictionaryService implements OnModuleInit {
   /** Reload the in-memory dictionary (useful after admin changes) */
   async reload(): Promise<number> {
     this.words.clear();
+    this.orderedWords = [];
     await this.loadFromDatabase();
     return this.words.size;
+  }
+
+  /** O(1) Fetch of a word by its frequency rank (index) */
+  getWordByIndex(index: number): string | null {
+    if (index < 0 || index >= this.orderedWords.length) return null;
+    return this.orderedWords[index];
   }
 
   /**

@@ -7,11 +7,15 @@ import { GamePlayer } from '../entities/game-player.entity';
 import { Round } from '../entities/round.entity';
 import { Turn } from '../entities/turn.entity';
 import { User } from '../entities/user.entity';
+import { DictionaryModule } from '../dictionary/dictionary.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Game, GamePlayer, Round, Turn, User])],
+  imports: [
+    TypeOrmModule.forFeature([Game, GamePlayer, Round, Turn, User]),
+    DictionaryModule,
+  ],
   providers: [GamesService],
   controllers: [GamesController],
   exports: [GamesService],
 })
-export class GamesModule {}
+export class GamesModule { }

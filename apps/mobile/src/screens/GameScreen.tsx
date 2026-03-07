@@ -871,8 +871,8 @@ const styles = StyleSheet.create({
   // ── Input ───────────────────────────────────────────────────────────────────
   inputRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
   wordInput: {
-    flex: 1, backgroundColor: Colors.white, borderRadius: 14, paddingHorizontal: 18, paddingVertical: 12,
-    fontSize: 20, fontWeight: '900', color: Colors.dark, letterSpacing: 3,
+    flex: 1, backgroundColor: Colors.white, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12,
+    fontSize: 16, fontWeight: '900', color: Colors.dark, letterSpacing: 1,
     borderWidth: 3, borderColor: Colors.accent,
     elevation: 4,
     shadowColor: Colors.accent,

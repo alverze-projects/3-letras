@@ -124,6 +124,10 @@ The gateway holds per-session Maps that are **not persisted**:
   
   Session (JWT + player) persists in `AsyncStorage` via `src/services/session.ts`.
   
+  ## Mobile UI Quirks & Workarounds
+  
+  - **Keyboard Handling (GameScreen):** Due to Android's edge-to-edge layout and bottom navigation bar, `KeyboardAvoidingView` can be unreliable for positioning elements precisely above the keyboard. To guarantee the input field is always visible, we use a custom approach: `Keyboard.addListener` manually captures the `keyboardHeight`. When the keyboard is active, a floating `Animated.View` (containing the text input and "Skip Turn" button) is rendered with `position: 'absolute'` and a bottom offset (`keyboardHeight + 45` for Android, `+20` for iOS) to perfectly clear the OS keyboard and system navigation bars.
+
   ## Game Rules Summary
   
   - **Basic:** 2 base letters, special letters optional (player vote per round)

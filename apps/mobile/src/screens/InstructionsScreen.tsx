@@ -85,26 +85,31 @@ export default function InstructionsScreen({ navigation, route }: Props) {
           {/* Objetivo */}
           <Section title="🎯  Objetivo">
             <Text style={styles.body}>
-              Forma palabras que contengan las <Text style={styles.accent}>letras base</Text> sorteadas,
-              en el mismo orden en que aparecen. Gana quien acumule más puntos al final de todas las rondas.
+              Formar palabras que contengan las tres letras base sorteadas respetando el orden en el que aparecen.{'\n'}
+              Gana quien acumule más puntos al final de todas las rondas.
             </Text>
           </Section>
 
           {/* Letras base */}
           <Section title="🔤  Las letras base">
             <Text style={styles.body}>
-              Al inicio de cada ronda se sortean 2 o 3 letras. Tu palabra debe contenerlas{' '}
-              <Text style={styles.accent}>en ese orden</Text>, pero pueden ir en cualquier posición
-              dentro de la palabra y con otras letras entre ellas.
+              Al inicio de cada ronda se sortean 2 o 3 letras (depende del nivel). Tu palabra debe contenerlas{' '}
+              <Text style={styles.accent}>en ese orden</Text> (no tienen que estar seguidas) pero puedes añadir otras letras antes, en medio o después de cada letra base para formar la palabra.
             </Text>
+
             <View style={styles.exampleBox}>
-              <Text style={styles.exampleLetters}>B · A · L</Text>
+              <Text style={styles.exampleLetters}>C – A – S</Text>
               <View style={styles.exampleList}>
-                <Text style={styles.exampleValid}>✓  BALÓN   (B-A-L en orden)</Text>
-                <Text style={styles.exampleValid}>✓  BAILE   (B·A····L·E)</Text>
-                <Text style={styles.exampleValid}>✓  CÓBALO  (···B-A···L···)</Text>
-                <Text style={styles.exampleInvalid}>✗  LABIO   (L aparece antes de B)</Text>
-                <Text style={styles.exampleInvalid}>✗  BRAZO   (falta la L)</Text>
+                <Text style={styles.exampleValid}>✔ Válidas: CASA, CARACAS, CLASIFICAR</Text>
+                <Text style={styles.exampleInvalid}>✘ No válidas: SACA, ACCIONES, SECCIONAR (no respetan el orden de aparición)</Text>
+              </View>
+            </View>
+
+            <View style={[styles.exampleBox, { marginTop: 12 }]}>
+              <Text style={styles.exampleLetters}>A – R – O</Text>
+              <View style={styles.exampleList}>
+                <Text style={styles.exampleValid}>✔ Válidas: AEROPUERTO, CATARRO, APARTAMENTO</Text>
+                <Text style={styles.exampleInvalid}>✘ No válidas: ROMA, RAMON, RADIO</Text>
               </View>
             </View>
           </Section>
@@ -132,12 +137,8 @@ export default function InstructionsScreen({ navigation, route }: Props) {
           {/* Puntuación */}
           <Section title="🏆  Puntuación">
             <View style={styles.scoreTable}>
-              <ScoreRow label="Letra normal (A–Z)" points="2 pts c/u" />
-              <ScoreRow label="Letra especial (Ñ W X Y Z)" points="4 pts c/u" />
-              <View style={styles.scoreDivider} />
-              <ScoreRow label="Palabra de 14+ letras" points="+5 pts" />
-              <ScoreRow label="Palabra de 16+ letras" points="+10 pts" />
-              <ScoreRow label="3 o más letras especiales en la palabra" points="+15 pts" />
+              <ScoreRow label="Letra normal: NO INDICAR (A-Z)" points="2 pts" />
+              <ScoreRow label="Letra especial: (Ñ, W, X, Y, Z)" points="4 pts" />
             </View>
           </Section>
 

@@ -37,8 +37,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList>('Welcome');
-  const [instructionsNextRoute, setInstructionsNextRoute] = useState<'Welcome' | 'Main'>('Welcome');
+  const [hasSeenInstructions, setHasSeenInstructions] = useState(true);
 
   useEffect(() => {
     Promise.all([
@@ -47,17 +46,10 @@ export default function App() {
     ])
       .then(([sess, seen]) => {
         setSession(sess);
-        const next = sess ? 'Main' : 'Welcome';
-        if (!seen) {
-          setInstructionsNextRoute(next);
-          setInitialRoute('Instructions');
-        } else {
-          setInitialRoute(next);
-        }
+        setHasSeenInstructions(!!seen);
       })
       .catch((err) => {
         console.warn('Startup Promise Error:', err);
-        setInitialRoute('Welcome');
       })
       .finally(() => {
         setIsReady(true);
@@ -85,12 +77,18 @@ export default function App() {
             <NavigationContainer>
               <StatusBar style="light" />
               <Stack.Navigator
-                initialRouteName={initialRoute}
                 screenOptions={{ headerShown: false, cardStyle: { flex: 1 } }}
               >
                 {!session ? (
                   // Auth Screens (When logged out)
                   <>
+                    {!hasSeenInstructions && (
+                      <Stack.Screen
+                        name="Instructions"
+                        component={InstructionsScreen}
+                        initialParams={{ nextRoute: 'Welcome' }}
+                      />
+                    )}
                     <Stack.Screen name="Welcome" component={WelcomeScreen} />
                     <Stack.Screen name="Login" component={LoginScreen} />
                     <Stack.Screen name="Register" component={RegisterScreen} />
@@ -103,14 +101,13 @@ export default function App() {
                     <Stack.Screen name="Lobby" component={LobbyScreen} />
                     <Stack.Screen name="Game" component={GameScreen} />
                     <Stack.Screen name="Results" component={ResultsScreen} />
+                    <Stack.Screen
+                      name="Instructions"
+                      component={InstructionsScreen}
+                      initialParams={{ nextRoute: 'Main' }}
+                    />
                   </>
                 )}
-
-                <Stack.Screen
-                  name="Instructions"
-                  component={InstructionsScreen}
-                  initialParams={{ nextRoute: instructionsNextRoute }}
-                />
               </Stack.Navigator>
             </NavigationContainer>
           </SoundProvider>

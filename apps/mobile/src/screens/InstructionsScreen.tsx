@@ -42,14 +42,18 @@ function ScoreRow({ label, points }: { label: string; points: string }) {
   );
 }
 
+import { AuthContext } from '../../App';
+
 export default function InstructionsScreen({ navigation, route }: Props) {
   const { play: playSound } = useSound();
+  const { session } = React.useContext(AuthContext);
   const nextRoute = route.params?.nextRoute ?? 'Welcome';
 
   async function handleContinue() {
     playSound('button_tap');
     await AsyncStorage.setItem(INSTRUCTIONS_SEEN_KEY, '1');
-    navigation.replace(nextRoute as any);
+    const targetRoute = session ? 'Main' : nextRoute;
+    navigation.replace(targetRoute as any);
   }
 
   function handleClose() {
@@ -57,7 +61,8 @@ export default function InstructionsScreen({ navigation, route }: Props) {
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
-      handleContinue();
+      const targetRoute = session ? 'Main' : nextRoute;
+      navigation.replace(targetRoute as any);
     }
   }
 

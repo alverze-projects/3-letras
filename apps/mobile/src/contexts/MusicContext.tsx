@@ -142,15 +142,14 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
                     try { nextPlayer.seekTo(0); nextPlayer.play(); } catch { /* */ }
                 }
             } else {
-                try { nextPlayer.seekTo(0); } catch { /* */ }
                 try {
-                    const playFn = nextPlayer.play as unknown as () => Promise<void>;
-                    const p = playFn();
-                    if (p && typeof p.catch === 'function') {
-                        p.catch(() => { });
-                    }
+                    nextPlayer.seekTo(0);
+                } catch { /* */ }
+
+                try {
+                    nextPlayer.play();
                 } catch (e) {
-                    console.warn('Play track failed sync:', e);
+                    console.warn('[Music] Native track play failed:', e);
                 }
             }
         } else {

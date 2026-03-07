@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Alert } from 'react-native';
 import type { AuthResponseDto, GuestLoginDto, LoginDto, RegisterDto } from '@3letras/dtos';
 import type { CreateGameDto, CreateGameResponseDto, GetGameResponseDto, JoinGameResponseDto } from '@3letras/dtos';
 import type { ValidateWordDto, ValidateWordResponseDto } from '@3letras/dtos';
@@ -6,6 +7,25 @@ import type { ValidateWordDto, ValidateWordResponseDto } from '@3letras/dtos';
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api';
 
 const http = axios.create({ baseURL: API_URL });
+
+// NATIVE DEBUGGING LOGS: Inject Axios Interceptors
+http.interceptors.request.use(request => {
+  console.log('[Axios HTTP] => Sending', request.method?.toUpperCase(), request.baseURL, request.url);
+  return request;
+});
+
+http.interceptors.response.use(
+  response => {
+    console.log('[Axios HTTP] <= Received', response.status, response.config.url);
+    return response;
+  },
+  error => {
+    const errorMsg = `HTTP Error: ${error.message}\nURL: ${error.config?.baseURL}${error.config?.url}`;
+    console.error(errorMsg, '| Data:', error.response?.data);
+    Alert.alert('Network Debug', errorMsg);
+    return Promise.reject(error);
+  }
+);
 
 let _token: string | null = null;
 

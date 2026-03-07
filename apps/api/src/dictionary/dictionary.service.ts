@@ -75,14 +75,29 @@ export class DictionaryService implements OnModuleInit {
     return results.sort((a, b) => a.localeCompare(b, 'es'));
   }
 
-  private hasLettersInOrder(word: string, letters: string[]): boolean {
-    let searchFrom = 0;
-    for (const letter of letters) {
-      const idx = word.indexOf(letter, searchFrom);
-      if (idx === -1) return false;
-      searchFrom = idx + 1;
+  private hasLettersInOrder(word: string, targetLetters: string[]): boolean {
+    if (targetLetters.length === 0) return true;
+    if (word.length < targetLetters.length) return false;
+
+    let targetIdx = 0;
+    for (let i = 0; i < word.length; i++) {
+      const char = word[i];
+      const currentTarget = targetLetters[targetIdx];
+
+      if (char === currentTarget) {
+        targetIdx++;
+        if (targetIdx === targetLetters.length) return true;
+      } else {
+        // Strict Sequence Rule: If the current character is ANY of the remaining
+        // target letters in the sequence, it's breaking the order because
+        // it appeared before the required `currentTarget`. 
+        // Example: Searching 'LAC' in 'abalance'. Encountering 'a' while looking for 'L' is invalid.
+        if (targetLetters.includes(char, targetIdx)) {
+          return false;
+        }
+      }
     }
-    return true;
+    return false;
   }
 
   exists(word: string): boolean {

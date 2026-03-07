@@ -11,7 +11,7 @@ import type { IWordValidationResult } from '@3letras/interfaces';
 
 @Injectable()
 export class WordsService {
-  constructor(private readonly dictionary: DictionaryService) {}
+  constructor(private readonly dictionary: DictionaryService) { }
 
   validate(
     word: string,
@@ -68,14 +68,25 @@ export class WordsService {
       .normalize('NFC');
   }
 
-  private hasLettersInOrder(word: string, letters: SpanishLetter[]): boolean {
-    let searchFrom = 0;
-    for (const letter of letters) {
-      const idx = word.indexOf(letter, searchFrom);
-      if (idx === -1) return false;
-      searchFrom = idx + 1;
+  private hasLettersInOrder(word: string, targetLetters: SpanishLetter[]): boolean {
+    if (targetLetters.length === 0) return true;
+    if (word.length < targetLetters.length) return false;
+
+    let targetIdx = 0;
+    for (let i = 0; i < word.length; i++) {
+      const char = word[i] as SpanishLetter;
+      const currentTarget = targetLetters[targetIdx];
+
+      if (char === currentTarget) {
+        targetIdx++;
+        if (targetIdx === targetLetters.length) return true;
+      } else {
+        if (targetLetters.includes(char, targetIdx)) {
+          return false;
+        }
+      }
     }
-    return true;
+    return false;
   }
 
   private calculateScore(originalWord: string, normalizedWord: string): IWordValidationResult {

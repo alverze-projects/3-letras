@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  Animated, ScrollView,
+  Animated, ScrollView, Keyboard, Platform
 } from 'react-native';
 import GradientBackground from '../components/GradientBackground';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -128,6 +128,7 @@ export default function GameScreen({ navigation, route }: Props) {
   const diceTextOpacity = useRef(new Animated.Value(0)).current;
   const diceTextSlide = useRef(new Animated.Value(18)).current;
   const timerWidth = useRef(new Animated.Value(1)).current;
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   const socket = getSocket();
   const { play: playSound } = useSound();
@@ -135,6 +136,20 @@ export default function GameScreen({ navigation, route }: Props) {
   // Precargar sonidos al montar la pantalla
   useEffect(() => {
     // soundManager no longer needed since SoundProvider preloads hooks
+  }, []);
+
+  // Ocultar notebook cuando se abre el teclado
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => setIsKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setIsKeyboardVisible(false));
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -558,69 +573,71 @@ export default function GameScreen({ navigation, route }: Props) {
       )}
 
       {/* Panel con tabs: Puntajes / Palabras */}
-      <View style={styles.notebook}>
-        {/* Tabs */}
-        <View style={styles.notebookTabs}>
-          <TouchableOpacity
-            style={[styles.notebookTab, notebookTab === 'scores' && styles.notebookTabActive]}
-            onPress={() => setNotebookTab('scores')}
-          >
-            <Text style={[styles.notebookTabText, notebookTab === 'scores' && styles.notebookTabTextActive]}>🏆 PUNTAJES</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.notebookTab, notebookTab === 'words' && styles.notebookTabActiveWords]}
-            onPress={() => setNotebookTab('words')}
-          >
-            <Text style={[styles.notebookTabText, notebookTab === 'words' && styles.notebookTabTextActive]}>📝 PALABRAS</Text>
-          </TouchableOpacity>
-        </View>
+      {!isKeyboardVisible && (
+        <View style={styles.notebook}>
+          {/* Tabs */}
+          <View style={styles.notebookTabs}>
+            <TouchableOpacity
+              style={[styles.notebookTab, notebookTab === 'scores' && styles.notebookTabActive]}
+              onPress={() => setNotebookTab('scores')}
+            >
+              <Text style={[styles.notebookTabText, notebookTab === 'scores' && styles.notebookTabTextActive]}>🏆 PUNTAJES</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.notebookTab, notebookTab === 'words' && styles.notebookTabActiveWords]}
+              onPress={() => setNotebookTab('words')}
+            >
+              <Text style={[styles.notebookTabText, notebookTab === 'words' && styles.notebookTabTextActive]}>📝 PALABRAS</Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Contenido */}
-        <ScrollView style={styles.notebookBody} nestedScrollEnabled>
-          {notebookTab === 'scores' ? (
-            // Vista de puntajes
-            players.sort((a, b) => b.totalScore - a.totalScore).map((p, i) => (
-              <View key={p.playerId} style={[styles.scoreRow, p.playerId === player.id && styles.scoreRowMe]}>
-                <Text style={styles.scoreRank}>#{i + 1}</Text>
-                <Text style={styles.scoreNick}>{p.nickname}</Text>
-                <Text style={styles.scorePoints}>{p.totalScore} pts</Text>
-              </View>
-            ))
-          ) : (
-            // Vista de palabras
-            <>
-              {wordHistory.length === 0 && (
-                <View style={styles.notebookRow}>
-                  <Text style={styles.notebookEmpty}>Las palabras aparecerán aquí...</Text>
+          {/* Contenido */}
+          <ScrollView style={styles.notebookBody} nestedScrollEnabled>
+            {notebookTab === 'scores' ? (
+              // Vista de puntajes
+              players.sort((a, b) => b.totalScore - a.totalScore).map((p, i) => (
+                <View key={p.playerId} style={[styles.scoreRow, p.playerId === player.id && styles.scoreRowMe]}>
+                  <Text style={styles.scoreRank}>#{i + 1}</Text>
+                  <Text style={styles.scoreNick}>{p.nickname}</Text>
+                  <Text style={styles.scorePoints}>{p.totalScore} pts</Text>
                 </View>
-              )}
-              {[...wordHistory].reverse().map((entry, i) => {
-                const originalIdx = wordHistory.length - i;
-                return (
-                  <View key={i} style={styles.notebookRow}>
-                    <Text style={styles.notebookRowNum}>{originalIdx}</Text>
-                    <View style={styles.notebookWordCol}>
-                      <HighlightedWord
-                        word={entry.word || '(nada)'}
-                        baseLetters={round?.letters || []}
-                        isValid={entry.isValid}
-                        baseStyle={styles.notebookWord}
-                        invalidStyle={styles.notebookWordInvalid}
-                      />
-                      <Text style={styles.notebookNickname}>{entry.nickname}</Text>
-                    </View>
-                    <View style={styles.notebookPointsCol}>
-                      <Text style={[styles.notebookPoints, entry.isValid ? styles.notebookPointsValid : styles.notebookPointsInvalid]}>
-                        {entry.isValid ? `+${entry.score}` : '✗'}
-                      </Text>
-                    </View>
+              ))
+            ) : (
+              // Vista de palabras
+              <>
+                {wordHistory.length === 0 && (
+                  <View style={styles.notebookRow}>
+                    <Text style={styles.notebookEmpty}>Las palabras aparecerán aquí...</Text>
                   </View>
-                );
-              })}
-            </>
-          )}
-        </ScrollView>
-      </View>
+                )}
+                {[...wordHistory].reverse().map((entry, i) => {
+                  const originalIdx = wordHistory.length - i;
+                  return (
+                    <View key={i} style={styles.notebookRow}>
+                      <Text style={styles.notebookRowNum}>{originalIdx}</Text>
+                      <View style={styles.notebookWordCol}>
+                        <HighlightedWord
+                          word={entry.word || '(nada)'}
+                          baseLetters={round?.letters || []}
+                          isValid={entry.isValid}
+                          baseStyle={styles.notebookWord}
+                          invalidStyle={styles.notebookWordInvalid}
+                        />
+                        <Text style={styles.notebookNickname}>{entry.nickname}</Text>
+                      </View>
+                      <View style={styles.notebookPointsCol}>
+                        <Text style={[styles.notebookPoints, entry.isValid ? styles.notebookPointsValid : styles.notebookPointsInvalid]}>
+                          {entry.isValid ? `+${entry.score}` : '✗'}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </>
+            )}
+          </ScrollView>
+        </View>
+      )}
 
       {isMyTurn && (
         <View style={{ paddingBottom: Math.max(insets.bottom, 16) }}>

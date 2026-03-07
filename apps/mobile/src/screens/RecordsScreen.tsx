@@ -8,6 +8,7 @@ import { recordsApi, GameRecord } from '../services/api';
 import { Colors } from '../theme/colors';
 import GradientBackground from '../components/GradientBackground';
 import GameCard from '../components/GameCard';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const RECORD_META: Record<string, { icon: string; title: string; description: string; unit: (n: number) => string }> = {
   most_words_in_round: {
@@ -89,6 +90,7 @@ export default function RecordsScreen() {
   const [records, setRecords] = useState<GameRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -128,7 +130,7 @@ export default function RecordsScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+          <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(insets.bottom, 40) }]} showsVerticalScrollIndicator={false}>
             <Text style={styles.subtitle}>Récords mundiales de todos los jugadores</Text>
             {knownTypes.map((type) =>
               recordByType[type]

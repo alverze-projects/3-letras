@@ -20,6 +20,7 @@ import { loadSession, clearSession, Session } from '../services/session';
 import { Colors } from '../theme/colors';
 import { AuthContext } from '../../App';
 import type { DifficultyLevel } from '@3letras/interfaces';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'Inicio'>,
@@ -38,6 +39,7 @@ const DIFFICULTIES: { value: DifficultyLevel; label: string; description: string
 type Step = 0 | 'mode' | 'multi' | 1 | 2;
 
 export default function MainScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const [session, setSession] = useState<Session | null>(null);
   const [step, setStep] = useState<Step>(0);
   const [isSolo, setIsSolo] = useState(false);
@@ -143,7 +145,7 @@ export default function MainScreen({ navigation }: Props) {
     <GradientBackground>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[styles.container, { paddingBottom: Math.max(insets.bottom, 40) }]}
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}

@@ -10,12 +10,14 @@ import { RootStackParamList } from '../navigation/types';
 import { authApi, gamesApi, setAuthToken } from '../services/api';
 import { useSound } from '../services/sound';
 import { Colors } from '../theme/colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = StackScreenProps<RootStackParamList, 'Main'>;
 
 export default function HomeScreen({ route }: Props) {
   const { play: playSound } = useSound();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const insets = useSafeAreaInsets();
   const [nickname, setNickname] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -52,7 +54,7 @@ export default function HomeScreen({ route }: Props) {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={[styles.container, { paddingBottom: Math.max(insets.bottom, 24) }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.header}>
         <Text style={styles.title}>TRES</Text>
         <Text style={styles.titleAccent}>LETRAS</Text>

@@ -9,6 +9,7 @@ import { leaderboardApi, LeaderboardEntry, LeaderboardDifficulty } from '../serv
 import { loadSession } from '../services/session';
 import { Colors } from '../theme/colors';
 import GradientBackground from '../components/GradientBackground';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TABS: { key: LeaderboardDifficulty; label: string }[] = [
   { key: 'general', label: 'General' },
@@ -30,6 +31,7 @@ export default function LeaderboardScreen() {
   const [userId, setUserId] = useState<string | null>(null);
   const [tab, setTab] = useState<LeaderboardDifficulty>('general');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const insets = useSafeAreaInsets();
   const [myEntry, setMyEntry] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -89,7 +91,7 @@ export default function LeaderboardScreen() {
 
   return (
     <GradientBackground sparkles={false}>
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingBottom: insets.bottom }]}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>CLASIFICACIÓN</Text>

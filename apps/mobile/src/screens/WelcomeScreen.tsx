@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { Colors } from '../theme/colors';
@@ -17,6 +18,7 @@ export default function WelcomeScreen({ navigation }: Props) {
   const slideAnim = useRef(new Animated.Value(40)).current;
   const { play: playSound } = useSound();
   const { play: playMusic, unlockAudioWeb } = useMusic();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     playMusic('menu');
@@ -33,7 +35,7 @@ export default function WelcomeScreen({ navigation }: Props) {
 
   return (
     <GradientBackground>
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 24) }]}>
         <Animated.View style={[styles.header, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <AnimatedLogo width={280} height={124} />
           <Text style={styles.subtitle}>¡Forma palabras y suma puntos!</Text>

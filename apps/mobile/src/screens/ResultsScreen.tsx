@@ -6,6 +6,7 @@ import { Colors } from '../theme/colors';
 import GradientBackground from '../components/GradientBackground';
 import GameButton from '../components/GameButton';
 import GameCard from '../components/GameCard';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = StackScreenProps<RootStackParamList, 'Results'>;
 
@@ -13,6 +14,7 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 
 export default function ResultsScreen({ navigation, route }: Props) {
   const { finalScores, winnerId } = route.params;
+  const insets = useSafeAreaInsets();
 
   // Entrance animation
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -31,7 +33,7 @@ export default function ResultsScreen({ navigation, route }: Props) {
 
   return (
     <GradientBackground>
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 24) }]}>
         <Animated.Text style={[styles.title, { transform: [{ scale: titleScale }] }]}>
           ¡FIN DEL JUEGO!
         </Animated.Text>

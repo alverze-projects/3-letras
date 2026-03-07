@@ -41,7 +41,7 @@ export default function GuestScreen({ navigation }: Props) {
           <Text style={styles.backText}>← Volver</Text>
         </TouchableOpacity>
 
-        <Text style={styles.title}>¿CÓMO TE LLAMAS?</Text>
+        <Text style={styles.title}>¿CÓMO TE LLAMAS2?</Text>
         <Text style={styles.subtitle}>Elige tu nombre de jugador</Text>
 
         <GameCard glow>

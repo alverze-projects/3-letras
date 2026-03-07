@@ -322,21 +322,22 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const now = new Date();
     const isSolo = this.soloGames.has(code);
+    const delayMs = (playerIndex === 0 && turnNumber === 1) ? 1500 : 0;
 
     this.server.to(code).emit(WS_EVENTS.SERVER.TURN_START, {
       activeTurn: {
         turnId: turn.id,
         playerId: currentPlayer.userId,
         nickname: currentPlayer.user.nickname,
-        startedAt: now.toISOString(),
-        timeoutAt: isSolo ? null : new Date(now.getTime() + this.turnDurationMs).toISOString(),
+        startedAt: new Date(now.getTime() + delayMs).toISOString(),
+        timeoutAt: isSolo ? null : new Date(now.getTime() + delayMs + this.turnDurationMs).toISOString(),
         turnNumber,
         totalTurns: isSolo ? null : dieResult,
       },
     });
 
     if (!isSolo) {
-      this.startTurnTimer(code, gameId, roundId, letters, players, playerIndex, dieResult, turnNumber, turn.id);
+      this.startTurnTimer(code, gameId, roundId, letters, players, playerIndex, dieResult, turnNumber, turn.id, delayMs);
     }
   }
 
@@ -350,15 +351,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     dieResult: number,
     turnNumber: number,
     turnId: string,
+    delayMs: number = 0,
   ) {
     const duration = this.turnDurationMs;
-    let remaining = duration;
+    let remaining = duration + delayMs;
     const interval = setInterval(() => {
       remaining -= 1000;
-      this.server.to(code).emit(WS_EVENTS.SERVER.TURN_TIMER, {
-        remainingMs: Math.max(0, remaining),
-        totalMs: duration,
-      });
+      if (remaining <= duration) {
+        this.server.to(code).emit(WS_EVENTS.SERVER.TURN_TIMER, {
+          remainingMs: Math.max(0, remaining),
+          totalMs: duration,
+        });
+      }
     }, 1000);
 
     const timeout = setTimeout(async () => {
@@ -378,7 +382,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
 
       await this.startNextTurn(code, gameId, roundId, letters, players, playerIndex + 1, dieResult, turnNumber);
-    }, duration);
+    }, duration + delayMs);
 
     this.turnTimers.set(turnId, timeout);
     (timeout as any)._interval = interval;

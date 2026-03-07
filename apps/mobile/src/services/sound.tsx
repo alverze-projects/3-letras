@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useRef, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAudioPlayer, AudioPlayer, setAudioModeAsync } from 'expo-audio';
+import { useAudioPlayer, AudioPlayer } from 'expo-audio';
 
 export type SoundName =
   | 'button_tap'
@@ -54,21 +54,6 @@ const SoundContext = createContext<SoundContextValue>({
 
 export function SoundProvider({ children }: { children: React.ReactNode }) {
   const [muted, setMuted] = useState(false);
-
-  useEffect(() => {
-    const initAudio = async () => {
-      try {
-        await setAudioModeAsync({
-          playsInSilentMode: true,
-          shouldPlayInBackground: false,
-          interruptionMode: 'doNotMix',
-        });
-      } catch (err) {
-        console.warn('Silent Mode init error SFX', err);
-      }
-    };
-    initAudio();
-  }, []);
 
   // Create all players via useAudioPlayer hook (now safe with patched ExpoAudio.js)
   const pButtonTap = useAudioPlayer(FILES.button_tap);

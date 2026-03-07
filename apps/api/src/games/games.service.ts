@@ -231,18 +231,28 @@ export class GamesService {
       // 1. Pick a random word from the TOP N most frequent words
       // Using quadratic RNG strongly biases selection towards the heavily-used words near index 0
       const rngIndex = Math.floor(Math.pow(Math.random(), 2) * effectiveSeedPool);
-      const seedWord = this.dictionaryService.getWordByIndex(rngIndex);
+      let seedWord = this.dictionaryService.getWordByIndex(rngIndex);
 
       if (!seedWord || seedWord.length < count) continue;
 
-      // 2. Extract exactly 'count' letters while preserving their natural sequence
+      // Sanitize accents (e.g., á -> a, ü -> u) before extracting
+      seedWord = seedWord.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+      // 2. Extract strictly unique letters while preserving natural sequence
       const indices = new Set<number>();
-      while (indices.size < count) {
+      let attempts = 0;
+      while (indices.size < count && attempts < 20) {
         indices.add(Math.floor(Math.random() * seedWord.length));
+        attempts++;
       }
+
+      if (indices.size < count) continue;
 
       const sortedIndices = Array.from(indices).sort((a, b) => a - b);
       const extractedLetters = sortedIndices.map(idx => seedWord[idx].toUpperCase());
+
+      // Ensure the drawn letters themselves are absolutely distinct (e.g. no 'A A B')
+      if (new Set(extractedLetters).size !== count) continue;
 
       // Validate allowed character sets
       if (!allowSpecials) {

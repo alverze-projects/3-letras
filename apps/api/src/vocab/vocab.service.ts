@@ -20,7 +20,7 @@ export class VocabService {
     const where = search ? { word: ILike(`%${search}%`) } : {};
     const [words, total] = await this.repo.findAndCount({
       where,
-      order: { word: 'ASC' },
+      order: { frequency: 'DESC', word: 'ASC' },
       skip: (page - 1) * limit,
       take: limit,
     });
@@ -45,21 +45,22 @@ export class VocabService {
     const entries = await this.repo
       .createQueryBuilder('v')
       .where('LOWER(v.word) IN (:...words)', { words: pageWords.map((w) => w.toLowerCase()) })
-      .orderBy('v.word', 'ASC')
+      .orderBy('v.frequency', 'DESC')
+      .addOrderBy('v.word', 'ASC')
       .getMany();
 
     return { words: entries, total, page, totalPages };
   }
 
-  async create(word: string): Promise<VocabEntry> {
+  async create(word: string, frequency: number = 0): Promise<VocabEntry> {
     const normalized = word.trim();
     const exists = await this.repo.findOneBy({ word: normalized });
     if (exists) throw new ConflictException('La palabra ya existe en el diccionario');
-    const entry = this.repo.create({ word: normalized });
+    const entry = this.repo.create({ word: normalized, frequency });
     return this.repo.save(entry);
   }
 
-  async update(id: string, data: { word?: string; isActive?: boolean }): Promise<VocabEntry> {
+  async update(id: string, data: { word?: string; isActive?: boolean; frequency?: number }): Promise<VocabEntry> {
     const entry = await this.repo.findOneBy({ id });
     if (!entry) throw new NotFoundException('Palabra no encontrada');
 
@@ -73,6 +74,7 @@ export class VocabService {
     }
 
     if (data.isActive !== undefined) entry.isActive = data.isActive;
+    if (data.frequency !== undefined) entry.frequency = data.frequency;
 
     return this.repo.save(entry);
   }

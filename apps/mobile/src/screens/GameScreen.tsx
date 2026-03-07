@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  Animated, ScrollView, Keyboard, Platform
+  Animated, ScrollView, Keyboard, Platform, KeyboardAvoidingView
 } from 'react-native';
 import GradientBackground from '../components/GradientBackground';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -138,13 +138,21 @@ export default function GameScreen({ navigation, route }: Props) {
     // soundManager no longer needed since SoundProvider preloads hooks
   }, []);
 
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
   // Ocultar notebook cuando se abre el teclado
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
-    const showSub = Keyboard.addListener(showEvent, () => setIsKeyboardVisible(true));
-    const hideSub = Keyboard.addListener(hideEvent, () => setIsKeyboardVisible(false));
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setIsKeyboardVisible(true);
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setIsKeyboardVisible(false);
+      setKeyboardHeight(0);
+    });
 
     return () => {
       showSub.remove();
@@ -477,7 +485,11 @@ export default function GameScreen({ navigation, route }: Props) {
   }
 
   return (
-    <GradientBackground style={styles.container}>
+    <GradientBackground style={{ flex: 1 }}>
+      <KeyboardAvoidingView 
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
       <View style={styles.header}>
         <Text style={styles.roundLabel}>RONDA {round?.roundNumber ?? '-'}</Text>
         <View style={styles.headerRight}>
@@ -552,9 +564,9 @@ export default function GameScreen({ navigation, route }: Props) {
         </View>
       )}
 
-      {/* Input */}
+      {/* Input normal (oculto visualmente pero ocupando espacio si el teclado está visible para no alterar el layout) */}
       {isMyTurn && (
-        <View style={styles.inputRow}>
+        <View style={[styles.inputRow, isKeyboardVisible && { opacity: 0 }]}>
           <TextInput
             style={styles.wordInput}
             placeholder="Escribe tu palabra..."
@@ -565,16 +577,16 @@ export default function GameScreen({ navigation, route }: Props) {
             autoCorrect={false}
             returnKeyType="send"
             onSubmitEditing={submitWord}
+            editable={!isKeyboardVisible}
           />
-          <TouchableOpacity style={styles.sendBtn} onPress={submitWord}>
+          <TouchableOpacity style={styles.sendBtn} onPress={submitWord} disabled={isKeyboardVisible}>
             <Text style={styles.sendBtnText}>✓</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* Panel con tabs: Puntajes / Palabras */}
-      {!isKeyboardVisible && (
-        <View style={styles.notebook}>
+      {/* Panel con tabs: Puntajes / Palabras (ahora nunca se oculta) */}
+      <View style={styles.notebook}>
           {/* Tabs */}
           <View style={styles.notebookTabs}>
             <TouchableOpacity
@@ -637,7 +649,6 @@ export default function GameScreen({ navigation, route }: Props) {
             )}
           </ScrollView>
         </View>
-      )}
 
       {isMyTurn && (
         <View style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
@@ -646,6 +657,57 @@ export default function GameScreen({ navigation, route }: Props) {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Fondo semitransparente oscuro cuando el teclado está abierto */}
+      {isMyTurn && isKeyboardVisible && (
+        <TouchableOpacity 
+          style={styles.keyboardBackdrop} 
+          activeOpacity={1}
+          onPress={() => Keyboard.dismiss()}
+        />
+      )}
+
+      {/* Input flotante cuando el teclado está abierto */}
+      {isMyTurn && isKeyboardVisible && (
+        <Animated.View style={[
+          styles.inputRow, 
+          { 
+            position: 'absolute', 
+            bottom: keyboardHeight + (Platform.OS === 'android' ? 45 : 20),
+            left: 16, 
+            right: 16, 
+            zIndex: 1000,
+            backgroundColor: Colors.white,
+            padding: 8,
+            borderRadius: 18,
+            borderWidth: 4,
+            borderColor: Colors.accent,
+            shadowColor: Colors.accent,
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.8,
+            shadowRadius: 10,
+            elevation: 10
+          }
+        ]}>
+          <TextInput
+            style={[styles.wordInput, { borderWidth: 0, elevation: 0, shadowOpacity: 0 }]}
+            placeholder="Escribe tu palabra..."
+            placeholderTextColor={Colors.gray}
+            value={word}
+            onChangeText={(t) => setWord(t.toUpperCase())}
+            autoCapitalize="characters"
+            autoCorrect={false}
+            returnKeyType="send"
+            onSubmitEditing={submitWord}
+            autoFocus
+          />
+          <TouchableOpacity style={styles.sendBtn} onPress={submitWord}>
+            <Text style={styles.sendBtnText}>✓</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+
+      </KeyboardAvoidingView>
     </GradientBackground>
   );
 }
@@ -1003,5 +1065,15 @@ const styles = StyleSheet.create({
   },
   notebookPointsInvalid: {
     color: '#C62828',
+  },
+  // ── Keyboard Backdrop ───────────────────────────────────────────────────────
+  keyboardBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    zIndex: 900,
   },
 });

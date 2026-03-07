@@ -31,9 +31,9 @@ export class DictionaryService implements OnModuleInit {
       do {
         fetched = await this.vocabRepo
           .createQueryBuilder('v')
-          .select('v.word')
+          .select(['v.word', 'v.frequency'])
           .where('v.isActive = :active', { active: true })
-          .orderBy('v.id', 'ASC')
+          .orderBy('v.frequency', 'DESC')
           .skip(offset)
           .take(BATCH)
           .getMany();

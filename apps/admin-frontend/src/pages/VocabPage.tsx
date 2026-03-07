@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import {
   Title, Text, Stack, Group, TextInput, Button, ActionIcon, Tooltip,
   Table, Badge, Pagination, Loader, Center, Modal, Alert,
-  Switch, Paper, Divider,
+  Switch, Paper, Divider, NumberInput,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
@@ -109,6 +109,7 @@ export default function VocabPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [jumpPage, setJumpPage] = useState<number | ''>('');
 
   // Letter filter
   const [letter1, setLetter1] = useState('');
@@ -390,13 +391,33 @@ export default function VocabPage() {
             </Table>
 
             {totalPages > 1 && (
-              <Group justify="center">
+              <Group justify="center" align="center">
                 <Pagination
                   total={totalPages}
                   value={page}
                   onChange={handlePageChange}
                   size="sm"
                 />
+                <Group gap="xs" ml="md">
+                  <Text size="sm" c="dimmed">Ir a pág:</Text>
+                  <NumberInput
+                    value={jumpPage}
+                    onChange={(val) => setJumpPage(typeof val === 'number' ? val : '')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && jumpPage) {
+                        const target = Math.min(Math.max(1, Number(jumpPage)), totalPages);
+                        handlePageChange(target);
+                        setJumpPage('');
+                      }
+                    }}
+                    min={1}
+                    max={totalPages}
+                    w={80}
+                    size="sm"
+                    hideControls
+                    placeholder="Nº"
+                  />
+                </Group>
               </Group>
             )}
           </>

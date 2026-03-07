@@ -88,12 +88,6 @@ export default function App() {
                 initialRouteName={initialRoute}
                 screenOptions={{ headerShown: false, cardStyle: { flex: 1 } }}
               >
-                <Stack.Screen
-                  name="Instructions"
-                  component={InstructionsScreen}
-                  initialParams={{ nextRoute: instructionsNextRoute }}
-                />
-
                 {!session ? (
                   // Auth Screens (When logged out)
                   <>
@@ -111,6 +105,12 @@ export default function App() {
                     <Stack.Screen name="Results" component={ResultsScreen} />
                   </>
                 )}
+
+                <Stack.Screen
+                  name="Instructions"
+                  component={InstructionsScreen}
+                  initialParams={{ nextRoute: instructionsNextRoute }}
+                />
               </Stack.Navigator>
             </NavigationContainer>
           </SoundProvider>

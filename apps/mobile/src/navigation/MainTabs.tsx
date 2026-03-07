@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Platform, StyleSheet, View, Text, Animated, Easing, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // @ts-ignore - Expo vector icons typing issue
 import { Ionicons } from '@expo/vector-icons';
@@ -161,6 +162,7 @@ function TabIcon({ name, color, focused, label }: {
 export default function MainTabs() {
   const { play: playMusic } = useMusic();
   const { play: playSound } = useSound();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     playMusic('menu');
@@ -175,9 +177,9 @@ export default function MainTabs() {
           tabBarStyle: {
             backgroundColor: '#0B1D42',
             borderTopWidth: 0,
-            height: Platform.OS === 'ios' ? 96 : 78,
-            paddingBottom: Platform.OS === 'ios' ? 22 : 6,
-            paddingTop: 8,
+            height: (Platform.OS === 'ios' ? 88 : 72) + insets.bottom,
+            paddingBottom: Math.max(insets.bottom, Platform.OS === 'ios' ? 20 : 8),
+            paddingTop: 10,
             shadowColor: Colors.primary,
             shadowOffset: { width: 0, height: -3 },
             shadowOpacity: 0.25,

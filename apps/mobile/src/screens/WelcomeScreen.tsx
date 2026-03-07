@@ -50,8 +50,8 @@ export default function WelcomeScreen({ navigation }: Props) {
             variant="secondary"
             onPress={() => { unlockAudioWeb(); playSound('button_tap'); navigation.navigate('Register'); }}
           />
-          <TouchableOpacity style={styles.btnGhost} onPress={() => { unlockAudioWeb(); playSound('button_tap'); navigation.navigate('Guest'); }}>
-            <Text style={styles.btnGhostText}>Jugar como invitado</Text>
+          <TouchableOpacity style={styles.guestBtn} onPress={() => { unlockAudioWeb(); playSound('button_tap'); navigation.navigate('Guest'); }}>
+            <Text style={styles.guestText}>Jugar como invitado  →</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -64,6 +64,22 @@ const styles = StyleSheet.create({
   header: { alignItems: 'center', marginBottom: 56 },
   subtitle: { color: Colors.accent, fontSize: 16, marginTop: 14, fontStyle: 'italic', fontWeight: '600' },
   buttons: { gap: 14 },
-  btnGhost: { alignItems: 'center', paddingVertical: 14 },
-  btnGhostText: { color: Colors.primaryLight, fontSize: 16, textDecorationLine: 'underline' },
+  guestBtn: {
+    alignSelf: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginTop: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  guestText: {
+    color: Colors.white,
+    fontSize: 15,
+    fontWeight: '600',
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
 });

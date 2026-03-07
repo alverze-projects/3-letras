@@ -17,12 +17,13 @@ const PAGE_SIZE = 50;
 
 interface WordFormProps {
   editing: IVocabEntry | null;
-  onSave: (word: string) => Promise<void>;
+  onSave: (word: string, frequency: number) => Promise<void>;
   onClose: () => void;
 }
 
 function WordForm({ editing, onSave, onClose }: WordFormProps) {
   const [word, setWord] = useState(editing?.word ?? '');
+  const [frequency, setFrequency] = useState<number | string>(editing?.frequency ?? 0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,7 +34,7 @@ function WordForm({ editing, onSave, onClose }: WordFormProps) {
     setError(null);
     setLoading(true);
     try {
-      await onSave(trimmed);
+      await onSave(trimmed, typeof frequency === 'number' ? frequency : parseInt(frequency, 10) || 0);
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Error al guardar');
       setLoading(false);
@@ -51,6 +52,14 @@ function WordForm({ editing, onSave, onClose }: WordFormProps) {
           required
           autoFocus
           ff="monospace"
+        />
+        <TextInput
+          label="Frecuencia (peso)"
+          placeholder="Ej: 15000"
+          value={frequency}
+          onChange={(e) => setFrequency(e.currentTarget.value.replace(/\D/g, ''))}
+          required
+          type="tel"
         />
         {error && (
           <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light">{error}</Alert>
@@ -188,12 +197,12 @@ export default function VocabPage() {
     } catch { /* silencioso */ }
   }
 
-  async function handleSave(word: string) {
+  async function handleSave(word: string, frequency: number) {
     if (editing) {
-      const updated = await adminApi.updateVocabWord(editing.id, { word });
+      const updated = await adminApi.updateVocabWord(editing.id, { word, frequency });
       setWords((prev) => prev.map((w) => w.id === updated.id ? updated : w));
     } else {
-      await adminApi.createVocabWord(word);
+      await adminApi.createVocabWord(word, frequency);
       await load(page, search, letterFilter, false);
     }
     closeForm();
@@ -309,6 +318,7 @@ export default function VocabPage() {
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th>Palabra</Table.Th>
+                  <Table.Th w={120}>Frecuencia</Table.Th>
                   <Table.Th w={140}>Estado</Table.Th>
                   <Table.Th>Agregada</Table.Th>
                   <Table.Th w={90} />
@@ -319,6 +329,9 @@ export default function VocabPage() {
                   <Table.Tr key={w.id}>
                     <Table.Td>
                       <Text ff="monospace" fw={600} size="sm">{w.word}</Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm">{w.frequency.toLocaleString('es-CL')}</Text>
                     </Table.Td>
                     <Table.Td>
                       <Group gap="xs" wrap="nowrap">

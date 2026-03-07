@@ -117,10 +117,10 @@ export const adminApi = {
   listVocab: (params: { search?: string; letters?: string; page?: number; limit?: number }) =>
     http.get<IVocabList>('/vocab', { params }).then((r) => r.data),
 
-  createVocabWord: (word: string) =>
-    http.post<IVocabEntry>('/vocab', { word }).then((r) => r.data),
+  createVocabWord: (word: string, frequency?: number) =>
+    http.post<IVocabEntry>('/vocab', { word, frequency }).then((r) => r.data),
 
-  updateVocabWord: (id: string, data: { word?: string; isActive?: boolean }) =>
+  updateVocabWord: (id: string, data: { word?: string; isActive?: boolean; frequency?: number }) =>
     http.patch<IVocabEntry>(`/vocab/${id}`, data).then((r) => r.data),
 
   deleteVocabWord: (id: string) =>
@@ -133,6 +133,7 @@ export const adminApi = {
 export interface IVocabEntry {
   id: string;
   word: string;
+  frequency: number;
   isActive: boolean;
   createdAt: string;
 }

@@ -44,14 +44,14 @@ export class VocabController {
   }
 
   @Post()
-  create(@Body('word') word: string) {
-    return this.vocabService.create(word);
+  create(@Body('word') word: string, @Body('frequency') frequency?: number) {
+    return this.vocabService.create(word, frequency);
   }
 
   @Patch(':id')
   update(
     @Param('id') id: string,
-    @Body() body: { word?: string; isActive?: boolean },
+    @Body() body: { word?: string; isActive?: boolean; frequency?: number },
   ) {
     return this.vocabService.update(id, body);
   }

@@ -73,74 +73,86 @@ The gateway holds per-session Maps that are **not persisted**:
 - `lastValidWord` — last valid word per round (for medium/advanced difficulty)
 - `usedWords` — Set of used words per round (prevents duplicates)
 - `pendingVotes` — vote state for special letter votes
-- `pendingDice` — dice roll state (rollerId, result, resolve callback, timeout)
-- `soloGames` — Set of game codes currently in solo mode (no timer, no dice, no vote)
+  - `pendingDice` — dice roll state (rollerId, result, resolve callback, timeout)
+  - `soloGames` — Set of game codes currently in solo mode (no timer, no dice, no vote)
+  
+  This state is lost on server restart. A crashed server terminates active games.
 
-This state is lost on server restart. A crashed server terminates active games.
+  ### Dynamic Letter Generation Algorithm (Hybrid)
+  The game does not pick purely random letters. The backend uses a hybrid generation approach:
+  - It fetches word frequency weights directly from the `vocab_entries` table.
+  - Generates candidate seeds starting from the most frequently used words (`frequency`).
+  - Verifies candidates against the dictionary to ensure at least `GAME_CONFIG_MIN_WORDS_REQUIRED` valid combinations exist before sending the letters to the players.
+  
+  ## WebSocket Event Flow
+  
+  All game logic runs server-side. Clients only emit: `game:ready`, `game:start`, `turn:submit`, `turn:skip`, `vote:submit`, `dice:roll`.
+  
+  ```
+  game:start → startNewRound()
+    → (multiplayer only) dice:roll_request → client emits dice:roll → dice:result + 4.5s animation wait
+    → if special letters + basic/medium difficulty → vote:start (15s timeout)
+      → vote:submit from all players → vote:result → round:new or redraw
+    → else → round:new → turn:start
+      → 15s timer → turn:timer (every 1s)
+      → turn:submit or timeout → turn:result → next turn
+    → all turns done → round:summary → next round or game:end
+  
+  Solo mode: no dice, no vote, no timer. Skip ends the round immediately.
+  Die result determines turns-per-player-per-round (1–6).
+  ```
+  
+  ## Mobile Screens Flow
+  
+  ```
+  App start
+    └─ loadSession() from AsyncStorage
+         ├─ session exists → MainTabs
+         └─ no session → Welcome → Login / Register / Guest → MainTabs
+  
+  MainTabs (bottom tab navigator):
+    ├─ Leaderboard
+    ├─ Inicio (MainScreen) → wizard:
+    │     step 0: menú principal (JUGAR) + Cómo se juega (InstructionsScreen global)
+    │     step 'mode': Solo | Multijugador
+    │     step 'multi': Crear sala | Unirse a partida (código)
+    │     step 1: Dificultad
+    │     step 2: Número de rondas
+    │     → Lobby → Game → Results
+    └─ Records
+  ```
+  
+  Session (JWT + player) persists in `AsyncStorage` via `src/services/session.ts`.
+  
+  ## Game Rules Summary
+  
+  - **Basic:** 2 base letters, special letters optional (player vote per round)
+  - **Medium:** 3 base letters, can build on previous valid word, special letters optional (vote)
+  - **Advanced:** 3 base letters, cannot build on previous, special letters mandatory if drawn
+  - Timer: 15s per turn, server-controlled
+  - Scoring: normal letters = 2pts, special (Ñ/W/X/Y/Z) = 4pts
+  - Bonuses: ≥14 letters +5pts, ≥16 letters +10pts, ≥3 special letters +15pts
+  - Words must contain base letters **in order**
+  - Words already used in current round are rejected
+  
+  ## Environment Variables
 
-## WebSocket Event Flow
-
-All game logic runs server-side. Clients only emit: `game:ready`, `game:start`, `turn:submit`, `turn:skip`, `vote:submit`, `dice:roll`.
-
-```
-game:start → startNewRound()
-  → (multiplayer only) dice:roll_request → client emits dice:roll → dice:result + 4.5s animation wait
-  → if special letters + basic/medium difficulty → vote:start (15s timeout)
-    → vote:submit from all players → vote:result → round:new or redraw
-  → else → round:new → turn:start
-    → 15s timer → turn:timer (every 1s)
-    → turn:submit or timeout → turn:result → next turn
-  → all turns done → round:summary → next round or game:end
-
-Solo mode: no dice, no vote, no timer. Skip ends the round immediately.
-Die result determines turns-per-player-per-round (1–6).
-```
-
-## Mobile Screens Flow
-
-```
-App start
-  └─ loadSession() from AsyncStorage
-       ├─ session exists → MainTabs
-       └─ no session → Welcome → Login / Register / Guest → MainTabs
-
-MainTabs (bottom tab navigator):
-  ├─ Leaderboard
-  ├─ Inicio (MainScreen) → wizard:
-  │     step 0: menú principal (JUGAR)
-  │     step 'mode': Solo | Multijugador
-  │     step 'multi': Crear sala | Unirse a partida (código)
-  │     step 1: Dificultad
-  │     step 2: Número de rondas
-  │     → Lobby → Game → Results
-  └─ Records
-```
-
-Session (JWT + player) persists in `AsyncStorage` via `src/services/session.ts`.
-
-## Game Rules Summary
-
-- **Basic:** 2 base letters, special letters optional (player vote per round)
-- **Medium:** 3 base letters, can build on previous valid word, special letters optional (vote)
-- **Advanced:** 3 base letters, cannot build on previous, special letters mandatory if drawn
-- Timer: 15s per turn, server-controlled
-- Scoring: normal letters = 2pts, special (Ñ/W/X/Y/Z) = 4pts
-- Bonuses: ≥14 letters +5pts, ≥16 letters +10pts, ≥3 special letters +15pts
-- Words must contain base letters **in order**
-- Words already used in current round are rejected
-
-## Environment Variables
-
-**apps/api/.env:**
-```
-PORT=3000
-NODE_ENV=development
-JWT_SECRET=tres-letras-dev-secret-2024
-DATABASE_PATH=data/tresletras.db
-```
-
-**apps/mobile/.env.local:**
-```
-EXPO_PUBLIC_API_URL=http://<local-ip>:3000/api
-```
-Use local network IP (not `localhost`) when testing on a physical device.
+  The backend allows dynamic configuration of the letter generator via environment variables:
+  - `GAME_CONFIG_SEED_POOL_SIZE`: Candidate words grabbed from DB (e.g. 5000)
+  - `GAME_CONFIG_VERIFY_POOL_SIZE`: Search boundary for verifying candidates (e.g. 10000)
+  - `GAME_CONFIG_MIN_WORDS_REQUIRED`: Min valid answers per round (e.g. 10)
+  - `GAME_CONFIG_MAX_RETRIES`: Timeout for the generator loop (e.g. 15)
+  
+  **apps/api/.env:**
+  ```
+  PORT=3000
+  NODE_ENV=development
+  JWT_SECRET=tres-letras-dev-secret-2024
+  DATABASE_PATH=data/tresletras.db
+  ```
+  
+  **apps/mobile/.env.local:**
+  ```
+  EXPO_PUBLIC_API_URL=http://<local-ip>:3000/api
+  ```
+  Use local network IP (not `localhost`) when testing on a physical device.

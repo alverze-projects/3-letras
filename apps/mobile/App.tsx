@@ -88,14 +88,15 @@ export default function App() {
                 initialRouteName={initialRoute}
                 screenOptions={{ headerShown: false, cardStyle: { flex: 1 } }}
               >
+                <Stack.Screen
+                  name="Instructions"
+                  component={InstructionsScreen}
+                  initialParams={{ nextRoute: instructionsNextRoute }}
+                />
+
                 {!session ? (
                   // Auth Screens (When logged out)
                   <>
-                    <Stack.Screen
-                      name="Instructions"
-                      component={InstructionsScreen}
-                      initialParams={{ nextRoute: instructionsNextRoute }}
-                    />
                     <Stack.Screen name="Welcome" component={WelcomeScreen} />
                     <Stack.Screen name="Login" component={LoginScreen} />
                     <Stack.Screen name="Register" component={RegisterScreen} />

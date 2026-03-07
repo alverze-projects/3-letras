@@ -148,7 +148,7 @@ export default function LeaderboardScreen() {
               data={entries}
               keyExtractor={(item) => item.userId + item.rank}
               renderItem={renderItem}
-              contentContainerStyle={styles.list}
+              contentContainerStyle={[styles.list, { paddingBottom: Math.max(insets.bottom, 24) }]}
               showsVerticalScrollIndicator={false}
             />
 

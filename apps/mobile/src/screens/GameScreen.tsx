@@ -12,6 +12,7 @@ import { useMusic } from '../contexts/MusicContext';
 import { Colors } from '../theme/colors';
 import type { IRound, IActiveTurn, ITurn, IGamePlayer } from '@3letras/interfaces';
 import { SPECIAL_LETTERS } from '@3letras/constants/game-rules';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SlotLetterCard from '../components/SlotLetterCard';
 import DiceAnimation from '../components/DiceAnimation';
 
@@ -97,6 +98,7 @@ type Props = StackScreenProps<RootStackParamList, 'Game'>;
 export default function GameScreen({ navigation, route }: Props) {
   const { gameCode, player, settings, initialPlayers } = route.params;
   const { play: playMusic } = useMusic();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     playMusic('game');
@@ -621,9 +623,11 @@ export default function GameScreen({ navigation, route }: Props) {
       </View>
 
       {isMyTurn && (
-        <TouchableOpacity style={styles.skipBtn} onPress={skipTurn}>
-          <Text style={styles.skipBtnText}>{isSolo ? 'Terminar ronda' : 'Pasar turno'}</Text>
-        </TouchableOpacity>
+        <View style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
+          <TouchableOpacity style={styles.skipBtn} onPress={skipTurn}>
+            <Text style={styles.skipBtnText}>{isSolo ? 'Terminar ronda' : 'Pasar turno'}</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </GradientBackground>
   );

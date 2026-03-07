@@ -1,14 +1,17 @@
 import { io, Socket } from 'socket.io-client';
 import { WS_EVENTS } from '@3letras/events/websocket.events';
 
-const SOCKET_URL = process.env.EXPO_PUBLIC_API_URL?.replace('/api', '') ?? 'http://localhost:3000';
+const SOCKET_URL = process.env.EXPO_PUBLIC_WS_URL ?? 'http://localhost:3000/api';
 
 let socket: Socket | null = null;
 
 export function connectSocket(token: string): Socket {
   if (socket?.connected) socket.disconnect();
 
-  socket = io(SOCKET_URL, {
+  const url = new URL(SOCKET_URL);
+
+  socket = io(url.origin, {
+    path: `${url.pathname === '/' ? '' : url.pathname}/socket.io/`,
     auth: { token },
     transports: ['websocket'],
     reconnection: true,

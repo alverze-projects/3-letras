@@ -12,6 +12,7 @@ import GradientBackground from '../components/GradientBackground';
 import GameButton from '../components/GameButton';
 import GameCard from '../components/GameCard';
 import { AuthContext } from '../../App';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = StackScreenProps<RootStackParamList, 'Login'>;
 
@@ -20,6 +21,7 @@ export default function LoginScreen({ navigation }: Props) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { setSession } = useContext(AuthContext);
+  const insets = useSafeAreaInsets();
 
   async function handleLogin() {
     if (!email.trim() || !password) { Alert.alert('Completa todos los campos'); return; }
@@ -37,7 +39,7 @@ export default function LoginScreen({ navigation }: Props) {
 
   return (
     <GradientBackground>
-      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={[styles.container, { paddingBottom: Math.max(insets.bottom, 24) }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>← Volver</Text>
         </TouchableOpacity>

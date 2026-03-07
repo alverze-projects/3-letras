@@ -12,6 +12,7 @@ import GameButton from '../components/GameButton';
 import GameCard from '../components/GameCard';
 import type { IGamePlayer } from '@3letras/interfaces';
 import type { Socket } from 'socket.io-client';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = StackScreenProps<RootStackParamList, 'Lobby'>;
 
@@ -23,6 +24,7 @@ const DIFF_LABELS: Record<string, { label: string; color: string }> = {
 
 export default function LobbyScreen({ navigation, route }: Props) {
   const { gameCode, token, player, difficulty, totalRounds, autoStart } = route.params;
+  const insets = useSafeAreaInsets();
   const [players, setPlayers] = useState<IGamePlayer[]>([]);
   const playersRef = useRef<IGamePlayer[]>([]);
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -109,7 +111,7 @@ export default function LobbyScreen({ navigation, route }: Props) {
 
   return (
     <GradientBackground>
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 24) }]}>
         <Text style={styles.title}>SALA DE ESPERA</Text>
 
         <GameCard glow>

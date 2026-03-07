@@ -11,6 +11,7 @@ import GradientBackground from '../components/GradientBackground';
 import GameButton from '../components/GameButton';
 import GameCard from '../components/GameCard';
 import AnimatedLogo from '../components/AnimatedLogo';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const INSTRUCTIONS_SEEN_KEY = '@tresletras_instructions_seen';
 
@@ -48,6 +49,7 @@ import { AuthContext } from '../../App';
 export default function InstructionsScreen({ navigation, route }: Props) {
   const { play: playSound } = useSound();
   const { session } = React.useContext(AuthContext);
+  const insets = useSafeAreaInsets();
   const nextRoute = route.params?.nextRoute ?? 'Welcome';
 
   async function handleContinue() {
@@ -178,7 +180,7 @@ export default function InstructionsScreen({ navigation, route }: Props) {
         </ScrollView>
 
         {/* Botón fijo en la parte inferior */}
-        <View style={styles.footer}>
+        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 32) }]}>
           {canGoBack ? (
             <GameButton title="Cerrar" variant="secondary" onPress={handleClose} />
           ) : (
@@ -186,7 +188,7 @@ export default function InstructionsScreen({ navigation, route }: Props) {
           )}
         </View>
       </View>
-    </GradientBackground>
+    </GradientBackground >
   );
 }
 

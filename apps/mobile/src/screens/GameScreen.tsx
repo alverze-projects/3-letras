@@ -678,6 +678,37 @@ export default function GameScreen({ navigation, route }: Props) {
           alignItems: 'center',
           gap: 12
         }}>
+          {/* Resultado de la palabra anterior (visible sobre el fondo oscuro) */}
+          {lastResult && lastResult.turn.word ? (
+            <View style={[styles.result, lastResult.turn.isValid ? styles.resultValid : styles.resultInvalid, { width: '100%', marginVertical: 0, paddingVertical: 10, paddingHorizontal: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+              <View style={{ flex: 1, marginRight: 10 }}>
+                <Text style={[styles.resultWord, { fontSize: 18, letterSpacing: 1, textAlign: 'left' }]} numberOfLines={1}>
+                  <HighlightedWord
+                    word={lastResult.turn.word}
+                    baseLetters={round?.letters || []}
+                    isValid={lastResult.turn.isValid}
+                    baseStyle={styles.resultWord}
+                  />
+                </Text>
+                {!lastResult.turn.isValid && (
+                  <Text style={[styles.resultReason, { fontSize: 12, marginTop: 2, textAlign: 'left' }]} numberOfLines={1}>
+                    {lastResult.turn.invalidReason === 'order' ? 'Orden incorrecto'
+                      : lastResult.turn.invalidReason === 'not_found' ? 'No encontrada'
+                        : lastResult.turn.invalidReason === 'no_special_letter' ? 'Falta especial'
+                          : lastResult.turn.invalidReason === 'builds_on_previous' ? 'No puedes construir'
+                            : lastResult.turn.invalidReason === 'already_used' ? 'Ya usada en esta ronda'
+                              : 'Inválida'}
+                  </Text>
+                )}
+              </View>
+              {lastResult.turn.isValid ? (
+                <Text style={[styles.resultScore, { fontSize: 20, marginTop: 0 }]}>+{lastResult.turn.score}</Text>
+              ) : (
+                <Text style={{ fontSize: 24 }}>❌</Text>
+              )}
+            </View>
+          ) : null}
+
           <TouchableOpacity style={[styles.skipBtn, { marginTop: 0, backgroundColor: 'rgba(0,0,0,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' }]} onPress={skipTurn}>
             <Text style={styles.skipBtnText}>{isSolo ? 'Terminar ronda' : 'Pasar turno'}</Text>
           </TouchableOpacity>

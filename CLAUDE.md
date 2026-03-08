@@ -127,7 +127,9 @@ The gateway holds per-session Maps that are **not persisted**:
   
   ## Mobile UI Quirks & Workarounds
   
-  - **Keyboard Handling (GameScreen):** Due to Android's edge-to-edge layout and bottom navigation bar, `KeyboardAvoidingView` can be unreliable for positioning elements precisely above the keyboard. To guarantee the input field is always visible, we use a custom approach: `Keyboard.addListener` manually captures the `keyboardHeight`. When the keyboard is active, a floating `Animated.View` (containing the text input and "Skip Turn" button) is rendered with `position: 'absolute'` and a bottom offset (`keyboardHeight + 45` for Android, `+20` for iOS) to perfectly clear the OS keyboard and system navigation bars.
+  - **Keyboard Handling (GameScreen):** Due to Android's edge-to-edge layout and bottom navigation bar, `KeyboardAvoidingView` can be unreliable for positioning elements precisely above the keyboard. To guarantee the input field is always visible, we use a custom approach: `Keyboard.addListener` manually captures the `keyboardHeight`. When the keyboard is active, a floating `Animated.View` (containing the text input, a "Skip Turn" button, and the result of the last word) is rendered with `position: 'absolute'` and a bottom offset (`keyboardHeight + 45` for Android, `+20` for iOS) to perfectly clear the OS keyboard and system navigation bars. The rest of the screen is overlaid with a dark semitransparent backdrop.
+  - **Local APK Building:** To build the APK for Android locally without invoking emulators, use `npm run build:apk`. It runs Gradle `assembleRelease` which automatically triggers Metro bundler to include the latest JS changes.
+  - **Cleartext Traffic:** The Android build has been modified in `AndroidManifest.xml` (`android:usesCleartextTraffic="true"`) to allow connecting to local HTTP backend IPs instead of strictly requiring HTTPS domains.
 
   ## Game Rules Summary
   

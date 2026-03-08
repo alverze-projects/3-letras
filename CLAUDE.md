@@ -36,7 +36,8 @@ npm run test:e2e      # E2E tests
 ```bash
 npx expo start        # Dev server (QR code for Expo Go)
 npx expo start --web  # Web browser on port 8081
-npx expo run:android  # Development build for Android (requires Android Studio)
+npx expo run:android  # Development build for Android (requires Android Studio/emulator)
+npm run build:apk     # Build standalone release APK locally (outputs to android/app/build/outputs/apk/release)
 npx expo export --platform web  # Verify web build compiles
 ```
 

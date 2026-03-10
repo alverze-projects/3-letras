@@ -29,6 +29,7 @@ export default function LobbyScreen({ navigation, route }: Props) {
   const playersRef = useRef<IGamePlayer[]>([]);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isHost, setIsHost] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
 
   // Pulsing dots for "waiting"
   const dotAnim = useRef(new Animated.Value(0.4)).current;
@@ -87,6 +88,8 @@ export default function LobbyScreen({ navigation, route }: Props) {
   }, [gameCode, token]);
 
   function handleStart() {
+    if (isStarting) return;
+    setIsStarting(true);
     socket?.emit(WS_EVENTS.CLIENT.GAME_START, {
       gameCode,
       settings: { difficulty, totalRounds },
@@ -155,10 +158,11 @@ export default function LobbyScreen({ navigation, route }: Props) {
 
         {isHost ? (
           <GameButton
-            title="INICIAR JUEGO"
+            title={isStarting ? "INICIANDO..." : "INICIAR JUEGO"}
             onPress={handleStart}
             shadowHeight={5}
             textStyle={{ fontSize: 20 }}
+            disabled={isStarting}
           />
         ) : (
           <View style={styles.waitingMsg}>

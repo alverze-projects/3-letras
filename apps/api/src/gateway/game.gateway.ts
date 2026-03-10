@@ -129,7 +129,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const gamePlayers = await this.gpRepo.find({ where: { gameId: game.id } });
     if (gamePlayers.length === 1) this.soloGames.add(code);
 
-    await this.startNewRound(code, game.id, game.difficulty, 1);
+    // Retrasar el inicio de la ronda para dar tiempo a los teléfonos a cargar la nueva pantalla (GameScreen)
+    // Esto previene que el evento de "Lanzar Dado" se envíe antes de que el jugador esté listo para escucharlo
+    setTimeout(async () => {
+      await this.startNewRound(code, game.id, game.difficulty, 1);
+    }, 2000);
   }
 
   @SubscribeMessage(WS_EVENTS.CLIENT.TURN_SUBMIT)

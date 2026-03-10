@@ -51,9 +51,14 @@ export default function MainScreen({ navigation }: Props) {
   const [isCustom, setIsCustom] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { play: playSound } = useSound();
+  const { play: playSound, muted: soundMuted, toggleMute: toggleSoundMute } = useSound();
   const { logout } = useContext(AuthContext);
-  const { unlockAudioWeb } = useMusic();
+  const { unlockAudioWeb, toggleMute: toggleMusicMute } = useMusic();
+
+  const handleToggleMute = () => {
+    toggleSoundMute();
+    toggleMusicMute();
+  };
 
   // Pulsing play button
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -155,9 +160,14 @@ export default function MainScreen({ navigation }: Props) {
             <Text style={styles.nickname}>{session.player.nickname}</Text>
             {session.player.isGuest && <Text style={styles.guestBadge}>Invitado</Text>}
           </View>
-          <TouchableOpacity onPress={handleLogout}>
-            <Text style={styles.logout}>Cerrar sesión</Text>
-          </TouchableOpacity>
+          <View style={{ alignItems: 'flex-end', gap: 16 }}>
+            <TouchableOpacity onPress={handleToggleMute} style={styles.soundToggleBtn}>
+              <Ionicons name={soundMuted ? 'volume-mute' : 'volume-high'} size={26} color={Colors.white} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLogout}>
+              <Text style={styles.logout}>Cerrar sesión</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Logo */}
@@ -387,6 +397,13 @@ const styles = StyleSheet.create({
   },
   guestBadge: { color: Colors.gray, fontSize: 12, marginTop: 2 },
   logout: { color: Colors.gray, fontSize: 14, textDecorationLine: 'underline', marginTop: 4 },
+  soundToggleBtn: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    padding: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)'
+  },
 
   logo: { alignItems: 'center', marginVertical: 36 },
 

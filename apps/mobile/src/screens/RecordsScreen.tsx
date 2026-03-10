@@ -7,6 +7,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { recordsApi, GameRecord } from '../services/api';
 import { Colors } from '../theme/colors';
 import GradientBackground from '../components/GradientBackground';
+import MuteButton from '../components/MuteButton';
 import GameCard from '../components/GameCard';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -112,6 +113,7 @@ export default function RecordsScreen() {
 
   return (
     <GradientBackground sparkles={false}>
+      <MuteButton absolute />
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>

@@ -9,6 +9,7 @@ import { authApi } from '../services/api';
 import { saveSession } from '../services/session';
 import { Colors } from '../theme/colors';
 import GradientBackground from '../components/GradientBackground';
+import MuteButton from '../components/MuteButton';
 import GameButton from '../components/GameButton';
 import GameCard from '../components/GameCard';
 import { AuthContext } from '../../App';
@@ -38,6 +39,7 @@ export default function GuestScreen({ navigation }: Props) {
 
   return (
     <GradientBackground>
+      <MuteButton absolute />
       <KeyboardAvoidingView style={[styles.container, { paddingBottom: Math.max(insets.bottom, 24) }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>← Volver</Text>

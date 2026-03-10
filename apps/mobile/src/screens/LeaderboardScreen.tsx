@@ -9,6 +9,7 @@ import { leaderboardApi, LeaderboardEntry, LeaderboardDifficulty } from '../serv
 import { loadSession } from '../services/session';
 import { Colors } from '../theme/colors';
 import GradientBackground from '../components/GradientBackground';
+import MuteButton from '../components/MuteButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TABS: { key: LeaderboardDifficulty; label: string }[] = [
@@ -91,6 +92,7 @@ export default function LeaderboardScreen() {
 
   return (
     <GradientBackground sparkles={false}>
+      <MuteButton absolute />
       <View style={[styles.container, { paddingBottom: insets.bottom }]}>
         {/* Header */}
         <View style={styles.header}>

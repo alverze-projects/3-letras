@@ -4,3 +4,4 @@
 - Sistema para poder ocupar la app móvil en una Web.
 - Sistema para poder ver la lista de salas abiertas para poder entrar a alguna.
 - Sistema para permitir cambiar la duración de los turnos desde el panel de administración.
+- Sistema para configurar el tiempo de cada turno desde el panel de administración.

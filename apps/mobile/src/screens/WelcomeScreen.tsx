@@ -8,6 +8,7 @@ import { useSound } from '../services/sound';
 import { useMusic } from '../contexts/MusicContext';
 import AnimatedLogo from '../components/AnimatedLogo';
 import GradientBackground from '../components/GradientBackground';
+import MuteButton from '../components/MuteButton';
 import GameButton from '../components/GameButton';
 
 type Props = StackScreenProps<RootStackParamList, 'Welcome'>;
@@ -35,6 +36,7 @@ export default function WelcomeScreen({ navigation }: Props) {
 
   return (
     <GradientBackground>
+      <MuteButton absolute />
       <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 24) }]}>
         <Animated.View style={[styles.header, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <AnimatedLogo width={280} height={124} />

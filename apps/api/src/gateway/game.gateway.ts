@@ -93,6 +93,91 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage(WS_EVENTS.CLIENT.GAME_REJOIN)
+  async onGameRejoin(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() payload: { gameCode: string },
+  ) {
+    const code = payload.gameCode.toUpperCase();
+    await client.join(code);
+    client.gameCode = code;
+
+    const stateGame = await this.gamesService.getByCode(code).catch(() => null);
+    if (!stateGame) return;
+
+    let activeTurnPayload = null;
+    let wordHistory: any[] = [];
+    const isSolo = this.soloGames.has(code);
+
+    if (stateGame.currentRound) {
+      const turns = await this.turnRepo.find({
+        where: { roundId: stateGame.currentRound.id },
+        order: { createdAt: 'ASC' },
+      });
+
+      const activeTurn = turns.find(t => t.status === 'active');
+      if (activeTurn) {
+        const player = stateGame.players.find(p => p.playerId === activeTurn.playerId);
+        activeTurnPayload = {
+          turnId: activeTurn.id,
+          playerId: activeTurn.playerId,
+          nickname: player?.nickname ?? 'Unknown',
+          startedAt: activeTurn.createdAt.toISOString(),
+          timeoutAt: isSolo ? null : new Date(activeTurn.createdAt.getTime() + this.turnDurationMs).toISOString(),
+          turnNumber: activeTurn.turnNumber,
+          totalTurns: isSolo ? null : stateGame.currentRound.dieResult,
+        };
+      }
+
+      const completedTurns = turns.filter(t => t.status !== 'active' && t.status !== 'pending' && t.word != null);
+      wordHistory = completedTurns.map(t => {
+        const p = stateGame.players.find(gp => gp.playerId === t.playerId);
+        return {
+          word: t.word,
+          score: t.score,
+          nickname: p?.nickname ?? 'Unknown',
+          isValid: t.isValid,
+        };
+      });
+    }
+
+    let diceRequest = null;
+    const pendingDice = this.pendingDice.get(code);
+    if (pendingDice) {
+      const p = stateGame.players.find(gp => gp.playerId === pendingDice.rollerId);
+      diceRequest = {
+        rollerId: pendingDice.rollerId,
+        rollerNickname: p?.nickname ?? 'Unknown',
+        roundNumber: stateGame.currentRound?.roundNumber ?? 0,
+        timeoutMs: 15000,
+        remainingMs: 15000,
+      };
+    }
+
+    let voteStatePayload = null;
+    const pendingVote = this.pendingVotes.get(code);
+    if (pendingVote) {
+      voteStatePayload = {
+        letters: stateGame.currentRound?.letters ?? [],
+        roundNumber: stateGame.currentRound?.roundNumber ?? 0,
+        timeoutMs: 15000,
+        remainingMs: 15000,
+        votedCount: pendingVote.votes.size,
+        totalCount: pendingVote.playerCount,
+        hasVoted: pendingVote.votes.has(client.userId),
+      };
+    }
+
+    client.emit(WS_EVENTS.SERVER.GAME_REJOIN_STATE as any, {
+      game: stateGame,
+      round: stateGame.currentRound,
+      activeTurn: activeTurnPayload,
+      diceRequest,
+      voteState: voteStatePayload,
+      wordHistory,
+    });
+  }
+
   @SubscribeMessage(WS_EVENTS.CLIENT.GAME_READY)
   async onGameReady(
     @ConnectedSocket() client: AuthenticatedSocket,

@@ -139,7 +139,7 @@ export default function InstructionsScreen({ navigation, route }: Props) {
           {/* Puntuación */}
           <Section title="🏆  Puntuación">
             <View style={styles.scoreTable}>
-              <ScoreRow label="Letra normal: NO INDICAR (A-Z)" points="2 pts" />
+              <ScoreRow label="Letra normal: (A-Z)" points="2 pts" />
               <ScoreRow label="Letra especial: (Ñ, W, X, Y, Z)" points="4 pts" />
             </View>
           </Section>

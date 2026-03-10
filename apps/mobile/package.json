@@ -5,9 +5,10 @@
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
-    "build:apk": "cd android && ./gradlew assembleRelease",
-    "build:apk:dev": "cd android && ./gradlew assembleDebug",
-    "build:aab": "cd android && ./gradlew bundleRelease",
+    "prebuild": "npx expo prebuild",
+    "build:apk": "npm run prebuild && cd android && ./gradlew assembleRelease",
+    "build:apk:dev": "npm run prebuild && cd android && ./gradlew assembleDebug",
+    "build:aab": "npm run prebuild && cd android && ./gradlew bundleRelease",
     "ios": "expo run:ios",
     "web": "BROWSER=none expo start --web",
     "postinstall": "patch-package"

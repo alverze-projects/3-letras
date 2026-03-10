@@ -188,31 +188,32 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // Dar tiempo a que la animación termine y el jugador lea el resultado (~2.3s animación + 2s lectura)
       await new Promise((r) => setTimeout(r, 4500));
-
-      const hasSpecial = round.letters.some(
-        (l) => (SPECIAL_LETTERS as readonly string[]).includes(l as string),
-      );
-
-      if (hasSpecial && (difficulty === 'basic' || difficulty === 'medium')) {
-        const voteTimer = setTimeout(() => this.resolveVote(code), VOTE_DURATION_MS);
-        this.pendingVotes.set(code, {
-          roundId: round.id,
-          gameId,
-          difficulty,
-          votes: new Map(),
-          playerCount: players.length,
-          timer: voteTimer,
-        });
-        this.server.to(code).emit(WS_EVENTS.SERVER.VOTE_START, {
-          letters: round.letters,
-          roundNumber: round.roundNumber,
-          timeoutMs: VOTE_DURATION_MS,
-        });
-        return;
-      }
     }
 
-    // Modo normal sin letras especiales, o modo solo (sin dado, sin votación)
+    // La votación de letras especiales ocurre tanto en multijugador como en solitario
+    const hasSpecial = round.letters.some(
+      (l) => (SPECIAL_LETTERS as readonly string[]).includes(l as string),
+    );
+
+    if (hasSpecial && (difficulty === 'basic' || difficulty === 'medium')) {
+      const voteTimer = setTimeout(() => this.resolveVote(code), VOTE_DURATION_MS);
+      this.pendingVotes.set(code, {
+        roundId: round.id,
+        gameId,
+        difficulty,
+        votes: new Map(),
+        playerCount: players.length,
+        timer: voteTimer,
+      });
+      this.server.to(code).emit(WS_EVENTS.SERVER.VOTE_START, {
+        letters: round.letters,
+        roundNumber: round.roundNumber,
+        timeoutMs: VOTE_DURATION_MS,
+      });
+      return;
+    }
+
+    // Modo normal sin letras especiales (o si se aceptaron tras votación)
     this.server.to(code).emit(WS_EVENTS.SERVER.ROUND_NEW, { round });
     const effectiveDieResult = isSolo ? 999 : round.dieResult;
     await this.startNextTurn(code, gameId, round.id, round.letters as SpanishLetter[], players, 0, effectiveDieResult, 1);

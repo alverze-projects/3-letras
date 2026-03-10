@@ -176,6 +176,80 @@ export default function GameScreen({ navigation, route }: Props) {
   useEffect(() => {
     if (!socket) return;
 
+    const handleConnect = () => {
+      socket.emit(WS_EVENTS.CLIENT.GAME_REJOIN as any, { gameCode });
+    };
+
+    socket.on('connect', handleConnect);
+    if (socket.connected) {
+      handleConnect();
+    }
+
+    socket.on(WS_EVENTS.SERVER.GAME_REJOIN_STATE as any, (state: any) => {
+      if (state.game) setPlayers(state.game.players);
+      if (state.round) setRound(state.round);
+
+      if (state.wordHistory) {
+        setWordHistory(state.wordHistory);
+        if (state.wordHistory.length > 0) {
+           const lastTurn = state.wordHistory[state.wordHistory.length - 1];
+           setLastResult({ 
+             turn: { word: lastTurn.word, isValid: lastTurn.isValid, score: lastTurn.score } as any, 
+             nickname: lastTurn.nickname 
+           });
+        }
+      }
+
+      if (state.activeTurn) {
+        setActiveTurn(state.activeTurn);
+        const mine = state.activeTurn.playerId === player.id;
+        setIsMyTurn(mine);
+        isMyTurnRef.current = mine;
+
+        let initialMs = 15000;
+        if (state.activeTurn.timeoutAt) {
+          initialMs = new Date(state.activeTurn.timeoutAt).getTime() - new Date().getTime();
+        }
+        setRemainingMs(Math.max(0, initialMs));
+        Animated.timing(timerWidth, { toValue: 1, duration: 0, useNativeDriver: false }).start();
+      } else {
+        setActiveTurn(null);
+        setIsMyTurn(false);
+        isMyTurnRef.current = false;
+      }
+
+      setDiceRequest(state.diceRequest || null);
+      if (state.diceRequest) {
+        diceRequestRef.current = state.diceRequest;
+        if (diceCountdownRef.current) clearInterval(diceCountdownRef.current);
+        let remaining = Math.ceil(state.diceRequest.remainingMs / 1000);
+        setDiceSecondsLeft(remaining);
+        diceCountdownRef.current = setInterval(() => {
+          remaining -= 1;
+          setDiceSecondsLeft(remaining);
+          if (remaining <= 0 && diceCountdownRef.current) {
+            clearInterval(diceCountdownRef.current);
+            diceCountdownRef.current = null;
+          }
+        }, 1000);
+      }
+
+      setVoteState(state.voteState || null);
+      if (state.voteState) {
+        if (voteCountdownRef.current) clearInterval(voteCountdownRef.current);
+        let remaining = Math.ceil(state.voteState.remainingMs / 1000);
+        setVoteSecondsLeft(remaining);
+        voteCountdownRef.current = setInterval(() => {
+          remaining -= 1;
+          setVoteSecondsLeft(remaining);
+          if (remaining <= 0 && voteCountdownRef.current) {
+            clearInterval(voteCountdownRef.current);
+            voteCountdownRef.current = null;
+          }
+        }, 1000);
+      }
+    });
+
     socket.on(WS_EVENTS.SERVER.GAME_STATE, ({ game }) => {
       setPlayers(game.players);
     });
@@ -330,6 +404,8 @@ export default function GameScreen({ navigation, route }: Props) {
       socket.off(WS_EVENTS.SERVER.VOTE_START);
       socket.off(WS_EVENTS.SERVER.VOTE_UPDATE);
       socket.off(WS_EVENTS.SERVER.VOTE_RESULT);
+      socket.off('connect', handleConnect);
+      socket.off(WS_EVENTS.SERVER.GAME_REJOIN_STATE as any);
     };
   }, [socket, player.id]);
 

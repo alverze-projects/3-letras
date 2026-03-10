@@ -32,6 +32,10 @@ export interface ClientDiceRollEvent {
   gameCode: string;
 }
 
+export interface ClientGameRejoinEvent {
+  gameCode: string;
+}
+
 // ─── Events: Server → Client ─────────────────────────────────────────────────
 
 export interface ServerGameStateEvent {
@@ -117,6 +121,34 @@ export interface ServerErrorEvent {
   message: string;
 }
 
+export interface ServerGameRejoinStateEvent {
+  game: IGame;
+  round: IRound | null;
+  activeTurn: IActiveTurn | null;
+  diceRequest: {
+    rollerId: string;
+    rollerNickname: string;
+    roundNumber: number;
+    timeoutMs: number;
+    remainingMs: number;
+  } | null;
+  voteState: {
+    letters: string[];
+    roundNumber: number;
+    timeoutMs: number;
+    remainingMs: number;
+    votedCount: number;
+    totalCount: number;
+    hasVoted: boolean;
+  } | null;
+  wordHistory: Array<{
+    word: string;
+    score: number;
+    nickname: string;
+    isValid: boolean;
+  }>;
+}
+
 // ─── Event Name Map ───────────────────────────────────────────────────────────
 
 export const WS_EVENTS = {
@@ -128,6 +160,7 @@ export const WS_EVENTS = {
     TURN_SKIP: 'turn:skip',
     VOTE_SUBMIT: 'vote:submit',
     DICE_ROLL: 'dice:roll',
+    GAME_REJOIN: 'game:rejoin',
   },
   // Server → Client
   SERVER: {
@@ -147,5 +180,6 @@ export const WS_EVENTS = {
     DICE_ROLL_REQUEST: 'dice:roll_request',
     DICE_RESULT: 'dice:result',
     ERROR: 'error',
+    GAME_REJOIN_STATE: 'game:rejoin-state',
   },
 } as const;

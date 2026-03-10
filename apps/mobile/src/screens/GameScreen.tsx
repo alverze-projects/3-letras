@@ -577,9 +577,9 @@ export default function GameScreen({ navigation, route }: Props) {
             autoCorrect={false}
             returnKeyType="send"
             onSubmitEditing={submitWord}
-            editable={!isKeyboardVisible}
+            showSoftInputOnFocus={true}
           />
-          <TouchableOpacity style={styles.sendBtn} onPress={submitWord} disabled={isKeyboardVisible}>
+          <TouchableOpacity style={styles.sendBtn} onPress={submitWord}>
             <Text style={styles.sendBtnText}>✓</Text>
           </TouchableOpacity>
         </View>

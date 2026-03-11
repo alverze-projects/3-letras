@@ -740,7 +740,10 @@ export default function GameScreen({ navigation, route }: Props) {
         <TouchableOpacity 
           style={styles.keyboardBackdrop} 
           activeOpacity={1}
-          onPress={() => Keyboard.dismiss()}
+          onPress={() => {
+            Keyboard.dismiss();
+            setIsKeyboardVisible(false);
+          }}
         />
       )}
 

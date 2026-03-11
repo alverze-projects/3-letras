@@ -413,6 +413,10 @@ export default function GameScreen({ navigation, route }: Props) {
     if (!word.trim()) return;
     socket?.emit(WS_EVENTS.CLIENT.TURN_SUBMIT, { gameCode, word: word.trim() });
     setWord('');
+    if (!isSolo) {
+      setIsKeyboardVisible(false);
+      Keyboard.dismiss();
+    }
   }
 
   function skipTurn() {
@@ -640,21 +644,18 @@ export default function GameScreen({ navigation, route }: Props) {
         </View>
       )}
 
-      {/* Input normal (oculto visualmente pero ocupando espacio si el teclado está visible para no alterar el layout) */}
-      {isMyTurn && (
-        <View style={[styles.inputRow, isKeyboardVisible && { opacity: 0 }]}>
-          <TextInput
-            style={styles.wordInput}
-            placeholder="Escribe tu palabra..."
-            placeholderTextColor={Colors.gray}
-            value={word}
-            onChangeText={(t) => setWord(t.toUpperCase())}
-            autoCapitalize="characters"
-            autoCorrect={false}
-            returnKeyType="send"
-            onSubmitEditing={submitWord}
-            showSoftInputOnFocus={true}
-          />
+      {/* Input normal (Dummy interactivo) - Parece un input pero es un botón para no confundir el foco del OS */}
+      {isMyTurn && !isKeyboardVisible && (
+        <View style={styles.inputRow}>
+          <TouchableOpacity 
+            style={[styles.wordInput, { justifyContent: 'center' }]} 
+            activeOpacity={0.8}
+            onPress={() => setIsKeyboardVisible(true)}
+          >
+            <Text style={{ color: word ? Colors.dark : Colors.gray, fontSize: 16, fontWeight: '900', letterSpacing: 1 }}>
+              {word || "Escribe tu palabra..."}
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.sendBtn} onPress={submitWord}>
             <Text style={styles.sendBtnText}>✓</Text>
           </TouchableOpacity>

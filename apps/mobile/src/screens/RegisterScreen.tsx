@@ -14,6 +14,7 @@ import GameButton from '../components/GameButton';
 import GameCard from '../components/GameCard';
 import { AuthContext } from '../../App';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 type Props = StackScreenProps<RootStackParamList, 'Register'>;
 
@@ -21,6 +22,7 @@ export default function RegisterScreen({ navigation }: Props) {
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { setSession } = useContext(AuthContext);
   const insets = useSafeAreaInsets();
@@ -71,14 +73,19 @@ export default function RegisterScreen({ navigation }: Props) {
               autoCapitalize="none"
               autoCorrect={false}
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Contraseña (mínimo 6 caracteres)"
-              placeholderTextColor={Colors.gray}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Contraseña (mínimo 6 caracteres)"
+                placeholderTextColor={Colors.gray}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
+                <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={24} color={Colors.dark} />
+              </TouchableOpacity>
+            </View>
             <GameButton title="CREAR CUENTA" onPress={handleRegister} loading={loading} />
           </View>
         </GameCard>
@@ -102,5 +109,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 14,
     fontSize: 16, color: Colors.dark,
     borderWidth: 2, borderColor: Colors.primaryLight,
+  },
+  passwordContainer: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 12,
+    borderWidth: 2, borderColor: Colors.primaryLight,
+    paddingRight: 12,
+  },
+  passwordInput: {
+    flex: 1, paddingHorizontal: 16, paddingVertical: 14,
+    fontSize: 16, color: Colors.dark,
+  },
+  eyeButton: {
+    padding: 4,
   },
 });

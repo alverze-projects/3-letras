@@ -129,6 +129,7 @@ export default function GameScreen({ navigation, route }: Props) {
   const diceTextSlide = useRef(new Animated.Value(18)).current;
   const timerWidth = useRef(new Animated.Value(1)).current;
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [showFloatingInput, setShowFloatingInput] = useState(false);
 
   const socket = getSocket();
   const { play: playSound } = useSound();
@@ -140,17 +141,15 @@ export default function GameScreen({ navigation, route }: Props) {
 
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
-  // Ocultar notebook cuando se abre el teclado
+  // Solo trackear la altura del teclado para posicionar el input flotante
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
     const showSub = Keyboard.addListener(showEvent, (e) => {
-      setIsKeyboardVisible(true);
       setKeyboardHeight(e.endCoordinates.height);
     });
     const hideSub = Keyboard.addListener(hideEvent, () => {
-      setIsKeyboardVisible(false);
       setKeyboardHeight(0);
     });
 
@@ -159,6 +158,13 @@ export default function GameScreen({ navigation, route }: Props) {
       hideSub.remove();
     };
   }, []);
+
+  // Cerrar el input flotante cuando ya no es mi turno
+  useEffect(() => {
+    if (!isMyTurn) {
+      setShowFloatingInput(false);
+    }
+  }, [isMyTurn]);
 
   useEffect(() => {
     if (diceAnimDone) {
@@ -414,7 +420,7 @@ export default function GameScreen({ navigation, route }: Props) {
     socket?.emit(WS_EVENTS.CLIENT.TURN_SUBMIT, { gameCode, word: word.trim() });
     setWord('');
     if (!isSolo) {
-      setIsKeyboardVisible(false);
+      setShowFloatingInput(false);
       Keyboard.dismiss();
     }
   }
@@ -644,13 +650,13 @@ export default function GameScreen({ navigation, route }: Props) {
         </View>
       )}
 
-      {/* Input normal (Dummy interactivo) - Parece un input pero es un botón para no confundir el foco del OS */}
-      {isMyTurn && !isKeyboardVisible && (
+      {/* Input normal (Dummy interactivo) - Parece un input pero es un botón para abrir el floating input */}
+      {isMyTurn && !showFloatingInput && (
         <View style={styles.inputRow}>
           <TouchableOpacity 
             style={[styles.wordInput, { justifyContent: 'center' }]} 
             activeOpacity={0.8}
-            onPress={() => setIsKeyboardVisible(true)}
+            onPress={() => setShowFloatingInput(true)}
           >
             <Text style={{ color: word ? Colors.dark : Colors.gray, fontSize: 16, fontWeight: '900', letterSpacing: 1 }}>
               {word || "Escribe tu palabra..."}
@@ -735,23 +741,23 @@ export default function GameScreen({ navigation, route }: Props) {
         </View>
       )}
 
-      {/* Fondo semitransparente oscuro cuando el teclado está abierto */}
-      {isMyTurn && isKeyboardVisible && (
+      {/* Fondo semitransparente oscuro cuando el input flotante está abierto */}
+      {isMyTurn && showFloatingInput && (
         <TouchableOpacity 
           style={styles.keyboardBackdrop} 
           activeOpacity={1}
           onPress={() => {
             Keyboard.dismiss();
-            setIsKeyboardVisible(false);
+            setShowFloatingInput(false);
           }}
         />
       )}
 
-      {/* Input flotante cuando el teclado está abierto */}
-      {isMyTurn && isKeyboardVisible && (
+      {/* Input flotante (controlado por showFloatingInput, NO por eventos del teclado) */}
+      {isMyTurn && showFloatingInput && (
         <Animated.View style={{ 
           position: 'absolute', 
-          bottom: keyboardHeight + (Platform.OS === 'android' ? 45 : 20),
+          bottom: keyboardHeight > 0 ? keyboardHeight + (Platform.OS === 'android' ? 45 : 20) : 80,
           left: 16, 
           right: 16, 
           zIndex: 1000,
@@ -789,7 +795,7 @@ export default function GameScreen({ navigation, route }: Props) {
             </View>
           ) : null}
 
-          <TouchableOpacity style={[styles.skipBtn, { marginTop: 0, backgroundColor: 'rgba(0,0,0,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' }]} onPress={skipTurn}>
+          <TouchableOpacity style={[styles.skipBtn, { marginTop: 0, backgroundColor: 'rgba(0,0,0,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' }]} onPress={() => { skipTurn(); setShowFloatingInput(false); }}>
             <Text style={styles.skipBtnText}>{isSolo ? 'Terminar ronda' : 'Pasar turno'}</Text>
           </TouchableOpacity>
           

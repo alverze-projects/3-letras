@@ -137,7 +137,22 @@ export default function GameScreen({ navigation, route }: Props) {
   const [isConnected, setIsConnected] = useState(true);
   const [showReconnectedToast, setShowReconnectedToast] = useState(false);
   const toastOpacity = useRef(new Animated.Value(0)).current;
+  const wifiAnim = useRef(new Animated.Value(0.3)).current;
   const hasInitiallyConnected = useRef(false);
+
+  // Animar el ícono de Wi-Fi cuando está desconectado
+  useEffect(() => {
+    if (!isConnected) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(wifiAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+          Animated.timing(wifiAnim, { toValue: 0.3, duration: 800, useNativeDriver: true }),
+        ])
+      ).start();
+    } else {
+      wifiAnim.setValue(0.3);
+    }
+  }, [isConnected]);
 
   const socket = getSocket();
   const { play: playSound } = useSound();
@@ -877,8 +892,10 @@ export default function GameScreen({ navigation, route }: Props) {
       {!isConnected && (
         <View style={[StyleSheet.absoluteFill, styles.disconnectOverlay]}>
           <View style={styles.disconnectBox}>
-            <Ionicons name="wifi-outline" size={48} color={Colors.white} style={{ marginBottom: 12 }} />
-            <Text style={styles.disconnectTitle}>Conexión perdida</Text>
+            <Animated.View style={{ opacity: wifiAnim, marginBottom: 16 }}>
+              <Ionicons name="wifi" size={64} color={Colors.accent} />
+            </Animated.View>
+            <Text style={styles.disconnectTitle}>CONEXIÓN PERDIDA</Text>
             <Text style={styles.disconnectText}>Intentando reconectar al servidor...</Text>
             
             <View style={{ marginTop: 32, width: '100%' }}>
@@ -937,34 +954,42 @@ const styles = StyleSheet.create({
 
   // ── Overlay Desconexión ───────────────────────────────────────────────────
   disconnectOverlay: {
-    backgroundColor: 'rgba(0,0,0,0.85)',
+    backgroundColor: 'rgba(15,23,42,0.92)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,
     padding: 24,
   },
   disconnectBox: {
-    backgroundColor: Colors.dark,
+    backgroundColor: 'rgba(30,41,59,0.8)',
     padding: 32,
-    borderRadius: 24,
+    borderRadius: 32,
     alignItems: 'center',
     width: '100%',
     maxWidth: 400,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,214,0,0.2)',
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
   },
   disconnectTitle: {
-    color: Colors.white,
+    color: Colors.accent,
     fontFamily: 'Mitr_500Medium',
-    fontSize: 24,
+    fontSize: 22,
     marginBottom: 8,
     textAlign: 'center',
+    letterSpacing: 1.5,
   },
   disconnectText: {
     color: Colors.gray,
     fontFamily: 'Inter_400Regular',
-    fontSize: 16,
+    fontSize: 15,
     textAlign: 'center',
+    paddingHorizontal: 16,
+    lineHeight: 22,
   },
   toastContainer: {
     position: 'absolute',

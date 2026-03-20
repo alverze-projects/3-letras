@@ -110,6 +110,21 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return;
       }
 
+      if (stateGame.status === 'finished') {
+        // Redirigir a los jugadores directamente a los resultados si el juego ya terminó
+        const players = await this.gpRepo.find({ where: { gameId: stateGame.id }, relations: ['user'] });
+        const sorted = players
+          .map((p) => ({ playerId: p.userId, nickname: p.user.nickname, totalScore: p.totalScore }))
+          .sort((a, b) => b.totalScore - a.totalScore)
+          .map((p, i) => ({ ...p, rank: i + 1 }));
+
+        client.emit(WS_EVENTS.SERVER.GAME_END, {
+          finalScores: sorted,
+          winnerId: sorted[0]?.playerId ?? '',
+        });
+        return;
+      }
+
       let activeTurnPayload = null;
       let wordHistory: any[] = [];
       const isSolo = this.soloGames.has(code);

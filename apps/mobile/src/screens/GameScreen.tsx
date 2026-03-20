@@ -898,15 +898,18 @@ export default function GameScreen({ navigation, route }: Props) {
             <Text style={styles.disconnectTitle}>CONEXIÓN PERDIDA</Text>
             <Text style={styles.disconnectText}>Intentando reconectar al servidor...</Text>
             
-            <View style={{ marginTop: 32, width: '100%' }}>
-              <GameButton 
-                title="SALIR DE LA PARTIDA" 
-                variant="danger" 
+            <View style={{ marginTop: 32, alignItems: 'center', width: '100%' }}>
+              <TouchableOpacity 
+                style={styles.disconnectBtn}
+                activeOpacity={0.7}
                 onPress={() => {
                   playSound('button_tap');
                   navigation.replace('Main');
-                }} 
-              />
+                }}
+              >
+                <Ionicons name="exit-outline" size={18} color={Colors.red} style={{ marginRight: 6 }} />
+                <Text style={styles.disconnectBtnText}>SALIR DE LA PARTIDA</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -990,6 +993,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 16,
     lineHeight: 22,
+  },
+  disconnectBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)', // Fondo rojizo translúcido
+    borderWidth: 1.5,
+    borderColor: 'rgba(239, 68, 68, 0.4)', // Borde rojo sutil
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 100, // Forma de píldora
+  },
+  disconnectBtnText: {
+    color: Colors.red,
+    fontFamily: 'Mitr_500Medium',
+    fontSize: 14,
+    letterSpacing: 1.5,
+    textAlign: 'center',
   },
   toastContainer: {
     position: 'absolute',

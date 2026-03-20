@@ -15,6 +15,8 @@ import { SPECIAL_LETTERS } from '@3letras/constants/game-rules';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SlotLetterCard from '../components/SlotLetterCard';
 import DiceAnimation from '../components/DiceAnimation';
+import GameButton from '../components/GameButton';
+import { Ionicons } from '@expo/vector-icons';
 
 // ---- Subcomponente para Resaltar Letras Base ----
 function HighlightedWord({ word, baseLetters, isValid, baseStyle, invalidStyle }: {
@@ -131,6 +133,12 @@ export default function GameScreen({ navigation, route }: Props) {
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [showFloatingInput, setShowFloatingInput] = useState(false);
 
+  // Connection states
+  const [isConnected, setIsConnected] = useState(true);
+  const [showReconnectedToast, setShowReconnectedToast] = useState(false);
+  const toastOpacity = useRef(new Animated.Value(0)).current;
+  const hasInitiallyConnected = useRef(false);
+
   const socket = getSocket();
   const { play: playSound } = useSound();
 
@@ -183,27 +191,52 @@ export default function GameScreen({ navigation, route }: Props) {
     if (!socket) return;
 
     const handleConnect = () => {
+      setIsConnected(true);
       socket.emit(WS_EVENTS.CLIENT.GAME_REJOIN as any, { gameCode });
+
+      if (hasInitiallyConnected.current) {
+        showToast();
+      }
+      hasInitiallyConnected.current = true;
+    };
+
+    const handleDisconnect = () => {
+      setIsConnected(false);
+    };
+
+    const showToast = () => {
+      setShowReconnectedToast(true);
+      Animated.sequence([
+        Animated.timing(toastOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.delay(3000),
+        Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+      ]).start(() => setShowReconnectedToast(false));
     };
 
     socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+
     if (socket.connected) {
       handleConnect();
+    } else {
+      handleDisconnect();
     }
 
     socket.on(WS_EVENTS.SERVER.GAME_REJOIN_STATE as any, (state: any) => {
       if (state.game) setPlayers(state.game.players);
-      if (state.round) setRound(state.round);
+      setRound(state.round || null);
+      
+      setDiceResult(null); // Clear any lingering dice result since server doesn't send it
 
-      if (state.wordHistory) {
-        setWordHistory(state.wordHistory);
-        if (state.wordHistory.length > 0) {
-           const lastTurn = state.wordHistory[state.wordHistory.length - 1];
-           setLastResult({ 
-             turn: { word: lastTurn.word, isValid: lastTurn.isValid, score: lastTurn.score } as any, 
-             nickname: lastTurn.nickname 
-           });
-        }
+      setWordHistory(state.wordHistory || []);
+      if (state.wordHistory && state.wordHistory.length > 0) {
+         const lastTurn = state.wordHistory[state.wordHistory.length - 1];
+         setLastResult({ 
+           turn: { word: lastTurn.word, isValid: lastTurn.isValid, score: lastTurn.score } as any, 
+           nickname: lastTurn.nickname 
+         });
+      } else {
+         setLastResult(null);
       }
 
       if (state.activeTurn) {
@@ -211,6 +244,7 @@ export default function GameScreen({ navigation, route }: Props) {
         const mine = state.activeTurn.playerId === player.id;
         setIsMyTurn(mine);
         isMyTurnRef.current = mine;
+        if (!mine) setWord('');
 
         let initialMs = 15000;
         if (state.activeTurn.timeoutAt) {
@@ -222,6 +256,7 @@ export default function GameScreen({ navigation, route }: Props) {
         setActiveTurn(null);
         setIsMyTurn(false);
         isMyTurnRef.current = false;
+        setWord('');
       }
 
       setDiceRequest(state.diceRequest || null);
@@ -411,6 +446,7 @@ export default function GameScreen({ navigation, route }: Props) {
       socket.off(WS_EVENTS.SERVER.VOTE_UPDATE);
       socket.off(WS_EVENTS.SERVER.VOTE_RESULT);
       socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
       socket.off(WS_EVENTS.SERVER.GAME_REJOIN_STATE as any);
     };
   }, [socket, player.id]);
@@ -836,6 +872,36 @@ export default function GameScreen({ navigation, route }: Props) {
       )}
 
       </KeyboardAvoidingView>
+
+      {/* Disconnection Overlay */}
+      {!isConnected && (
+        <View style={[StyleSheet.absoluteFill, styles.disconnectOverlay]}>
+          <View style={styles.disconnectBox}>
+            <Ionicons name="wifi-outline" size={48} color={Colors.white} style={{ marginBottom: 12 }} />
+            <Text style={styles.disconnectTitle}>Conexión perdida</Text>
+            <Text style={styles.disconnectText}>Intentando reconectar al servidor...</Text>
+            
+            <View style={{ marginTop: 32, width: '100%' }}>
+              <GameButton 
+                title="SALIR DE LA PARTIDA" 
+                variant="danger" 
+                onPress={() => {
+                  playSound('button_tap');
+                  navigation.replace('Main');
+                }} 
+              />
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Reconnected Toast */}
+      {showReconnectedToast && (
+        <Animated.View style={[styles.toastContainer, { opacity: toastOpacity }]}>
+          <Ionicons name="checkmark-circle" size={20} color={Colors.white} />
+          <Text style={styles.toastText}>¡Conexión recuperada!</Text>
+        </Animated.View>
+      )}
     </GradientBackground>
   );
 }
@@ -868,6 +934,62 @@ const styles = StyleSheet.create({
   difficulty_medium: { backgroundColor: '#EF6C00' },
   difficulty_advanced: { backgroundColor: '#C62828' },
   difficultyText: { color: Colors.white, fontWeight: '900', fontSize: 11, letterSpacing: 1.5 },
+
+  // ── Overlay Desconexión ───────────────────────────────────────────────────
+  disconnectOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+    padding: 24,
+  },
+  disconnectBox: {
+    backgroundColor: Colors.dark,
+    padding: 32,
+    borderRadius: 24,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  disconnectTitle: {
+    color: Colors.white,
+    fontFamily: 'Mitr_500Medium',
+    fontSize: 24,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  disconnectText: {
+    color: Colors.gray,
+    fontFamily: 'Inter_400Regular',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  toastContainer: {
+    position: 'absolute',
+    bottom: 40,
+    alignSelf: 'center',
+    backgroundColor: Colors.accent,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    zIndex: 10000,
+  },
+  toastText: {
+    color: Colors.dark,
+    fontFamily: 'Mitr_500Medium',
+    fontSize: 16,
+  },
+
   // ── Dado ────────────────────────────────────────────────────────────────────
   diceOverlay: {
     flex: 1,

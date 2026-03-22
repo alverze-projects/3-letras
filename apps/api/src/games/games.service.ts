@@ -208,11 +208,11 @@ export class GamesService {
   }
 
   private drawLetters(count: 2 | 3 = 3): string[] {
-    return ['H', 'D', 'C'];
+    return this.generateDynamicLetters(count, true);
   }
 
   private drawLettersNoSpecial(count: 2 | 3 = 3): string[] {
-    return ['H', 'D', 'C'];
+    return this.generateDynamicLetters(count, false);
   }
 
   private generateDynamicLetters(count: number, allowSpecials: boolean): string[] {

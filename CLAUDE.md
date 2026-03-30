@@ -87,7 +87,7 @@ The gateway holds per-session Maps that are **not persisted**:
   
   ## WebSocket Event Flow
   
-  All game logic runs server-side. Clients only emit: `game:ready`, `game:start`, `turn:submit`, `turn:skip`, `vote:submit`, `dice:roll`.
+  All game logic runs server-side. Clients only emit: `game:ready`, `game:start`, `turn:submit`, `turn:skip`, `vote:submit`, `dice:roll`, and `game:rejoin`.
   
   ```
   game:start → startNewRound()
@@ -99,6 +99,10 @@ The gateway holds per-session Maps that are **not persisted**:
       → turn:submit or timeout → turn:result → next turn
     → all turns done → round:summary → next round or game:end
   
+  Reconnection: client socket.io connects → emits game:rejoin(code) 
+    → if game finished → SERVER emits game_end
+    → else SERVER emits game_rejoin_state (full payload: game, round, activeTurn, diceRequest, voteState, wordHistory)
+
   Solo mode: no dice, no vote, no timer. Skip ends the round immediately.
   Die result determines turns-per-player-per-round (1–6).
   ```

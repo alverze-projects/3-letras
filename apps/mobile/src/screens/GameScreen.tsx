@@ -645,7 +645,7 @@ export default function GameScreen({ navigation, route }: Props) {
       </View>
 
       {/* Letras base — animación tragaperras al inicio de cada ronda */}
-      <View style={styles.lettersRow}>
+      <View style={[styles.lettersRow, isMyTurn && showFloatingInput && { zIndex: 950, elevation: 20 }]}>
         {letters.map((letter, i) => (
           <SlotLetterCard
             key={`${round?.id ?? 'init'}-${i}`}

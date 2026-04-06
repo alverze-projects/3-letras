@@ -170,9 +170,9 @@ export default function InstructionsScreen({ navigation, route }: Props) {
           {/* Modo solitario */}
           <Section title="👤  Modo solitario">
             <Text style={styles.body}>
-              Si inicias una partida solo, el juego se adapta: no hay dado ni votación, y{' '}
-              <Text style={styles.accent}>no hay límite de tiempo</Text> por turno. Toca{' '}
-              <Text style={styles.accent}>"Terminar ronda"</Text> cuando quieras pasar a la siguiente.
+              Si inicias una partida solo el juego se adapta: no hay dado ni votación, y los turnos individuales no tienen límite. Sin embargo, existe un{' '}
+              <Text style={styles.accent}>límite de tiempo global en la ronda</Text>. Acumula todos los puntos que puedas en ese tiempo límite o toca{' '}
+              <Text style={styles.accent}>"Saltar"</Text> para dar por finalizada la ronda antes de que el reloj marque tu final automático.
             </Text>
           </Section>
 

@@ -20,9 +20,9 @@ export class AppConfigService implements OnModuleInit {
   private async loadConfig() {
     let config = await this.configRepo.findOneBy({ id: 'singleton' });
     
-    // Si no existe, crear la configuración inicial usando process.env o el valor predeterminado 25
+    // Si no existe, crear la configuración inicial usando el valor predeterminado 25
     if (!config) {
-      const defaultDuration = parseInt(process.env.GAME_TURN_DURATION || '25', 10);
+      const defaultDuration = 25;
       config = this.configRepo.create({
         id: 'singleton',
         turnDurationSeconds: defaultDuration,

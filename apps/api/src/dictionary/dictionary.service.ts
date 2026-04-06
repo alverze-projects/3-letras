@@ -107,7 +107,7 @@ export class DictionaryService implements OnModuleInit {
     return results.sort((a, b) => a.localeCompare(b, 'es'));
   }
 
-  private hasLettersInOrder(word: string, targetLetters: string[]): boolean {
+  hasLettersInOrder(word: string, targetLetters: string[]): boolean {
     if (targetLetters.length === 0) return true;
     if (word.length < targetLetters.length) return false;
 
@@ -143,6 +143,15 @@ export class DictionaryService implements OnModuleInit {
       return originals[0]; // Retorna la original (frecuencia más alta)
     }
     return word; // Fallback
+  }
+
+  getOriginalsForNormalized(normalizedWords: string[]): string[] {
+    const results: string[] = [];
+    for (const nw of normalizedWords) {
+      const origs = this.originalsByNormalized.get(nw);
+      if (origs) results.push(...origs);
+    }
+    return results;
   }
 
   get size(): number {

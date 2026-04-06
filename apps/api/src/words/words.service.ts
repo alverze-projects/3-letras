@@ -19,13 +19,13 @@ export class WordsService {
     difficulty: DifficultyLevel = 'medium',
     previousWord: string | null = null,
   ): IWordValidationResult {
-    const normalized = this.normalize(word);
+    const normalized = this.dictionary.normalize(word);
 
     if (normalized.includes(' ')) {
       return this.invalid(word, 'compound_word');
     }
 
-    if (!this.hasLettersInOrder(normalized, baseLetters)) {
+    if (!this.dictionary.hasLettersInOrder(normalized, baseLetters)) {
       return this.invalid(word, 'order');
     }
 
@@ -50,7 +50,7 @@ export class WordsService {
 
     // Avanzado: no puede construir sobre la palabra anterior (contenerla)
     if (difficulty === 'advanced' && previousWord) {
-      const normalizedPrev = this.normalize(previousWord);
+      const normalizedPrev = this.dictionary.normalize(previousWord);
       if (normalized.includes(normalizedPrev)) {
         return this.invalid(correctWord, 'builds_on_previous');
       }
@@ -60,35 +60,7 @@ export class WordsService {
   }
 
   normalize(word: string): string {
-    return word.trim().toUpperCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, (c, offset, str) => {
-        const base = str[offset - 1];
-        if ('AEIOU'.includes(base)) return '';
-        return c;
-      })
-      .normalize('NFC');
-  }
-
-  private hasLettersInOrder(word: string, targetLetters: SpanishLetter[]): boolean {
-    if (targetLetters.length === 0) return true;
-    if (word.length < targetLetters.length) return false;
-
-    let targetIdx = 0;
-    for (let i = 0; i < word.length; i++) {
-      const char = word[i] as SpanishLetter;
-      const currentTarget = targetLetters[targetIdx];
-
-      if (char === currentTarget) {
-        targetIdx++;
-        if (targetIdx === targetLetters.length) return true;
-      } else {
-        if (targetLetters.includes(char, targetIdx)) {
-          return false;
-        }
-      }
-    }
-    return false;
+    return this.dictionary.normalize(word);
   }
 
   private calculateScore(originalWord: string, normalizedWord: string): IWordValidationResult {

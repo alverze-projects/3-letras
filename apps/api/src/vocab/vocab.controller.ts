@@ -38,7 +38,8 @@ export class VocabController {
         letters.toUpperCase().split('').filter(Boolean),
         10_000,
       );
-      return this.vocabService.listByWords(matchingWords, page, Math.min(limit, 200));
+      const originalWords = this.dictionaryService.getOriginalsForNormalized(matchingWords);
+      return this.vocabService.listByWords(originalWords, page, Math.min(limit, 200));
     }
     if (search) {
       const normalizedSearch = this.dictionaryService.normalize(search);

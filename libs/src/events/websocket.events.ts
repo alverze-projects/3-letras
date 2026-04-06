@@ -36,6 +36,11 @@ export interface ClientGameRejoinEvent {
   gameCode: string;
 }
 
+export interface ClientTurnTypingEvent {
+  gameCode: string;
+  word: string;
+}
+
 // ─── Events: Server → Client ─────────────────────────────────────────────────
 
 export interface ServerGameStateEvent {
@@ -121,6 +126,12 @@ export interface ServerErrorEvent {
   message: string;
 }
 
+export interface ServerTurnTypingEvent {
+  word: string;
+  playerNickname: string;
+  playerId: string;
+}
+
 export interface ServerGameRejoinStateEvent {
   game: IGame;
   round: IRound | null;
@@ -161,6 +172,7 @@ export const WS_EVENTS = {
     VOTE_SUBMIT: 'vote:submit',
     DICE_ROLL: 'dice:roll',
     GAME_REJOIN: 'game:rejoin',
+    TURN_TYPING: 'turn:typing',
   },
   // Server → Client
   SERVER: {
@@ -181,5 +193,6 @@ export const WS_EVENTS = {
     DICE_RESULT: 'dice:result',
     ERROR: 'error',
     GAME_REJOIN_STATE: 'game:rejoin-state',
+    TURN_TYPING: 'turn:typing',
   },
 } as const;

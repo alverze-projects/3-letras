@@ -110,6 +110,7 @@ export default function GameScreen({ navigation, route }: Props) {
   const [round, setRound] = useState<IRound | null>(null);
   const [activeTurn, setActiveTurn] = useState<IActiveTurn | null>(null);
   const [word, setWord] = useState('');
+  const [otherPlayerTyping, setOtherPlayerTyping] = useState('');
   const [remainingMs, setRemainingMs] = useState(0);
   const [players, setPlayers] = useState<IGamePlayer[]>(initialPlayers ?? []);
   const [lastResult, setLastResult] = useState<{ turn: ITurn; nickname: string } | null>(null);
@@ -348,7 +349,13 @@ export default function GameScreen({ navigation, route }: Props) {
       if (isMyTurnRef.current && ms <= 5000 && ms > 0) playSound('tick');
     });
 
+    socket.on(WS_EVENTS.SERVER.TURN_TYPING, ({ word }) => {
+      setOtherPlayerTyping(word);
+      if (word.length > 0) playSound('tick');
+    });
+
     socket.on(WS_EVENTS.SERVER.TURN_RESULT, ({ turn, playerNickname, playerScores }) => {
+      setOtherPlayerTyping('');
       setLastResult({ turn, nickname: playerNickname });
       if (turn.word) {
         setWordHistory((prev) => [...prev, {
@@ -456,6 +463,7 @@ export default function GameScreen({ navigation, route }: Props) {
       socket.off(WS_EVENTS.SERVER.ROUND_NEW);
       socket.off(WS_EVENTS.SERVER.TURN_START);
       socket.off(WS_EVENTS.SERVER.TURN_TIMER);
+      socket.off(WS_EVENTS.SERVER.TURN_TYPING);
       socket.off(WS_EVENTS.SERVER.TURN_RESULT);
       socket.off(WS_EVENTS.SERVER.VOTE_START);
       socket.off(WS_EVENTS.SERVER.VOTE_UPDATE);
@@ -670,6 +678,9 @@ export default function GameScreen({ navigation, route }: Props) {
           <Text style={styles.turnWho}>
             {isMyTurn ? '¡ES TU TURNO!' : `Turno de ${activeTurn.nickname}`}
           </Text>
+          {!isMyTurn && otherPlayerTyping.length > 0 && (
+            <Text style={styles.otherTypingText}>{otherPlayerTyping}</Text>
+          )}
         </View>
       )}
 
@@ -872,7 +883,10 @@ export default function GameScreen({ navigation, route }: Props) {
               placeholder="Escribe tu palabra..."
               placeholderTextColor={Colors.gray}
               value={word}
-              onChangeText={(t) => setWord(t.toUpperCase())}
+              onChangeText={(t) => {
+                setWord(t.toUpperCase());
+                socket?.emit(WS_EVENTS.CLIENT.TURN_TYPING, { gameCode, word: t.toUpperCase() });
+              }}
               autoCapitalize="characters"
               autoCorrect={false}
               returnKeyType="send"
@@ -1133,6 +1147,10 @@ const styles = StyleSheet.create({
   turnWho: {
     color: Colors.accent, fontSize: 22, fontWeight: '900', letterSpacing: 2,
     textShadowColor: 'rgba(255,214,0,0.5)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 10,
+  },
+  otherTypingText: {
+    color: Colors.white, fontSize: 24, fontWeight: '900', letterSpacing: 3, marginTop: 6,
+    opacity: 0.9, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 3,
   },
   // ── Resultado ───────────────────────────────────────────────────────────────
   result: {

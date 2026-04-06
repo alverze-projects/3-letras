@@ -255,6 +255,19 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     await this.processWordSubmission(code, client.userId, client.nickname, payload.word.trim());
   }
 
+  @SubscribeMessage(WS_EVENTS.CLIENT.TURN_TYPING)
+  onTurnTyping(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() payload: { gameCode: string; word: string },
+  ) {
+    if (!client.gameCode) return;
+    client.broadcast.to(client.gameCode).emit(WS_EVENTS.SERVER.TURN_TYPING, {
+      word: payload.word,
+      playerNickname: client.nickname,
+      playerId: client.userId,
+    });
+  }
+
   @SubscribeMessage(WS_EVENTS.CLIENT.TURN_SKIP)
   async onTurnSkip(
     @ConnectedSocket() client: AuthenticatedSocket,

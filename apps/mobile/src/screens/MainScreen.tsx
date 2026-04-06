@@ -27,7 +27,7 @@ type Props = CompositeScreenProps<
   StackScreenProps<RootStackParamList>
 >;
 
-const ROUND_OPTIONS = [3, 5, 7, 10];
+const ROUND_OPTIONS = [3, 5];
 
 const DIFFICULTIES: { value: DifficultyLevel; label: string; description: string; color: string }[] = [
   { value: 'basic', label: 'Básico', description: '2 letras · Sin restricciones especiales', color: '#43A047' },

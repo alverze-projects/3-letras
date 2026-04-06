@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Title, Table, Badge, Group, Stack, Button, ActionIcon, Tooltip,
   Modal, Drawer, TextInput, PasswordInput, Switch, Text, Loader, Center,
-  Alert, Divider, Avatar,
+  Alert, Divider, Avatar, Pagination,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
@@ -247,10 +247,14 @@ function GamesDrawer({ user, onClose, onGoToGame }: GamesDrawerProps) {
 export default function UsersPage() {
   const navigate = useNavigate();
   const [users, setUsers] = useState<IUserSummary[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<IUserSummary | null>(null);
   const [deleting, setDeleting] = useState<IUserSummary | null>(null);
   const [viewingGames, setViewingGames] = useState<IUserSummary | null>(null);
+  const [sortDesc, setSortDesc] = useState(false);
 
   const [formOpened, { open: openForm, close: closeForm }] = useDisclosure(false);
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
@@ -262,9 +266,12 @@ export default function UsersPage() {
   }
 
   async function load() {
+    setLoading(true);
     try {
-      const { users } = await adminApi.listUsers();
-      setUsers(users);
+      const result = await adminApi.listUsers(page, 15, sortDesc);
+      setUsers(result.users);
+      setTotalPages(result.totalPages);
+      setTotalUsers(result.total);
     } catch {
       // silencioso
     } finally {
@@ -272,7 +279,7 @@ export default function UsersPage() {
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [page, sortDesc]);
 
   function handleNewUser() {
     setEditing(null);
@@ -291,26 +298,22 @@ export default function UsersPage() {
 
   async function handleSave(dto: CreateUserDto | UpdateUserDto) {
     if (editing) {
-      const updated = await adminApi.updateUser(editing.id, dto as UpdateUserDto);
-      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      await adminApi.updateUser(editing.id, dto as UpdateUserDto);
     } else {
-      const created = await adminApi.createUser(dto as CreateUserDto);
-      setUsers((prev) => [created, ...prev]);
+      await adminApi.createUser(dto as CreateUserDto);
+      setPage(1);
     }
     closeForm();
+    load();
   }
 
   async function handleDelete() {
     if (!deleting) return;
     await adminApi.deleteUser(deleting.id);
-    setUsers((prev) => prev.filter((u) => u.id !== deleting.id));
     closeDelete();
     setDeleting(null);
+    load();
   }
-
-  const registered = users.filter((u) => !u.isGuest).length;
-  const guests = users.filter((u) => u.isGuest).length;
-  const admins = users.filter((u) => u.isAdmin).length;
 
   return (
     <>
@@ -319,7 +322,7 @@ export default function UsersPage() {
           <div>
             <Title order={2}>Usuarios</Title>
             <Text size="sm" c="dimmed">
-              {users.length} total · {registered} registrados · {guests} invitados · {admins} admins
+              {totalUsers} total · mostrando página {page} de {totalPages}
               </Text>
           </div>
           <Button leftSection={<IconUserPlus size={16} />} onClick={handleNewUser}>
@@ -337,7 +340,13 @@ export default function UsersPage() {
                 <Table.Th>Email</Table.Th>
                 <Table.Th>Tipo</Table.Th>
                 <Table.Th>Partidas</Table.Th>
-                <Table.Th>Registro</Table.Th>
+                <Table.Th 
+                  style={{ cursor: 'pointer', userSelect: 'none' }} 
+                  onClick={() => { setSortDesc(!sortDesc); setPage(1); }}
+                  title="Clic para cambiar el orden"
+                >
+                  <Group gap={4} wrap="nowrap">Registro {sortDesc ? '↓ (Nuevos)' : '↑ (Antiguos)'}</Group>
+                </Table.Th>
                 <Table.Th w={120} />
               </Table.Tr>
             </Table.Thead>
@@ -415,6 +424,12 @@ export default function UsersPage() {
               )}
             </Table.Tbody>
           </Table>
+        )}
+        
+        {!loading && totalPages > 1 && (
+          <Group justify="center" mt="md">
+            <Pagination total={totalPages} value={page} onChange={setPage} />
+          </Group>
         )}
       </Stack>
 

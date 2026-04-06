@@ -38,13 +38,20 @@ export class UsersService {
     @InjectRepository(GamePlayer) private readonly gpRepo: Repository<GamePlayer>,
   ) {}
 
-  async listAll(): Promise<IUserSummary[]> {
-    const users = await this.userRepo.find({
+  async listAll(page: number = 1, limit: number = 15, orderDesc: boolean = true): Promise<{ users: IUserSummary[]; total: number }> {
+    const [users, total] = await this.userRepo.findAndCount({
       relations: ['gamePlayers'],
-      order: { createdAt: 'DESC' },
-      take: 500,
+      order: { 
+        createdAt: orderDesc ? 'DESC' : 'ASC',
+        id: 'ASC'
+      },
+      skip: (page - 1) * limit,
+      take: limit,
     });
-    return users.map((u) => this.toSummary(u));
+    return {
+      users: users.map((u) => this.toSummary(u)),
+      total
+    };
   }
 
   async getOne(id: string): Promise<IUserSummary> {

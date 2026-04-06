@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Patch, Delete,
-  Param, Body, UseGuards, HttpCode, HttpStatus,
+  Param, Body, UseGuards, HttpCode, HttpStatus, Query
 } from '@nestjs/common';
 import { UsersService, CreateUserDto, UpdateUserDto } from './users.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -12,9 +12,21 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  async listAll() {
-    const users = await this.usersService.listAll();
-    return { users, total: users.length };
+  async listAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('desc') desc?: string,
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 15;
+    const isDesc = desc !== 'false';
+    const result = await this.usersService.listAll(pageNum, limitNum, isDesc);
+    return {
+      users: result.users,
+      total: result.total,
+      page: pageNum,
+      totalPages: Math.ceil(result.total / limitNum),
+    };
   }
 
   @Get(':id')

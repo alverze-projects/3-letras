@@ -93,8 +93,8 @@ export const adminApi = {
   deleteGame: (id: string) =>
     http.delete(`/games/admin/${id}`),
 
-  listUsers: () =>
-    http.get<{ users: IUserSummary[]; total: number }>('/users').then((r) => r.data),
+  listUsers: (page: number = 1, limit: number = 15, desc: boolean = true) =>
+    http.get<{ users: IUserSummary[]; total: number; page: number; totalPages: number }>(`/users?page=${page}&limit=${limit}&desc=${desc}`).then((r) => r.data),
 
   createUser: (dto: CreateUserDto) =>
     http.post<IUserSummary>('/users', dto).then((r) => r.data),

@@ -236,7 +236,11 @@ export class GamesService {
       if (!seedWord || seedWord.length < count) continue;
 
       // Sanitize accents (e.g., á -> a, ü -> u) before extracting
-      seedWord = seedWord.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      seedWord = seedWord.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, (c, offset, str) => {
+        const base = str[offset - 1];
+        if ('AEIOU'.includes(base)) return '';
+        return c;
+      }).normalize('NFC');
 
       // 2. Extract strictly unique letters while preserving natural sequence
       const indices = new Set<number>();

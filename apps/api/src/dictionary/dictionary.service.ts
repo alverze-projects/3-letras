@@ -39,7 +39,7 @@ export class DictionaryService implements OnModuleInit {
           .getMany();
 
         for (const entry of fetched) {
-          const w = entry.word.toLowerCase();
+          const w = this.normalize(entry.word);
           this.words.add(w);
           this.orderedWords.push(w);
         }
@@ -78,7 +78,7 @@ export class DictionaryService implements OnModuleInit {
     const results: string[] = [];
 
     for (const word of this.words) {
-      if (this.hasLettersInOrder(word.toUpperCase(), upperLetters)) {
+      if (this.hasLettersInOrder(word, upperLetters)) {
         results.push(word);
         if (results.length >= limit) break;
       }
@@ -113,10 +113,21 @@ export class DictionaryService implements OnModuleInit {
   }
 
   exists(word: string): boolean {
-    return this.words.has(word.toLowerCase().trim());
+    return this.words.has(this.normalize(word));
   }
 
   get size(): number {
     return this.words.size;
+  }
+
+  private normalize(word: string): string {
+    return word.trim().toUpperCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, (c, offset, str) => {
+        const base = str[offset - 1];
+        if ('AEIOU'.includes(base)) return '';
+        return c;
+      })
+      .normalize('NFC');
   }
 }

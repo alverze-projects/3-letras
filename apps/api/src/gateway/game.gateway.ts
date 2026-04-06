@@ -53,6 +53,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }>();
   private soloGames = new Set<string>();
 
+  // Map <roundId, setTimeout>
+  private roundTimers = new Map<string, NodeJS.Timeout>();
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly gamesService: GamesService,
@@ -343,9 +346,24 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     // Modo normal sin letras especiales (o si se aceptaron tras votación)
-    this.server.to(code).emit(WS_EVENTS.SERVER.ROUND_NEW, { round });
+    const extraPayload = this.startSoloRoundTimer(code, gameId, round.id);
+    this.server.to(code).emit(WS_EVENTS.SERVER.ROUND_NEW, { round, ...extraPayload });
     const effectiveDieResult = isSolo ? 999 : round.dieResult;
     await this.startNextTurn(code, gameId, round.id, round.letters as SpanishLetter[], players, 0, effectiveDieResult, 1);
+  }
+
+  private startSoloRoundTimer(code: string, gameId: string, roundId: string): { roundTimeoutAt?: string } {
+    if (!this.soloGames.has(code)) return {};
+    if (this.roundTimers.has(roundId)) {
+      clearTimeout(this.roundTimers.get(roundId));
+    }
+    const timeoutAt = new Date(Date.now() + this.appConfigService.soloRoundDurationMs).toISOString();
+    const timer = setTimeout(() => {
+      this.roundTimers.delete(roundId);
+      this.endRound(code, gameId, roundId);
+    }, this.appConfigService.soloRoundDurationMs);
+    this.roundTimers.set(roundId, timer);
+    return { roundTimeoutAt: timeoutAt };
   }
 
   @SubscribeMessage(WS_EVENTS.CLIENT.VOTE_SUBMIT)
@@ -418,8 +436,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.usedWords.set(round.id, new Set());
     }
 
-    this.server.to(code).emit(WS_EVENTS.SERVER.ROUND_NEW, { round });
-    await this.startNextTurn(code, voteState.gameId, round.id, round.letters as SpanishLetter[], players, 0, round.dieResult, 1);
+    const extraPayload = this.startSoloRoundTimer(code, voteState.gameId, round.id);
+    this.server.to(code).emit(WS_EVENTS.SERVER.ROUND_NEW, { round, ...extraPayload });
+    const isSolo = this.soloGames.has(code);
+    const effectiveDieResult = isSolo ? 999 : round.dieResult;
+    await this.startNextTurn(code, voteState.gameId, round.id, round.letters as SpanishLetter[], players, 0, effectiveDieResult, 1);
   }
 
   private async startNextTurn(
@@ -620,6 +641,19 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private async endRound(code: string, gameId: string, roundId: string) {
+    if (this.roundTimers.has(roundId)) {
+      clearTimeout(this.roundTimers.get(roundId));
+      this.roundTimers.delete(roundId);
+    }
+    
+    const turnToClose = await this.turnRepo.findOne({
+      where: { roundId, status: 'active' },
+    });
+    if (turnToClose) {
+      turnToClose.status = 'timeout';
+      await this.turnRepo.save(turnToClose);
+    }
+
     const round = await this.roundRepo.findOneBy({ id: roundId });
     if (!round) return;
 

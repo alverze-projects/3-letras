@@ -7,6 +7,7 @@ import { GameConfig } from '../entities/game-config.entity';
 export class AppConfigService implements OnModuleInit {
   private readonly logger = new Logger(AppConfigService.name);
   private _turnDurationSeconds: number = 25;
+  private _soloRoundDurationSeconds: number = 180;
 
   constructor(
     @InjectRepository(GameConfig)
@@ -26,31 +27,49 @@ export class AppConfigService implements OnModuleInit {
       config = this.configRepo.create({
         id: 'singleton',
         turnDurationSeconds: defaultDuration,
+        soloRoundDurationSeconds: 180,
       });
       await this.configRepo.save(config);
-      this.logger.log(`Created default config with duration: ${defaultDuration}s`);
+      this.logger.log(`Created default config with duration: ${defaultDuration}s and solo round duration: 180s`);
     }
 
     this._turnDurationSeconds = config.turnDurationSeconds;
-    this.logger.log(`Configured turn duration to ${this._turnDurationSeconds}s in memory cache.`);
+    this._soloRoundDurationSeconds = config.soloRoundDurationSeconds ?? 180;
+    this.logger.log(`Configured turn duration to ${this._turnDurationSeconds}s and solo round duration to ${this._soloRoundDurationSeconds}s in memory cache.`);
   }
 
   get turnDurationMs(): number {
     return this._turnDurationSeconds * 1000;
   }
 
+  get soloRoundDurationMs(): number {
+    return this._soloRoundDurationSeconds * 1000;
+  }
+
   async getConfig(): Promise<GameConfig> {
     return this.configRepo.findOneByOrFail({ id: 'singleton' });
   }
 
-  async updateTurnDuration(seconds: number): Promise<GameConfig> {
+  async updateConfig(dto: { turnDurationSeconds?: number; soloRoundDurationSeconds?: number }): Promise<GameConfig> {
     const config = await this.getConfig();
-    config.turnDurationSeconds = seconds;
-    await this.configRepo.save(config);
-    
-    // Update memory cache
-    this._turnDurationSeconds = seconds;
-    this.logger.log(`Updated turn duration dynamically to ${seconds}s`);
+    let updated = false;
+
+    if (dto.turnDurationSeconds !== undefined && dto.turnDurationSeconds >= 3) {
+      config.turnDurationSeconds = dto.turnDurationSeconds;
+      this._turnDurationSeconds = dto.turnDurationSeconds;
+      updated = true;
+    }
+
+    if (dto.soloRoundDurationSeconds !== undefined && dto.soloRoundDurationSeconds >= 10) {
+      config.soloRoundDurationSeconds = dto.soloRoundDurationSeconds;
+      this._soloRoundDurationSeconds = dto.soloRoundDurationSeconds;
+      updated = true;
+    }
+
+    if (updated) {
+      await this.configRepo.save(config);
+      this.logger.log(`Updated cache: turnDuration=${this._turnDurationSeconds}s, soloRoundDuration=${this._soloRoundDurationSeconds}s`);
+    }
     
     return config;
   }

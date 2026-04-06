@@ -133,6 +133,9 @@ export default function GameScreen({ navigation, route }: Props) {
   const timerWidth = useRef(new Animated.Value(1)).current;
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [showFloatingInput, setShowFloatingInput] = useState(false);
+  const [soloTimeoutAt, setSoloTimeoutAt] = useState<string | null>(null);
+  const [soloRemainingMs, setSoloRemainingMs] = useState<number | null>(null);
+  const soloTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Connection states
   const [isConnected, setIsConnected] = useState(true);
@@ -311,13 +314,18 @@ export default function GameScreen({ navigation, route }: Props) {
       setPlayers(game.players);
     });
 
-    socket.on(WS_EVENTS.SERVER.ROUND_NEW, ({ round: newRound }) => {
+    socket.on(WS_EVENTS.SERVER.ROUND_NEW, ({ round: newRound, roundTimeoutAt }) => {
       setDiceResult(null);
       setRound(newRound);
       setLastResult(null);
       setWordHistory([]);
       setWord('');
       playSound('round_start');
+      if (roundTimeoutAt) {
+        setSoloTimeoutAt(roundTimeoutAt);
+      } else {
+        setSoloTimeoutAt(null);
+      }
     });
 
     socket.on(WS_EVENTS.SERVER.TURN_START, ({ activeTurn: at }) => {
@@ -385,6 +393,7 @@ export default function GameScreen({ navigation, route }: Props) {
 
     socket.on(WS_EVENTS.SERVER.ROUND_SUMMARY, () => {
       setRound(null);
+      setSoloTimeoutAt(null);
       playSound('round_end');
     });
 
@@ -458,6 +467,8 @@ export default function GameScreen({ navigation, route }: Props) {
     return () => {
       if (diceCountdownRef.current) clearInterval(diceCountdownRef.current);
       if (voteCountdownRef.current) clearInterval(voteCountdownRef.current);
+      if (soloTimerRef.current) clearInterval(soloTimerRef.current);
+      socket.off(WS_EVENTS.SERVER.GAME_STATE);
       socket.off(WS_EVENTS.SERVER.DICE_ROLL_REQUEST);
       socket.off(WS_EVENTS.SERVER.DICE_RESULT);
       socket.off(WS_EVENTS.SERVER.ROUND_NEW);
@@ -500,6 +511,26 @@ export default function GameScreen({ navigation, route }: Props) {
   const timerColor = remainingMs > 9000 ? Colors.green
     : remainingMs > 4500 ? Colors.accent
       : Colors.red;
+
+  useEffect(() => {
+    if (soloTimeoutAt) {
+      if (soloTimerRef.current) clearInterval(soloTimerRef.current);
+      const updateTimer = () => {
+        const remaining = new Date(soloTimeoutAt).getTime() - Date.now();
+        if (remaining <= 0) {
+          setSoloRemainingMs(0);
+          if (soloTimerRef.current) clearInterval(soloTimerRef.current);
+        } else {
+          setSoloRemainingMs(remaining);
+        }
+      };
+      updateTimer();
+      soloTimerRef.current = setInterval(updateTimer, 500);
+    } else {
+      setSoloRemainingMs(null);
+      if (soloTimerRef.current) clearInterval(soloTimerRef.current);
+    }
+  }, [soloTimeoutAt]);
 
   const letters = round?.letters ?? [];
 
@@ -664,11 +695,21 @@ export default function GameScreen({ navigation, route }: Props) {
         ))}
       </View>
 
-      {/* Timer — oculto en modo solo */}
+      {/* Timer individual de turnos — oculto en modo solo */}
       {activeTurn && !isSolo && (
         <View style={styles.timerContainer}>
           <Animated.View style={[styles.timerBar, { flex: timerWidth, backgroundColor: timerColor }]} />
           <Text style={styles.timerText}>{Math.ceil(remainingMs / 1000)}s</Text>
+        </View>
+      )}
+
+      {/* Timer Global de Ronda — solo en modo solitario */}
+      {isSolo && soloRemainingMs !== null && (
+        <View style={styles.timerContainer}>
+          <Animated.View style={[styles.timerBar, { flex: 1, backgroundColor: soloRemainingMs < 10000 ? '#ef4444' : '#3b82f6' }]} />
+          <Text style={styles.timerText}>
+            {Math.floor(soloRemainingMs / 60000)}:{(Math.floor((soloRemainingMs % 60000) / 1000)).toString().padStart(2, '0')}
+          </Text>
         </View>
       )}
 

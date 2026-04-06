@@ -8,6 +8,9 @@ export class GameConfig {
   @Column({ type: 'int', default: 25 })
   turnDurationSeconds: number;
 
+  @Column({ type: 'int', default: 180 })
+  soloRoundDurationSeconds: number;
+
   @UpdateDateColumn()
   updatedAt: Date;
 }

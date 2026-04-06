@@ -14,10 +14,7 @@ export class AppConfigController {
   }
 
   @Patch()
-  async updateConfig(@Body() body: { turnDurationSeconds?: number }) {
-    if (body.turnDurationSeconds && body.turnDurationSeconds >= 3) {
-      return this.configService.updateTurnDuration(body.turnDurationSeconds);
-    }
-    return this.configService.getConfig();
+  async updateConfig(@Body() body: { turnDurationSeconds?: number; soloRoundDurationSeconds?: number }) {
+    return this.configService.updateConfig(body);
   }
 }

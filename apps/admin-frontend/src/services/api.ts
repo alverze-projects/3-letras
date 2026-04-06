@@ -132,7 +132,7 @@ export const adminApi = {
   getGameConfig: () =>
     http.get<IGameConfig>('/config').then((r) => r.data),
 
-  updateGameConfig: (dto: { turnDurationSeconds?: number }) =>
+  updateGameConfig: (dto: { turnDurationSeconds?: number; soloRoundDurationSeconds?: number }) =>
     http.patch<IGameConfig>('/config', dto).then((r) => r.data),
 };
 
@@ -180,5 +180,6 @@ export interface IUserGame {
 export interface IGameConfig {
   id: string;
   turnDurationSeconds: number;
+  soloRoundDurationSeconds: number;
   updatedAt: string;
 }

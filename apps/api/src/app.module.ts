@@ -20,6 +20,8 @@ import { Turn } from './entities/turn.entity';
 import { AdmobConfig } from './entities/admob-config.entity';
 import { VocabEntry } from './entities/vocab-entry.entity';
 import { Record } from './entities/record.entity';
+import { GameConfig } from './entities/game-config.entity';
+import { AppConfigModule } from './app-config/app-config.module';
 
 @Module({
   imports: [
@@ -29,7 +31,7 @@ import { Record } from './entities/record.entity';
       useFactory: (config: ConfigService) => ({
         type: 'better-sqlite3',
         database: config.get<string>('DATABASE_PATH', 'data/tresletras.db'),
-        entities: [User, Game, GamePlayer, Round, Turn, AdmobConfig, VocabEntry, Record],
+        entities: [User, Game, GamePlayer, Round, Turn, AdmobConfig, VocabEntry, Record, GameConfig],
         synchronize: true,
         logging: config.get('NODE_ENV') !== 'production',
       }),
@@ -46,6 +48,7 @@ import { Record } from './entities/record.entity';
     LeaderboardModule,
     RecordsModule,
     GatewayModule,
+    AppConfigModule,
   ],
 })
 export class AppModule {}

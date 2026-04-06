@@ -128,6 +128,12 @@ export const adminApi = {
 
   searchByLetters: (letters: string) =>
     http.get<{ words: string[]; count: number }>('/vocab/search-by-letters', { params: { letters } }).then((r) => r.data),
+
+  getGameConfig: () =>
+    http.get<IGameConfig>('/config').then((r) => r.data),
+
+  updateGameConfig: (dto: { turnDurationSeconds?: number }) =>
+    http.patch<IGameConfig>('/config', dto).then((r) => r.data),
 };
 
 export interface IVocabEntry {
@@ -169,4 +175,10 @@ export interface IUserGame {
   score: number;
   isHost: boolean;
   createdAt: string;
+}
+
+export interface IGameConfig {
+  id: string;
+  turnDurationSeconds: number;
+  updatedAt: string;
 }

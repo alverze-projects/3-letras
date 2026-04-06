@@ -9,6 +9,8 @@ import GameDetailPage from './pages/GameDetailPage';
 import UsersPage from './pages/UsersPage';
 import AdmobPage from './pages/AdmobPage';
 import VocabPage from './pages/VocabPage';
+import ConfigPage from './pages/ConfigPage';
+import { IconSettings } from '@tabler/icons-react';
 
 function Shell() {
   const [opened, { toggle }] = useDisclosure();
@@ -77,6 +79,13 @@ function Shell() {
           active={location.pathname === '/admob'}
           onClick={() => navigate('/admob')}
         />
+        <NavLink
+          component="button"
+          label="Configuración"
+          leftSection={<IconSettings size={18} />}
+          active={location.pathname === '/config'}
+          onClick={() => navigate('/config')}
+        />
       </AppShell.Navbar>
 
       <AppShell.Main>
@@ -87,6 +96,7 @@ function Shell() {
           <Route path="/users" element={<UsersPage />} />
           <Route path="/vocab" element={<VocabPage />} />
           <Route path="/admob" element={<AdmobPage />} />
+          <Route path="/config" element={<ConfigPage />} />
           <Route path="*" element={<Navigate to="/games" replace />} />
         </Routes>
       </AppShell.Main>

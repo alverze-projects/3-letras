@@ -10,6 +10,7 @@ import { Logger } from '@nestjs/common';
 import { GamesService } from '../games/games.service';
 import { WordsService } from '../words/words.service';
 import { RecordsService } from '../records/records.service';
+import { AppConfigService } from '../app-config/app-config.service';
 import type { IRound } from '@3letras/interfaces';
 import { Game } from '../entities/game.entity';
 import { GamePlayer } from '../entities/game-player.entity';
@@ -57,6 +58,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly gamesService: GamesService,
     private readonly wordsService: WordsService,
     private readonly recordsService: RecordsService,
+    private readonly appConfigService: AppConfigService,
     @InjectRepository(Game) private readonly gameRepo: Repository<Game>,
     @InjectRepository(GamePlayer) private readonly gpRepo: Repository<GamePlayer>,
     @InjectRepository(Round) private readonly roundRepo: Repository<Round>,
@@ -65,7 +67,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) { }
 
   private get turnDurationMs(): number {
-    return parseInt(process.env.GAME_TURN_DURATION || '15', 10) * 1000;
+    return this.appConfigService.turnDurationMs;
   }
 
   async handleConnection(client: AuthenticatedSocket) {

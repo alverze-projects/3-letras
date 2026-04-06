@@ -577,7 +577,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         game.difficulty as any,
         previousWord,
       );
-      turn.word = word;
+      turn.word = result.word;
       turn.isValid = result.isValid;
       turn.score = result.score;
       turn.status = 'submitted';

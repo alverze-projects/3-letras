@@ -40,6 +40,11 @@ export class VocabController {
       );
       return this.vocabService.listByWords(matchingWords, page, Math.min(limit, 200));
     }
+    if (search) {
+      const normalizedSearch = this.dictionaryService.normalize(search);
+      const matchingWords = this.dictionaryService.searchOriginalsBySubstring(normalizedSearch, 10_000);
+      return this.vocabService.listByWords(matchingWords, page, Math.min(limit, 200));
+    }
     return this.vocabService.list(search, page, Math.min(limit, 200));
   }
 

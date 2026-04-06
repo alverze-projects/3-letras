@@ -33,6 +33,8 @@ export class WordsService {
       return this.invalid(word, 'not_found');
     }
 
+    const correctWord = this.dictionary.getOriginal(normalized);
+
     // Avanzado: si las letras base incluyen una especial, la palabra debe contenerla
     if (difficulty === 'advanced') {
       const baseHasSpecial = baseLetters.some(
@@ -50,11 +52,11 @@ export class WordsService {
     if (difficulty === 'advanced' && previousWord) {
       const normalizedPrev = this.normalize(previousWord);
       if (normalized.includes(normalizedPrev)) {
-        return this.invalid(word, 'builds_on_previous');
+        return this.invalid(correctWord, 'builds_on_previous');
       }
     }
 
-    return this.calculateScore(word, normalized);
+    return this.calculateScore(correctWord, normalized);
   }
 
   normalize(word: string): string {

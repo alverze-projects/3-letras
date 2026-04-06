@@ -8,6 +8,7 @@ export class DictionaryService implements OnModuleInit {
   private readonly logger = new Logger(DictionaryService.name);
   private words: Set<string> = new Set();
   private orderedWords: string[] = [];
+  private originalsByNormalized: Map<string, string[]> = new Map();
 
   constructor(
     @InjectRepository(VocabEntry)
@@ -42,6 +43,13 @@ export class DictionaryService implements OnModuleInit {
           const w = this.normalize(entry.word);
           this.words.add(w);
           this.orderedWords.push(w);
+          
+          let originals = this.originalsByNormalized.get(w);
+          if (!originals) {
+            originals = [];
+            this.originalsByNormalized.set(w, originals);
+          }
+          originals.push(entry.word);
         }
         offset += BATCH;
       } while (fetched.length === BATCH);
@@ -59,8 +67,20 @@ export class DictionaryService implements OnModuleInit {
   async reload(): Promise<number> {
     this.words.clear();
     this.orderedWords = [];
+    this.originalsByNormalized.clear();
     await this.loadFromDatabase();
     return this.words.size;
+  }
+
+  searchOriginalsBySubstring(normalizedSearch: string, limit: number = 200): string[] {
+    const results: string[] = [];
+    for (const [norm, originals] of this.originalsByNormalized.entries()) {
+      if (norm.includes(normalizedSearch)) {
+        results.push(...originals);
+        if (results.length >= limit) break;
+      }
+    }
+    return results;
   }
 
   /** O(1) Fetch of a word by its frequency rank (index) */
@@ -116,11 +136,20 @@ export class DictionaryService implements OnModuleInit {
     return this.words.has(this.normalize(word));
   }
 
+  getOriginal(word: string): string {
+    const norm = this.normalize(word);
+    const originals = this.originalsByNormalized.get(norm);
+    if (originals && originals.length > 0) {
+      return originals[0]; // Retorna la original (frecuencia más alta)
+    }
+    return word; // Fallback
+  }
+
   get size(): number {
     return this.words.size;
   }
 
-  private normalize(word: string): string {
+  normalize(word: string): string {
     return word.trim().toUpperCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, (c, offset, str) => {

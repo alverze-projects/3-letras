@@ -66,16 +66,20 @@ NestJS uses **webpack** (not tsc) as bundler — configured in `nest-cli.json`. 
 1. **Native modules must be webpack externals:** `better-sqlite3` and `bcrypt` are in `webpack.config.js` externals. Any new native module must be added there.
 2. **TypeORM entities need explicit column types:** Webpack removes TypeScript metadata, so `@Column({ type: 'text' })` is required on every entity column — never rely on type inference.
 
+**Global Configuration (AppConfigService):**
+Environment variables like `GAME_TURN_DURATION` have been migrated to the `game_config` table (SQLite). `AppConfigService` acts as the SSOT, using an in-memory cache for 0ms latency. The Admin Panel allows editing these values in real-time.
+
 Dictionary is loaded once at startup into a `Set<string>` in `DictionaryService` from the `vocab_entries` DB table (only `isActive = true` rows). Supports `reload()` to refresh after admin changes.
 
 ### In-memory game state (GameGateway)
 The gateway holds per-session Maps that are **not persisted**:
-- `turnTimers` — active `setTimeout` references
+- `turnTimers` — active `setTimeout` references per turn (multiplayer)
+- `roundTimers` — active `setTimeout` per round (solo mode global timer)
 - `lastValidWord` — last valid word per round (for medium/advanced difficulty)
 - `usedWords` — Set of used words per round (prevents duplicates)
 - `pendingVotes` — vote state for special letter votes
-  - `pendingDice` — dice roll state (rollerId, result, resolve callback, timeout)
-  - `soloGames` — Set of game codes currently in solo mode (no timer, no dice, no vote)
+- `pendingDice` — dice roll state (rollerId, result, resolve callback, timeout)
+- `soloGames` — Set of game codes currently in solo mode
   
   This state is lost on server restart. A crashed server terminates active games.
 
@@ -91,21 +95,29 @@ The gateway holds per-session Maps that are **not persisted**:
   
   ```
   game:start → startNewRound()
-    → (multiplayer only) dice:roll_request → client emits dice:roll → dice:result + 4.5s animation wait
-    → if special letters + basic/medium difficulty → vote:start (15s timeout)
-      → vote:submit from all players → vote:result → round:new or redraw
-    → else → round:new → turn:start
-      → 15s timer → turn:timer (every 1s)
-      → turn:submit or timeout → turn:result → next turn
-    → all turns done → round:summary → next round or game:end
+    → (solo) if mode = solo → startSoloRoundTimer() → emit round:new with roundTimeoutAt
+    → (multi) if mode = multi → dice:roll_request → dice:result
+      → if special letters + basic/medium difficulty → vote:start (15s timeout)
+        → vote:submit from all players → vote:result → round:new or redraw
+      → else → round:new → turn:start
+    → 15s/25s timer → turn:timer (every 1s)
+    → turn:submit or timeout → turn:result → next turn
+    → all turns done or round timeout (solo) → round:summary → next round or game:end
+  ```
   
   Reconnection: client socket.io connects → emits game:rejoin(code) 
     → if game finished → SERVER emits game_end
-    → else SERVER emits game_rejoin_state (full payload: game, round, activeTurn, diceRequest, voteState, wordHistory)
+    → else SERVER emits game_rejoin_state (full payload: game, round, activeTurn, diceRequest, voteState, wordHistory, roundTimeoutAt)
 
-  Solo mode: no dice, no vote, no timer. Skip ends the round immediately.
-  Die result determines turns-per-player-per-round (1–6).
-  ```
+  Solo mode: global round timer enforced by server (default 180s). Skip ends the round immediately.
+  Die result determines turns-per-player-per-round (1–6) in multiplayer.
+  
+  ## Admin Panel (admin-frontend)
+  
+  The admin panel is built with React + Mantine UI.
+  - **Configuration:** Allows editing `game_config` (turn duration, solo round duration).
+  - **Users:** Master list with **Remote Pagination** (15 per page) and interactive sorting by registration date.
+  - **Authentication:** JWT based with `AdminGuard` enforcement.
   
   ## Mobile Screens Flow
   
@@ -119,7 +131,7 @@ The gateway holds per-session Maps that are **not persisted**:
     ├─ Leaderboard
     ├─ Inicio (MainScreen) → wizard:
     │     step 0: menú principal (JUGAR) + Cómo se juega (InstructionsScreen global)
-    │     step 'mode': Solo | Multijugador
+    │     step 'mode': Solo | Multijugador (Solo mode has global round timer UI)
     │     step 'multi': Crear sala | Unirse a partida (código)
     │     step 1: Dificultad
     │     step 2: Número de rondas
@@ -131,36 +143,35 @@ The gateway holds per-session Maps that are **not persisted**:
   
   ## Mobile UI Quirks & Workarounds
   
-  - **Keyboard Handling (GameScreen):** Due to Android's edge-to-edge layout and bottom navigation bar, `KeyboardAvoidingView` can be unreliable for positioning elements precisely above the keyboard. To guarantee the input field is always visible, we use a custom approach: `Keyboard.addListener` manually captures the `keyboardHeight`. When the keyboard is active, a floating `Animated.View` (containing the text input, a "Skip Turn" button, and the result of the last word) is rendered with `position: 'absolute'` and a bottom offset (`keyboardHeight + 45` for Android, `+20` for iOS) to perfectly clear the OS keyboard and system navigation bars. The rest of the screen is overlaid with a dark semitransparent backdrop.
-  - **Local APK Building:** To build the APK for Android locally without invoking emulators, use `npm run build:apk`. It runs Gradle `assembleRelease` which automatically triggers Metro bundler to include the latest JS changes.
-  - **Cleartext Traffic:** The Android build has been modified in `AndroidManifest.xml` (`android:usesCleartextTraffic="true"`) to allow connecting to local HTTP backend IPs instead of strictly requiring HTTPS domains.
+  - **Global Round Timer (Solo Mode):** Shown as a progress bar below the letters. Syncs with `roundTimeoutAt` emitted by server. Colors change to Red when < 10s.
+  - **Keyboard Handling (GameScreen):** Custom approach using `Keyboard.addListener` to capture `keyboardHeight`. A floating `Animated.View` clears the OS keyboard.
+  - **Local APK Building:** `npm run build:apk` runs Gradle `assembleRelease`.
+  - **Cleartext Traffic:** Enabled for local IP development.
 
   ## Game Rules Summary
   
   - **Basic:** 2 base letters, special letters optional (player vote per round)
   - **Medium:** 3 base letters, can build on previous valid word, special letters optional (vote)
   - **Advanced:** 3 base letters, cannot build on previous, special letters mandatory if drawn
-  - Timer: Server-controlled (configurable dynamically via Admin Panel UI)
+  - Timer: Server-controlled (configurable dynamically via Admin Panel UI). Solo mode uses a global round timer instead of turn timers.
   - Scoring: normal letters = 2pts, special (Ñ/W/X/Y/Z) = 4pts
   - Bonuses: ≥14 letters +5pts, ≥16 letters +10pts, ≥3 special letters +15pts
-  - Words must contain base letters **in order**
   - Words already used in current round are rejected
   
   ## Environment Variables
 
-  The backend allows dynamic configuration of the letter generator via environment variables:
-  - `GAME_CONFIG_SEED_POOL_SIZE`: Candidate words grabbed from DB (e.g. 5000)
-  - `GAME_CONFIG_VERIFY_POOL_SIZE`: Search boundary for verifying candidates (e.g. 10000)
-  - `GAME_CONFIG_MIN_WORDS_REQUIRED`: Min valid answers per round (e.g. 10)
-  - `GAME_CONFIG_MAX_RETRIES`: Timeout for the generator loop (e.g. 15)
-  
   **apps/api/.env:**
   ```
   PORT=3000
   NODE_ENV=development
-  JWT_SECRET=tres-letras-dev-secret-2024
+  JWT_SECRET=...             # Use strong secret
   DATABASE_PATH=data/tresletras.db
+  ADMIN_EMAIL=...            # Initial admin seed
+  ADMIN_PASSWORD=...         # Only used if admin doesn't exist
+  ADMIN_NICKNAME=Admin
   ```
+  
+  **Git Security:** Tracked `.env` files must be removed from history using `git filter-branch` or `filter-repo`. 
   
   **apps/mobile/.env.local:**
   ```
